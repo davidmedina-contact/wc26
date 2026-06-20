@@ -977,6 +977,7 @@ async function init() {
       btns.forEach(function(b, i) { b.classList.toggle('active', i === tabIndex); });
       document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
       document.getElementById('tab-' + tab).classList.add('active');
+      document.body.setAttribute('data-active-tab', tab);
       // Restore match date if present
       if (tab === 'matches' && parts[1]) {
         selectedMatchDate = parts[1];
