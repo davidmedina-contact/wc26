@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="/icon-512.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIFA World Cup 2026 Interactive Guide</title>
+<script>
+(function(){
+  var pref = null;
+  try { pref = localStorage.getItem('wc2026-theme'); } catch(e){}
+  var theme;
+  if (pref === 'light' || pref === 'dark') theme = pref;
+  else theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+<style>
+/* ============================================================
+   FIFA World Cup 2026 Guide — Critical CSS
+   Tokens + Base + Header + Nav + Skeleton (for first paint)
+   ============================================================ */
+
+/* --- Color Scheme Declaration --- */
+:root { color-scheme: light dark; }
+
+/* === LAYER 1: Primitive Colors (raw palette) === */
+:root {
+  /* Light primitives */
+  --color-gray-50: #f5f5f7;
+  --color-gray-100: #f0f0f2;
+  --color-gray-200: #e0e0e8;
+  --color-gray-300: #d0d0e0;
+  --color-gray-400: #a0a0b0;
+  --color-gray-500: #6b6b80;
+  --color-gray-600: #4a4a5a;
+  --color-gray-900: #1a1a2e;
+
+  /* Dark primitives */
+  --color-night-950: #0c0c1d;
+  --color-night-900: #14142b;
+  --color-night-800: #1c1c3a;
+  --color-night-700: #2a2a4a;
+  --color-night-500: #8080a0;
+  --color-night-400: #a8a8c0;
+  --color-night-100: #f0f0f5;
+
+  /* Accent primitives */
+  --color-indigo-light: #4f46e5;
+  --color-indigo-dark: #6366f1;
+  --color-violet: #8b5cf6;
+  --color-violet-light: #7c3aed;
+  --color-violet-muted: #a78bfa;
+  --color-violet-pale: #c4b5fd;
+  --color-cyan: #06b6d4;
+  --color-emerald: #059669;
+  --color-emerald-light: #34d399;
+  --color-green: #22c55e;
+  --color-green-light: #4ade80;
+  --color-amber: #fbbf24;
+  --color-red: #ef4444;
+  --color-red-light: #f87171;
+
+  /* Design tokens (non-color) */
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-xs: 8px;
+  --radius-pill: 12px;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  --mono: 'SF Mono', 'JetBrains Mono', monospace;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.1);
+  --shadow-xl: 0 20px 50px rgba(0,0,0,0.15);
+}
+
+/* === LAYER 2: Semantic Tokens (purpose-based) === */
+
+/* Default: Light mode semantic tokens */
+:root {
+  --bg: var(--color-gray-50);
+  --surface: #ffffff;
+  --surface2: var(--color-gray-100);
+  --text: var(--color-gray-900);
+  --text-sec: var(--color-gray-500);
+  --text-muted: var(--color-gray-400);
+  --border: var(--color-gray-200);
+  --accent: var(--color-indigo-light);
+  --accent-gradient: linear-gradient(135deg, var(--color-indigo-light), var(--color-violet-light));
+  --header-bg: #ffffff;
+  --header-gradient: linear-gradient(135deg, var(--color-indigo-light), var(--color-violet), var(--color-cyan));
+  --card-shadow: var(--shadow-sm);
+  --card-hover-shadow: var(--shadow-md);
+  --focus-ring: rgba(79, 70, 229, 0.2);
+  --badge-bg: var(--color-gray-100);
+  --badge-text: var(--color-gray-600);
+  --pill-bg: var(--color-gray-100);
+  --pill-text: var(--color-gray-600);
+  --divider: var(--color-gray-200);
+  --overlay: rgba(0, 0, 0, 0.5);
+  --modal-bg: #ffffff;
+  --modal-border: var(--color-gray-200);
+  --modal-shadow: var(--shadow-xl);
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: var(--color-gray-300);
+  /* Functional: position badges */
+  --pos-gk: linear-gradient(135deg, #f59e0b, #d97706);
+  --pos-def: linear-gradient(135deg, #3b82f6, #2563eb);
+  --pos-mid: linear-gradient(135deg, #22c55e, #16a34a);
+  --pos-fwd: linear-gradient(135deg, #ef4444, #dc2626);
+  /* Functional: predictions */
+  --pred-home: rgba(34,197,94,0.08);
+  --pred-draw: rgba(234,179,8,0.08);
+  --pred-away: rgba(239,68,68,0.08);
+  --pred-home-text: #16a34a;
+  --pred-draw-text: #a16207;
+  --pred-away-text: #dc2626;
+  /* Functional: broadcast badges */
+  --net-badge-bg: var(--color-gray-100);
+  --net-badge-text: var(--color-gray-600);
+  /* Functional: network badges */
+  --net-fox-bg: #1a1a2e;
+  --net-fox-text: #ffffff;
+  --net-fs1-bg: #003087;
+  --net-fs1-text: #ffffff;
+  --net-tele-bg: #e50914;
+  --net-tele-text: #ffffff;
+  --net-univ-bg: #6b21a8;
+  --net-univ-text: #ffffff;
+  --net-pcock-bg: #0078d4;
+  --net-pcock-text: #ffffff;
+  --net-fubo-bg: #e44d26;
+  --net-fubo-text: #ffffff;
+  /* Functional: top5 chips */
+  --top5-chip-bg: var(--color-gray-100);
+  --top5-chip-text: var(--color-gray-900);
+  /* Functional: analysis tags */
+  --analysis-tag-bg: var(--color-gray-100);
+  --analysis-tag-text: var(--color-gray-600);
+  /* Functional: star/squad highlight */
+  --star-gradient: linear-gradient(135deg, rgba(79,70,229,0.06), rgba(139,92,246,0.06));
+  --star-border: rgba(79, 70, 229, 0.2);
+  /* Functional: bracket */
+  --bracket-connector: var(--color-gray-300);
+  --bracket-selected-bg: rgba(79, 70, 229, 0.08);
+  --bracket-selected-border: var(--color-indigo-light);
+  /* Functional: date pill */
+  --pill-active-bg: var(--accent-gradient);
+  --pill-active-text: #ffffff;
+  /* Functional: match stage */
+  --stage-badge-bg: rgba(79, 70, 229, 0.08);
+  --stage-badge-text: var(--color-indigo-light);
+  /* Functional: analysis block */
+  --analysis-bg: var(--color-gray-50);
+  --analysis-border: var(--color-gray-200);
+  /* Modal match row */
+  --match-row-bg: var(--color-gray-50);
+  --match-row-border: var(--color-gray-200);
+  --mmr-hover-bg: rgba(99,102,241,0.05);
+  --tag-watch-bg: rgba(99,102,241,0.1);
+  --tag-callup-bg: rgba(22,163,74,0.1);
+  --tag-snub-bg: rgba(239,68,68,0.1);
+  --top5-hover-bg: linear-gradient(135deg, rgba(79,70,229,0.15), rgba(109,40,217,0.1));
+  --top5-bg: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(109,40,217,0.05));
+  --top5-pos-bg: rgba(79,70,229,0.1);
+  --net-peacock-bg: rgba(139,92,246,0.08);
+  --net-stream-bg: rgba(22,163,74,0.1);
+  --bc-paid-bg: rgba(217,119,6,0.08);
+  --bc-free-bg: rgba(22,163,74,0.08);
+  --pos-gk-bg: rgba(217,119,6,0.1);
+  --pos-def-bg: rgba(37,99,235,0.1);
+  --pos-mid-bg: rgba(22,163,74,0.1);
+  --pos-fwd-bg: rgba(190,24,93,0.1);
+  --bracket-winner-bg: rgba(22,163,74,0.08);
+  --bracket-runner-bg: rgba(59,130,246,0.08);
+  --star-color: #b45309;
+  --top5-border: rgba(79,70,229,0.2);
+  --top5-hover-border: rgba(79,70,229,0.4);
+  --top5-pos-text: #4f46e5;
+  --top5-text: #4f46e5;
+  --bc-free-border: rgba(22,163,74,0.2);
+  --bc-free-text: #16a34a;
+  --bc-paid-border: rgba(217,119,6,0.2);
+  --bc-paid-text: #b45309;
+  --bracket-info-accent: #4f46e5;
+  --bracket-round-title: #4f46e5;
+  --bracket-runner-text: #2563eb;
+  --bracket-winner-text: #16a34a;
+  --date-today-border: #22c55e;
+  --date-today-text: #16a34a;
+  --gc: #22c55e;
+  --gc2: #a3e635;
+  --match-stage-text: #4f46e5;
+  --mmr-goto-color: #818cf8;
+  --mmr-hover-border: #6366f1;
+  --net-peacock-text: #7c3aed;
+  --net-stream-text: #16a34a;
+  --pos-def-text: #2563eb;
+  --pos-fwd-text: #be185d;
+  --pos-gk-text: #b45309;
+  --pos-mid-text: #16a34a;
+  --search-results-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  --tag-callup-border: #22c55e;
+  --tag-callup-text: #16a34a;
+  --tag-snub-border: #ef4444;
+  --tag-snub-text: #dc2626;
+  --tag-watch-border: #6366f1;
+  --tag-watch-text: #4f46e5;
+}
+
+/* Dark mode via system preference */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: var(--color-night-950);
+    --surface: var(--color-night-900);
+    --surface2: var(--color-night-800);
+    --text: var(--color-night-100);
+    --text-sec: var(--color-night-400);
+    --text-muted: #8888a8;
+    --border: var(--color-night-700);
+    --accent: var(--color-indigo-dark);
+    --accent-gradient: linear-gradient(135deg, var(--color-indigo-dark), var(--color-violet));
+    --header-bg: var(--color-night-900);
+    --header-gradient: linear-gradient(135deg, var(--color-indigo-dark), var(--color-violet-muted), var(--color-cyan));
+    --card-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    --card-hover-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    --focus-ring: rgba(99, 102, 241, 0.3);
+    --badge-bg: var(--color-night-700);
+    --badge-text: var(--color-night-400);
+    --pill-bg: var(--color-night-800);
+    --pill-text: var(--color-night-400);
+    --divider: var(--color-night-700);
+    --overlay: rgba(0, 0, 0, 0.7);
+    --modal-bg: var(--color-night-900);
+    --modal-border: var(--color-night-700);
+    --modal-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    --scrollbar-thumb: var(--color-night-700);
+    --pred-home: rgba(34,197,94,0.12);
+    --pred-draw: rgba(234,179,8,0.12);
+    --pred-away: rgba(239,68,68,0.12);
+    --pred-home-text: #4ade80;
+    --pred-draw-text: #fbbf24;
+    --pred-away-text: #f87171;
+    --net-badge-bg: var(--color-night-700);
+    --net-badge-text: var(--color-night-400);
+    --top5-chip-bg: var(--color-night-800);
+    --top5-chip-text: var(--color-night-100);
+    --analysis-tag-bg: var(--color-night-800);
+    --analysis-tag-text: var(--color-night-400);
+    --star-gradient: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1));
+    --star-border: rgba(99, 102, 241, 0.3);
+    --bracket-connector: var(--color-night-700);
+    --bracket-selected-bg: rgba(99, 102, 241, 0.12);
+    --bracket-selected-border: var(--color-indigo-dark);
+    --pill-active-bg: var(--accent-gradient);
+    --pill-active-text: #ffffff;
+    --stage-badge-bg: rgba(99, 102, 241, 0.12);
+    --stage-badge-text: var(--color-violet-muted);
+    --analysis-bg: var(--color-night-800);
+    --analysis-border: var(--color-night-700);
+    --match-row-bg: var(--color-night-800);
+    --match-row-border: var(--color-night-700);
+    --mmr-hover-bg: rgba(99,102,241,0.05);
+    --tag-watch-bg: rgba(99,102,241,0.12);
+    --tag-callup-bg: rgba(34,197,94,0.12);
+    --tag-snub-bg: rgba(239,68,68,0.12);
+    --top5-hover-bg: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15));
+    --top5-bg: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08));
+    --top5-pos-bg: rgba(99,102,241,0.15);
+    --net-peacock-bg: rgba(139,92,246,0.12);
+    --net-stream-bg: rgba(34,197,94,0.15);
+    --bc-paid-bg: rgba(245,158,11,0.1);
+    --bc-free-bg: rgba(34,197,94,0.1);
+    --pos-gk-bg: rgba(245,158,11,0.15);
+    --pos-def-bg: rgba(59,130,246,0.15);
+    --pos-mid-bg: rgba(34,197,94,0.15);
+    --pos-fwd-bg: rgba(236,72,153,0.15);
+    --bracket-winner-bg: rgba(34,197,94,0.08);
+    --bracket-runner-bg: rgba(59,130,246,0.08);
+    --star-color: #fbbf24;
+    --top5-border: rgba(99,102,241,0.25);
+    --top5-hover-border: rgba(99,102,241,0.5);
+    --top5-pos-text: #818cf8;
+    --top5-text: #c4b5fd;
+    --bc-free-border: rgba(34,197,94,0.2);
+    --bc-free-text: #4ade80;
+    --bc-paid-border: rgba(245,158,11,0.2);
+    --bc-paid-text: #fbbf24;
+    --bracket-info-accent: #a78bfa;
+    --bracket-round-title: #a78bfa;
+    --bracket-runner-text: #60a5fa;
+    --bracket-winner-text: #4ade80;
+    --date-today-border: #22c55e;
+    --date-today-text: #4ade80;
+    --gc: #ef4444;
+    --gc2: #f97316;
+    --match-stage-text: #a78bfa;
+    --mmr-goto-color: #818cf8;
+    --mmr-hover-border: #6366f1;
+    --net-peacock-text: #a78bfa;
+    --net-stream-text: #4ade80;
+    --pos-def-text: #60a5fa;
+    --pos-fwd-text: #f472b6;
+    --pos-gk-text: #fbbf24;
+    --pos-mid-text: #4ade80;
+    --search-results-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    --tag-callup-border: #22c55e;
+    --tag-callup-text: #4ade80;
+    --tag-snub-border: #ef4444;
+    --tag-snub-text: #f87171;
+    --tag-watch-border: #6366f1;
+    --tag-watch-text: #a5b4fc;
+  }
+}
+
+/* Manual override: dark */
+[data-theme="dark"] {
+  --bg: var(--color-night-950);
+  --surface: var(--color-night-900);
+  --surface2: var(--color-night-800);
+  --text: var(--color-night-100);
+  --text-sec: var(--color-night-400);
+  --text-muted: #8888a8;
+  --border: var(--color-night-700);
+  --accent: var(--color-indigo-dark);
+  --accent-gradient: linear-gradient(135deg, var(--color-indigo-dark), var(--color-violet));
+  --header-bg: var(--color-night-900);
+  --header-gradient: linear-gradient(135deg, var(--color-indigo-dark), var(--color-violet-muted), var(--color-cyan));
+  --card-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  --card-hover-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  --focus-ring: rgba(99, 102, 241, 0.3);
+  --badge-bg: var(--color-night-700);
+  --badge-text: var(--color-night-400);
+  --pill-bg: var(--color-night-800);
+  --pill-text: var(--color-night-400);
+  --divider: var(--color-night-700);
+  --overlay: rgba(0, 0, 0, 0.7);
+  --modal-bg: var(--color-night-900);
+  --modal-border: var(--color-night-700);
+  --modal-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  --scrollbar-thumb: var(--color-night-700);
+  --pred-home: rgba(34,197,94,0.12);
+  --pred-draw: rgba(234,179,8,0.12);
+  --pred-away: rgba(239,68,68,0.12);
+  --pred-home-text: #4ade80;
+  --pred-draw-text: #fbbf24;
+  --pred-away-text: #f87171;
+  --net-badge-bg: var(--color-night-700);
+  --net-badge-text: var(--color-night-400);
+  --top5-chip-bg: var(--color-night-800);
+  --top5-chip-text: var(--color-night-100);
+  --analysis-tag-bg: var(--color-night-800);
+  --analysis-tag-text: var(--color-night-400);
+  --star-gradient: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1));
+  --star-border: rgba(99, 102, 241, 0.3);
+  --bracket-connector: var(--color-night-700);
+  --bracket-selected-bg: rgba(99, 102, 241, 0.12);
+  --bracket-selected-border: var(--color-indigo-dark);
+  --pill-active-bg: var(--accent-gradient);
+  --pill-active-text: #ffffff;
+  --stage-badge-bg: rgba(99, 102, 241, 0.12);
+  --stage-badge-text: var(--color-violet-muted);
+  --analysis-bg: var(--color-night-800);
+  --analysis-border: var(--color-night-700);
+  --match-row-bg: var(--color-night-800);
+  --match-row-border: var(--color-night-700);
+    --mmr-hover-bg: rgba(99,102,241,0.05);
+    --tag-watch-bg: rgba(99,102,241,0.12);
+    --tag-callup-bg: rgba(34,197,94,0.12);
+    --tag-snub-bg: rgba(239,68,68,0.12);
+    --top5-hover-bg: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15));
+    --top5-bg: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08));
+    --top5-pos-bg: rgba(99,102,241,0.15);
+    --net-peacock-bg: rgba(139,92,246,0.12);
+    --net-stream-bg: rgba(34,197,94,0.15);
+    --bc-paid-bg: rgba(245,158,11,0.1);
+    --bc-free-bg: rgba(34,197,94,0.1);
+    --pos-gk-bg: rgba(245,158,11,0.15);
+    --pos-def-bg: rgba(59,130,246,0.15);
+    --pos-mid-bg: rgba(34,197,94,0.15);
+    --pos-fwd-bg: rgba(236,72,153,0.15);
+    --bracket-winner-bg: rgba(34,197,94,0.08);
+    --bracket-runner-bg: rgba(59,130,246,0.08);
+    --star-color: #fbbf24;
+    --top5-border: rgba(99,102,241,0.25);
+    --top5-hover-border: rgba(99,102,241,0.5);
+    --top5-pos-text: #818cf8;
+    --top5-text: #c4b5fd;
+    --bc-free-border: rgba(34,197,94,0.2);
+    --bc-free-text: #4ade80;
+    --bc-paid-border: rgba(245,158,11,0.2);
+    --bc-paid-text: #fbbf24;
+    --bracket-info-accent: #a78bfa;
+    --bracket-round-title: #a78bfa;
+    --bracket-runner-text: #60a5fa;
+    --bracket-winner-text: #4ade80;
+    --date-today-border: #22c55e;
+    --date-today-text: #4ade80;
+    --gc: #ef4444;
+    --gc2: #f97316;
+    --match-stage-text: #a78bfa;
+    --mmr-goto-color: #818cf8;
+    --mmr-hover-border: #6366f1;
+    --net-peacock-text: #a78bfa;
+    --net-stream-text: #4ade80;
+    --pos-def-text: #60a5fa;
+    --pos-fwd-text: #f472b6;
+    --pos-gk-text: #fbbf24;
+    --pos-mid-text: #4ade80;
+    --search-results-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    --tag-callup-border: #22c55e;
+    --tag-callup-text: #4ade80;
+    --tag-snub-border: #ef4444;
+    --tag-snub-text: #f87171;
+    --tag-watch-border: #6366f1;
+    --tag-watch-text: #a5b4fc;
+}
+
+/* Manual override: light (explicit) */
+[data-theme="light"] {
+  --bg: var(--color-gray-50);
+  --surface: #ffffff;
+  --surface2: var(--color-gray-100);
+  --text: var(--color-gray-900);
+  --text-sec: var(--color-gray-500);
+  --text-muted: var(--color-gray-400);
+  --border: var(--color-gray-200);
+  --accent: var(--color-indigo-light);
+  --accent-gradient: linear-gradient(135deg, var(--color-indigo-light), var(--color-violet-light));
+  --header-bg: #ffffff;
+  --header-gradient: linear-gradient(135deg, var(--color-indigo-light), var(--color-violet), var(--color-cyan));
+  --card-shadow: var(--shadow-sm);
+  --card-hover-shadow: var(--shadow-md);
+  --focus-ring: rgba(79, 70, 229, 0.2);
+  --badge-bg: var(--color-gray-100);
+  --badge-text: var(--color-gray-600);
+  --pill-bg: var(--color-gray-100);
+  --pill-text: var(--color-gray-600);
+  --divider: var(--color-gray-200);
+  --overlay: rgba(0, 0, 0, 0.5);
+  --modal-bg: #ffffff;
+  --modal-border: var(--color-gray-200);
+  --modal-shadow: var(--shadow-xl);
+  --scrollbar-thumb: var(--color-gray-300);
+  --pred-home: rgba(34,197,94,0.08);
+  --pred-draw: rgba(234,179,8,0.08);
+  --pred-away: rgba(239,68,68,0.08);
+  --pred-home-text: #16a34a;
+  --pred-draw-text: #a16207;
+  --pred-away-text: #dc2626;
+  --net-badge-bg: var(--color-gray-100);
+  --net-badge-text: var(--color-gray-600);
+  --top5-chip-bg: var(--color-gray-100);
+  --top5-chip-text: var(--color-gray-900);
+  --analysis-tag-bg: var(--color-gray-100);
+  --analysis-tag-text: var(--color-gray-600);
+  --star-gradient: linear-gradient(135deg, rgba(79,70,229,0.06), rgba(139,92,246,0.06));
+  --star-border: rgba(79, 70, 229, 0.2);
+  --bracket-connector: var(--color-gray-300);
+  --bracket-selected-bg: rgba(79, 70, 229, 0.08);
+  --bracket-selected-border: var(--color-indigo-light);
+  --pill-active-bg: var(--accent-gradient);
+  --pill-active-text: #ffffff;
+  --stage-badge-bg: rgba(79, 70, 229, 0.08);
+  --stage-badge-text: var(--color-indigo-light);
+  --analysis-bg: var(--color-gray-50);
+  --analysis-border: var(--color-gray-200);
+  --match-row-bg: var(--color-gray-50);
+  --match-row-border: var(--color-gray-200);
+}
+
+/* =========================================================
+   ELEMENT STYLES — ALL using semantic tokens only
+   ========================================================= */
+
+/* --- Reset & Base --- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { overflow-x: hidden; }
+body {
+  font-family: var(--font);
+  background-color: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+.container { max-width: 1440px; margin: 0 auto; padding: 20px; }
+
+
+/* --- Header --- */
+.header {
+  text-align: center;
+  padding: 24px 20px 20px;
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 28px;
+}
+.header h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: var(--header-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+
+/* --- Navigation Tabs --- */
+.nav-tabs {
+  display: flex; gap: 4px;
+  background: var(--surface); padding: 5px;
+  border-radius: var(--radius-pill); margin-bottom: 24px;
+  border: 1px solid var(--border);
+}
+.nav-tab {
+  padding: 10px 22px; border-radius: var(--radius-xs); border: none;
+  background: transparent; color: var(--text-sec); cursor: pointer;
+  font-size: 0.9rem; font-weight: 500; transition: all 0.2s; white-space: nowrap;
+}
+.nav-tab:hover { background: var(--surface2); color: var(--text); }
+.nav-tab.active {
+  background: var(--accent-gradient);
+  color: white; font-weight: 600;
+}
+
+/* --- Tab Content Visibility --- */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* --- Loading Skeleton --- */
+.loading .tab-content { display: none; }
+.skeleton-container { padding: 20px 0; }
+.skeleton-shimmer {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+  height: 180px;
+  margin-bottom: 16px;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+</style>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<div class="header">
+  <h1>FIFA World Cup 2026</h1>
+</div>
+
+<div class="container loading">
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('groups',this)">◫ Groups</button>
+    <button class="nav-tab" onclick="switchTab('matches',this)">📅 Matches</button>
+    <button class="nav-tab" onclick="switchTab('bracket',this)">⊞ Bracket</button>
+    <button class="nav-tab" onclick="switchTab('stats',this)">⚡ Stats</button>
+  </div>
+
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input type="text" class="search-input" placeholder="Search teams or players..." id="searchInput" oninput="handleSearch(this.value)" onfocus="handleSearch(this.value)" onblur="setTimeout(()=>document.getElementById('searchResults').classList.remove('visible'),200)">
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
+  <div id="loading-skeleton" class="skeleton-container">
+    <div class="skeleton-shimmer"></div>
+    <div class="skeleton-shimmer" style="height:120px"></div>
+    <div class="skeleton-shimmer" style="height:120px"></div>
+  </div>
+
+  <div class="tab-content active" id="tab-groups"></div>
+  <div class="tab-content" id="tab-matches"></div>
+  <div class="tab-content" id="tab-bracket"></div>
+  <div class="tab-content" id="tab-stats"></div>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<button class="theme-fab" id="themeFab" onclick="cycleTheme()" title="Theme: system" aria-label="Toggle theme">💻</button>
+
+<div id="updateBanner" style="display:none;position:fixed;bottom:60px;left:16px;right:16px;background:var(--accent,#4f46e5);color:white;padding:12px 16px;border-radius:10px;font-size:0.85rem;text-align:center;z-index:999;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3)" onclick="applyUpdate()">
+  New update available. Tap to refresh.
+</div>
+
+<script defer src="/live-api.js"></script>
+<script defer src="/app.js"></script>
+<script>
+var waitingWorker = null;
+(function() {
+  try {
+    if (!('serviceWorker' in navigator) || !navigator.serviceWorker) return;
+    function showUpdateBanner(w) {
+      waitingWorker = w;
+      var b = document.getElementById('updateBanner');
+      if (b) b.style.display = 'block';
+    }
+    navigator.serviceWorker.register('/service-worker.js').then(function(reg) {
+      if (reg.waiting) { showUpdateBanner(reg.waiting); return; }
+      reg.addEventListener('updatefound', function() {
+        var nw = reg.installing; if (!nw) return;
+        nw.addEventListener('statechange', function() {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateBanner(nw);
+        });
+      });
+      document.addEventListener('visibilitychange', function() { if (!document.hidden) reg.update(); });
+    }).catch(function() {});
+    navigator.serviceWorker.addEventListener('controllerchange', function() { window.location.reload(); });
+  } catch(e) {}
+})();
+function applyUpdate() {
+  try {
+    if (waitingWorker) { waitingWorker.postMessage('skipWaiting'); }
+    else { window.location.reload(); }
+  } catch(e) { window.location.reload(); }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "WC26 Guide",
+  "short_name": "WC26",
+  "description": "FIFA World Cup 2026 Interactive Guide",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0c1d",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
