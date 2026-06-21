@@ -1,6 +1,18 @@
 {
   "headers": [
     {
+      "source": "/api/scores",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, s-maxage=900, stale-while-revalidate=60" }
+      ]
+    },
+    {
+      "source": "/api/standings",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, s-maxage=900, stale-while-revalidate=60" }
+      ]
+    },
+    {
       "source": "/service-worker.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },

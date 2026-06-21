@@ -45,7 +45,8 @@ self.addEventListener('fetch', function(e) {
   if (e.request.method !== 'GET' || !url.protocol.startsWith('http')) return;
   if (url.origin !== self.location.origin) return;
 
-  var isNetworkFirst = NETWORK_FIRST.some(function(path) {
+  var isApiRequest = url.pathname.indexOf('/api/') === 0;
+  var isNetworkFirst = isApiRequest || NETWORK_FIRST.some(function(path) {
     return url.pathname === path || url.pathname.endsWith(path);
   });
 
