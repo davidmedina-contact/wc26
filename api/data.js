@@ -6,6 +6,26 @@ const SNAPSHOT = require('../data.json');
 const NAME_MAP = { 'USA': 'United States', 'Turkey': 'Türkiye' };
 function norm(name) { return NAME_MAP[name] || name; }
 
+async function fetchJson(url, timeoutMs) {
+  const proxyUrl = 'https://r.jina.ai/' + url.replace(/^https?:\/\//, 'http://');
+  const direct = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) })
+    .then(r => r.text())
+    .catch(() => null);
+  if (direct) {
+    try { return JSON.parse(direct); } catch (e) {}
+  }
+  const proxied = await fetch(proxyUrl, { signal: AbortSignal.timeout(timeoutMs + 5000) })
+    .then(r => r.text())
+    .catch(() => null);
+  if (!proxied) return null;
+  const start = proxied.indexOf('{');
+  const end = proxied.lastIndexOf('}');
+  if (start >= 0 && end > start) {
+    try { return JSON.parse(proxied.slice(start, end + 1)); } catch (e) {}
+  }
+  return null;
+}
+
 const TEAM_CONFED = {
   'Mexico': 'CONCACAF',
   'United States': 'CONCACAF',
@@ -193,10 +213,8 @@ function computeStats(games) {
 
 async function fetchStandings() {
   const [groupsRes, teamsRes] = await Promise.all([
-    fetch('https://worldcup26.ir/get/groups', { signal: AbortSignal.timeout(10000) })
-      .then(r => r.json()).catch(() => null),
-    fetch('https://worldcup26.ir/get/teams', { signal: AbortSignal.timeout(10000) })
-      .then(r => r.json()).catch(() => null),
+    fetchJson('http://worldcup26.ir/get/groups', 10000),
+    fetchJson('http://worldcup26.ir/get/teams', 10000),
   ]);
 
   const apiGroups = groupsRes?.groups || [];
@@ -229,7 +247,7 @@ async function fetchStandings() {
 
 module.exports = async (req, res) => {
   const [gamesResult, standings] = await Promise.all([
-    fetch('https://worldcup26.ir/get/games', { signal: AbortSignal.timeout(10000) }).then(r => r.json()).catch(() => null),
+    fetchJson('http://worldcup26.ir/get/games', 10000),
     fetchStandings(),
   ]);
   const scores = {};

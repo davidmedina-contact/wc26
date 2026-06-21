@@ -1,38 +1,41 @@
-// Serverless proxy: fetches WC match scores from TheSportsDB for yesterday/today/tomorrow
-// Returns { scores: { "Home_Away": { h, a, status } } } with 15-min CDN cache.
-
-const TSDB = 'https://www.thesportsdb.com/api/v1/json/3/eventsday.php';
+// Serverless proxy: derives finished match scores from the live games feed.
+// Returns { scores: { "Home_Away": { h, a, status } } } with CDN cache.
 
 const NAME_MAP = { 'USA': 'United States', 'Turkey': 'Türkiye' };
 function norm(name) { return NAME_MAP[name] || name; }
 
-function dateStr(offsetDays) {
-  const d = new Date();
-  d.setUTCDate(d.getUTCDate() + offsetDays);
-  return d.toISOString().slice(0, 10);
+async function fetchJson(url, timeoutMs) {
+  const proxyUrl = 'https://r.jina.ai/' + url.replace(/^https?:\/\//, 'http://');
+  const direct = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) })
+    .then(r => r.text())
+    .catch(() => null);
+  if (direct) {
+    try { return JSON.parse(direct); } catch (e) {}
+  }
+  const proxied = await fetch(proxyUrl, { signal: AbortSignal.timeout(timeoutMs + 5000) })
+    .then(r => r.text())
+    .catch(() => null);
+  if (!proxied) return null;
+  const start = proxied.indexOf('{');
+  const end = proxied.lastIndexOf('}');
+  if (start >= 0 && end > start) {
+    try { return JSON.parse(proxied.slice(start, end + 1)); } catch (e) {}
+  }
+  return null;
 }
 
 module.exports = async (req, res) => {
-  const dates = [dateStr(-1), dateStr(0), dateStr(1)];
-
-  const results = await Promise.all(
-    dates.map(d =>
-      fetch(`${TSDB}?d=${d}&s=Soccer`, { signal: AbortSignal.timeout(8000) })
-        .then(r => r.json())
-        .catch(() => null)
-    )
-  );
-
+  const gamesRes = await fetchJson('http://worldcup26.ir/get/games', 10000);
   const scores = {};
-  for (const result of results) {
-    for (const e of (result?.events || [])) {
-      if (!e.strLeague?.includes('World Cup')) continue;
-      if (!['FT', 'AET', 'PEN'].includes(e.strStatus)) continue;
-      const home = norm(e.strHomeTeam || '');
-      const away = norm(e.strAwayTeam || '');
-      if (home && away) scores[`${home}_${away}`] = {
-        h: parseInt(e.intHomeScore) || 0,
-        a: parseInt(e.intAwayScore) || 0,
+
+  for (const e of (gamesRes?.games || [])) {
+    if (String(e.finished).toUpperCase() !== 'TRUE') continue;
+    const home = norm(e.home_team_name_en || '');
+    const away = norm(e.away_team_name_en || '');
+    if (home && away) {
+      scores[`${home}_${away}`] = {
+        h: parseInt(e.home_score) || 0,
+        a: parseInt(e.away_score) || 0,
         status: 'FT',
       };
     }
