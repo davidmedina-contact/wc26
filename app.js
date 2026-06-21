@@ -4,6 +4,7 @@
 var wcData, jerseyNumbers, matchesData, scorePredictions, teamStrength,
     eloRatings, injuryIntel, actualScores, standingsData, bracketVenues,
     groupColors, modelPredictions;
+var statsData;
 
 let bracketState = {};
 var selectedMatchDate = '2026-06-11';
@@ -545,19 +546,9 @@ function resetBracket() {
 function renderStats() {
   var el = document.getElementById('tab-stats');
   var html = '';
-  
-  // Tournament overview
-  html += '<h2 style="margin-bottom:16px;font-size:1.1rem">Tournament Statistics</h2>';
-  html += '<div class="stats-grid">';
-  html += '<div class="stat-card"><div class="stat-val" style="color:var(--accent)">28</div><div class="stat-lbl">Matches Played</div></div>';
-  html += '<div class="stat-card"><div class="stat-val" style="color:#22c55e">84</div><div class="stat-lbl">Goals Scored</div></div>';
-  html += '<div class="stat-card"><div class="stat-val" style="color:#f59e0b">3.0</div><div class="stat-lbl">Goals/Match</div></div>';
-  html += '<div class="stat-card"><div class="stat-val" style="color:#ec4899">48</div><div class="stat-lbl">Teams</div></div>';
-  html += '</div>';
-  
-  // Top Scorers
-  html += '<div class="modal-section"><h3 style="color:var(--accent)">⚽ Top Scorers</h3>';
-  var scorers = [
+  var live = (typeof statsData !== 'undefined' && statsData) ? statsData : null;
+  var overview = live && live.overview ? live.overview : { matchesPlayed: 28, goalsScored: 84, goalsPerMatch: 3.0, teams: 48 };
+  var scorers = live && live.topScorers && live.topScorers.length ? live.topScorers : [
     {n:"Lionel Messi",t:"Argentina",g:3},{n:"Jonathan David",t:"Canada",g:3},
     {n:"Erling Haaland",t:"Norway",g:2},{n:"Kylian Mbappé",t:"France",g:2},
     {n:"Harry Kane",t:"England",g:2},{n:"Folarin Balogun",t:"United States",g:2},
@@ -569,6 +560,30 @@ function renderStats() {
     {n:"Omar Marmoush",t:"Egypt",g:1},{n:"Bradley Barcola",t:"France",g:1},
     {n:"Teboho Mokoena",t:"South Africa",g:1},{n:"Granit Xhaka",t:"Switzerland",g:1}
   ];
+  var groupGoals = live && live.groupGoals && live.groupGoals.length ? live.groupGoals : [{g:"A",m:4,goals:8},{g:"B",m:4,goals:15},{g:"C",m:2,goals:3},{g:"D",m:2,goals:8},{g:"E",m:2,goals:9},{g:"F",m:2,goals:10},{g:"G",m:2,goals:8},{g:"H",m:2,goals:2},{g:"I",m:2,goals:9},{g:"J",m:2,goals:7},{g:"K",m:1,goals:2},{g:"L",m:1,goals:6}];
+  var confStats = live && live.confStats && live.confStats.length ? live.confStats : [{c:"UEFA",s:36,con:17},{c:"CONMEBOL",s:6,con:7},{c:"AFC",s:13,con:23},{c:"CAF",s:7,con:17},{c:"CONCACAF",s:16,con:12},{c:"OFC",s:2,con:2}];
+  var records = live && live.records && live.records.length ? live.records : [
+    {label:'Messi hat-trick', detail:'First WC hat-trick of his career (vs Algeria). Now tied with Klose at 16 career WC goals.'},
+    {label:'David hat-trick', detail:'Jonathan David scores 3 as Canada crush Qatar 6-0 for their first-ever World Cup win.'},
+    {label:'Mbappé milestone', detail:'14 career WC goals. Third on all-time list behind Klose (16) and Messi (16).'},
+    {label:'Germany 7-1', detail:'Biggest win of the tournament so far (vs Curaçao). Havertz scored twice.'},
+    {label:'Canada 6-0', detail:'Second-biggest win (vs 9-man Qatar). David, Larin, Saliba, and an own goal.'},
+    {label:'Spain 0-0', detail:'Favorites held to a goalless draw by debutants Cape Verde.'},
+    {label:'Haaland arrives', detail:'Two goals in Norway debut (4-1 vs Iraq). First WC goals of his career.'},
+    {label:'Kane joins race', detail:'Two goals in England\'s 4-2 win over Croatia. 67 career international goals.'}
+  ];
+  
+  // Tournament overview
+  html += '<h2 style="margin-bottom:16px;font-size:1.1rem">Tournament Statistics</h2>';
+  html += '<div class="stats-grid">';
+  html += '<div class="stat-card"><div class="stat-val" style="color:var(--accent)">' + overview.matchesPlayed + '</div><div class="stat-lbl">Matches Played</div></div>';
+  html += '<div class="stat-card"><div class="stat-val" style="color:#22c55e">' + overview.goalsScored + '</div><div class="stat-lbl">Goals Scored</div></div>';
+  html += '<div class="stat-card"><div class="stat-val" style="color:#f59e0b">' + overview.goalsPerMatch.toFixed(1) + '</div><div class="stat-lbl">Goals/Match</div></div>';
+  html += '<div class="stat-card"><div class="stat-val" style="color:#ec4899">' + overview.teams + '</div><div class="stat-lbl">Teams</div></div>';
+  html += '</div>';
+  
+  // Top Scorers
+  html += '<div class="modal-section"><h3 style="color:var(--accent)">⚽ Top Scorers</h3>';
   var maxGoals = scorers[0].g;
   // Golden leader card
   var leader = scorers[0];
@@ -596,7 +611,6 @@ function renderStats() {
   // Group Goals
   html += '<div class="modal-section"><h3 style="color:var(--accent)">📊 Goals by Group</h3>';
   html += '<table class="standings-table"><thead><tr><th>Group</th><th>Matches</th><th>Goals</th><th>Avg/Match</th></tr></thead><tbody>';
-  var groupGoals = [{g:"A",m:4,goals:8},{g:"B",m:4,goals:15},{g:"C",m:2,goals:3},{g:"D",m:2,goals:8},{g:"E",m:2,goals:9},{g:"F",m:2,goals:10},{g:"G",m:2,goals:8},{g:"H",m:2,goals:2},{g:"I",m:2,goals:9},{g:"J",m:2,goals:7},{g:"K",m:1,goals:2},{g:"L",m:1,goals:6}];
   groupGoals.forEach(function(gg) {
     html += '<tr><td style="font-weight:700;color:' + (groupColors[gg.g]||'var(--accent)') + '">Group ' + gg.g + '</td><td>' + gg.m + '</td><td style="font-weight:600">' + gg.goals + '</td><td>' + (gg.goals/gg.m).toFixed(1) + '</td></tr>';
   });
@@ -605,7 +619,6 @@ function renderStats() {
   // Confederation stats
   html += '<div class="modal-section"><h3 style="color:var(--accent)">🌍 Goals by Confederation</h3>';
   html += '<table class="standings-table"><thead><tr><th>Confederation</th><th>Scored</th><th>Conceded</th><th>+/-</th></tr></thead><tbody>';
-  var confStats = [{c:"UEFA",s:36,con:17},{c:"CONMEBOL",s:6,con:7},{c:"AFC",s:13,con:23},{c:"CAF",s:7,con:17},{c:"CONCACAF",s:16,con:12},{c:"OFC",s:2,con:2}];
   confStats.forEach(function(cs) {
     var diff = cs.s - cs.con;
     html += '<tr><td style="font-weight:500">' + cs.c + '</td><td>' + cs.s + '</td><td>' + cs.con + '</td><td style="color:' + (diff>=0?'var(--green, #22c55e)':'var(--red, #ef4444)') + '">' + (diff>=0?'+':'') + diff + '</td></tr>';
@@ -615,14 +628,9 @@ function renderStats() {
   // Key records
   html += '<div class="modal-section"><h3 style="color:var(--accent)">🏅 Records & Milestones</h3>';
   html += '<table class="key-dates"><tbody>';
-  html += '<tr><td>Messi hat-trick</td><td>First WC hat-trick of his career (vs Algeria). Now tied with Klose at 16 career WC goals.</td></tr>';
-  html += '<tr><td>David hat-trick</td><td>Jonathan David scores 3 as Canada crush Qatar 6-0 for their first-ever World Cup win.</td></tr>';
-  html += '<tr><td>Mbappé milestone</td><td>14 career WC goals. Third on all-time list behind Klose (16) and Messi (16).</td></tr>';
-  html += '<tr><td>Germany 7-1</td><td>Biggest win of the tournament so far (vs Curaçao). Havertz scored twice.</td></tr>';
-  html += '<tr><td>Canada 6-0</td><td>Second-biggest win (vs 9-man Qatar). David, Larin, Saliba, and an own goal.</td></tr>';
-  html += '<tr><td>Spain 0-0</td><td>Favorites held to a goalless draw by debutants Cape Verde.</td></tr>';
-  html += '<tr><td>Haaland arrives</td><td>Two goals in Norway debut (4-1 vs Iraq). First WC goals of his career.</td></tr>';
-  html += '<tr><td>Kane joins race</td><td>Two goals in England\'s 4-2 win over Croatia. 67 career international goals.</td></tr>';
+  records.forEach(function(record) {
+    html += '<tr><td>' + esc(record.label) + '</td><td>' + esc(record.detail) + '</td></tr>';
+  });
   html += '</tbody></table></div>';
   
   el.innerHTML = html;
@@ -961,6 +969,7 @@ async function init() {
     injuryIntel = data.injuryIntel;
     actualScores = data.actualScores;
     standingsData = data.standingsData;
+    statsData = data.statsData;
     bracketVenues = data.bracketVenues;
     groupColors = data.groupColors;
     modelPredictions = data.modelPredictions;

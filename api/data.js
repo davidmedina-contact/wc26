@@ -1,45 +1,194 @@
 // Combined bootstrap payload for the client.
-// Returns the static snapshot plus live final scores and standings.
+// Returns the static snapshot plus live final scores, standings, and stats.
 
-const TSDB = 'https://www.thesportsdb.com/api/v1/json/3/eventsday.php';
 const SNAPSHOT = require('../data.json');
 
 const NAME_MAP = { 'USA': 'United States', 'Turkey': 'Türkiye' };
 function norm(name) { return NAME_MAP[name] || name; }
 
-function dateStr(offsetDays) {
-  const d = new Date();
-  d.setUTCDate(d.getUTCDate() + offsetDays);
-  return d.toISOString().slice(0, 10);
+const TEAM_CONFED = {
+  'Mexico': 'CONCACAF',
+  'United States': 'CONCACAF',
+  'Canada': 'CONCACAF',
+  'Haiti': 'CONCACAF',
+  'Panama': 'CONCACAF',
+  'Curaçao': 'CONCACAF',
+  'Brazil': 'CONMEBOL',
+  'Uruguay': 'CONMEBOL',
+  'Argentina': 'CONMEBOL',
+  'Colombia': 'CONMEBOL',
+  'Paraguay': 'CONMEBOL',
+  'Ecuador': 'CONMEBOL',
+  'Germany': 'UEFA',
+  'Netherlands': 'UEFA',
+  'Sweden': 'UEFA',
+  'Switzerland': 'UEFA',
+  'Spain': 'UEFA',
+  'France': 'UEFA',
+  'England': 'UEFA',
+  'Portugal': 'UEFA',
+  'Belgium': 'UEFA',
+  'Croatia': 'UEFA',
+  'Austria': 'UEFA',
+  'Scotland': 'UEFA',
+  'Czech Republic': 'UEFA',
+  'Türkiye': 'UEFA',
+  'Bosnia and Herzegovina': 'UEFA',
+  'Norway': 'UEFA',
+  'South Korea': 'AFC',
+  'Japan': 'AFC',
+  'Iran': 'AFC',
+  'Qatar': 'AFC',
+  'Saudi Arabia': 'AFC',
+  'Australia': 'AFC',
+  'Uzbekistan': 'AFC',
+  'Jordan': 'AFC',
+  'Iraq': 'AFC',
+  'New Zealand': 'OFC',
+  'Morocco': 'CAF',
+  'South Africa': 'CAF',
+  'Ivory Coast': 'CAF',
+  'Tunisia': 'CAF',
+  'Egypt': 'CAF',
+  'Ghana': 'CAF',
+  'Algeria': 'CAF',
+  'DR Congo': 'CAF',
+  'Senegal': 'CAF',
+  'Cape Verde': 'CAF',
+};
+
+function parseScorerTokens(raw) {
+  if (!raw || raw === 'null') return [];
+  const str = String(raw).replace(/[“”]/g, '"').trim();
+  const out = [];
+  const re = /"([^"]+)"/g;
+  let match;
+  while ((match = re.exec(str))) out.push(match[1]);
+  if (out.length > 0) return out;
+  return str
+    .replace(/^[{\[]|[}\]]$/g, '')
+    .split(',')
+    .map(s => s.replace(/^["']|["']$/g, '').trim())
+    .filter(Boolean);
 }
 
-async function fetchScores() {
-  const dates = [dateStr(-1), dateStr(0), dateStr(1)];
-  const results = await Promise.all(
-    dates.map(d =>
-      fetch(`${TSDB}?d=${d}&s=Soccer`, { signal: AbortSignal.timeout(8000) })
-        .then(r => r.json())
-        .catch(() => null)
-    )
-  );
+function scorerName(token) {
+  if (!token || /(OG)|own goal/i.test(token)) return null;
+  const name = token.replace(/\s+\d.*$/, '').trim();
+  return name || null;
+}
 
-  const scores = {};
-  for (const result of results) {
-    for (const e of (result?.events || [])) {
-      if (!e.strLeague?.includes('World Cup')) continue;
-      if (!['FT', 'AET', 'PEN'].includes(e.strStatus)) continue;
-      const home = norm(e.strHomeTeam || '');
-      const away = norm(e.strAwayTeam || '');
-      if (home && away) {
-        scores[`${home}_${away}`] = {
-          h: parseInt(e.intHomeScore) || 0,
-          a: parseInt(e.intAwayScore) || 0,
-          status: 'FT',
-        };
-      }
-    }
+function sumGoals(game) {
+  return (parseInt(game.home_score) || 0) + (parseInt(game.away_score) || 0);
+}
+
+function computeStats(games) {
+  const finishedGames = games.filter(g => String(g.finished).toUpperCase() === 'TRUE');
+  const finishedGroupGames = finishedGames.filter(g => g.type === 'group');
+
+  const scorerTotals = {};
+  const scorerTeams = {};
+  const conf = {};
+
+  function addConf(teamName, scored, conceded) {
+    const key = TEAM_CONFED[teamName];
+    if (!key) return;
+    if (!conf[key]) conf[key] = { c: key, s: 0, con: 0 };
+    conf[key].s += scored;
+    conf[key].con += conceded;
   }
-  return scores;
+
+  finishedGames.forEach(game => {
+    const home = norm(game.home_team_name_en || '');
+    const away = norm(game.away_team_name_en || '');
+    const homeScore = parseInt(game.home_score) || 0;
+    const awayScore = parseInt(game.away_score) || 0;
+
+    addConf(home, homeScore, awayScore);
+    addConf(away, awayScore, homeScore);
+
+    parseScorerTokens(game.home_scorers).forEach(token => {
+      const name = scorerName(token);
+      if (!name) return;
+      scorerTotals[name] = (scorerTotals[name] || 0) + 1;
+      scorerTeams[name] = home;
+    });
+    parseScorerTokens(game.away_scorers).forEach(token => {
+      const name = scorerName(token);
+      if (!name) return;
+      scorerTotals[name] = (scorerTotals[name] || 0) + 1;
+      scorerTeams[name] = away;
+    });
+  });
+
+  const topScorers = Object.keys(scorerTotals)
+    .map(name => ({ n: name, t: scorerTeams[name] || '', g: scorerTotals[name] }))
+    .sort((a, b) => b.g - a.g || a.n.localeCompare(b.n))
+    .slice(0, 20);
+
+  const groupTotals = {};
+  finishedGroupGames.forEach(game => {
+    const letter = game.group;
+    if (!groupTotals[letter]) groupTotals[letter] = { g: letter, m: 0, goals: 0 };
+    groupTotals[letter].m += 1;
+    groupTotals[letter].goals += sumGoals(game);
+  });
+
+  const groupGoals = Object.keys(groupTotals)
+    .sort()
+    .map(letter => groupTotals[letter]);
+
+  const biggestWin = finishedGames.reduce((best, game) => {
+    const homeScore = parseInt(game.home_score) || 0;
+    const awayScore = parseInt(game.away_score) || 0;
+    const margin = Math.abs(homeScore - awayScore);
+    if (margin <= (best?.margin || 0)) return best;
+    const winner = homeScore > awayScore ? (game.home_team_name_en || '') : (game.away_team_name_en || '');
+    const loser = homeScore > awayScore ? (game.away_team_name_en || '') : (game.home_team_name_en || '');
+    return {
+      margin,
+      label: `${winner} ${Math.max(homeScore, awayScore)}-${Math.min(homeScore, awayScore)} ${loser}`,
+    };
+  }, null);
+
+  const highestScoring = finishedGames.reduce((best, game) => {
+    const goals = sumGoals(game);
+    if (goals <= (best?.goals || 0)) return best;
+    return {
+      goals,
+      label: `${game.home_team_name_en || ''} ${game.home_score}-${game.away_score} ${game.away_team_name_en || ''}`,
+    };
+  }, null);
+
+  const confStatsOrder = ['UEFA', 'CONMEBOL', 'AFC', 'CAF', 'CONCACAF', 'OFC'];
+  const confStats = confStatsOrder.map(name => {
+    const row = conf[name] || { c: name, s: 0, con: 0 };
+    return { c: row.c, s: row.s, con: row.con };
+  });
+
+  const matchesPlayed = finishedGames.length;
+  const goalsScored = finishedGames.reduce((sum, game) => sum + sumGoals(game), 0);
+
+  const leader = topScorers[0] || { n: 'N/A', t: '', g: 0 };
+  const leaderFlag = (SNAPSHOT.teams[leader.t] && SNAPSHOT.teams[leader.t].flag) ? SNAPSHOT.teams[leader.t].flag : '';
+  const leaderTeam = leaderFlag ? `${leaderFlag} ${leader.t}` : leader.t;
+
+  return {
+    overview: {
+      matchesPlayed,
+      goalsScored,
+      goalsPerMatch: matchesPlayed ? (goalsScored / matchesPlayed) : 0,
+      teams: Object.keys(SNAPSHOT.teams || {}).length,
+    },
+    topScorers,
+    groupGoals,
+    confStats,
+    records: [
+      { label: 'Top scorer', detail: leader.t ? `${leader.n} (${leaderTeam}) leads with ${leader.g} goals.` : 'No scoring data available yet.' },
+      { label: 'Biggest win', detail: biggestWin ? biggestWin.label : 'No completed matches yet.' },
+      { label: 'Highest-scoring match', detail: highestScoring ? highestScoring.label : 'No completed matches yet.' },
+    ],
+  };
 }
 
 async function fetchStandings() {
@@ -79,11 +228,29 @@ async function fetchStandings() {
 }
 
 module.exports = async (req, res) => {
-  const [scores, standings] = await Promise.all([fetchScores(), fetchStandings()]);
+  const [gamesResult, standings] = await Promise.all([
+    fetch('https://worldcup26.ir/get/games', { signal: AbortSignal.timeout(10000) }).then(r => r.json()).catch(() => null),
+    fetchStandings(),
+  ]);
+  const scores = {};
+  const liveStats = computeStats(gamesResult?.games || []);
+  for (const e of (gamesResult?.games || [])) {
+    if (String(e.finished).toUpperCase() !== 'TRUE') continue;
+    const home = norm(e.home_team_name_en || '');
+    const away = norm(e.away_team_name_en || '');
+    if (home && away) {
+      scores[`${home}_${away}`] = {
+        h: parseInt(e.home_score) || 0,
+        a: parseInt(e.away_score) || 0,
+        status: 'FT',
+      };
+    }
+  }
   const data = JSON.parse(JSON.stringify(SNAPSHOT));
 
   data.actualScores = Object.assign({}, data.actualScores, scores);
   if (Object.keys(standings).length > 0) data.standingsData = standings;
+  data.statsData = liveStats;
 
   res.setHeader('Cache-Control', 'public, s-maxage=900, stale-while-revalidate=60');
   res.setHeader('Access-Control-Allow-Origin', '*');
