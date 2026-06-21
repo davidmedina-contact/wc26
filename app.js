@@ -56,6 +56,10 @@ function getPC(pos) {
   return 'pos-fwd';
 }
 
+function getTeamsIndex() {
+  return (typeof wcData !== 'undefined' && wcData && wcData.teams) ? wcData.teams : {};
+}
+
 function handleSearch(q) {
   var el = document.getElementById('searchResults');
   if (!q || q.length < 2) { el.classList.remove('visible'); return; }
@@ -236,7 +240,12 @@ function esc(str) {
 
 function renderGroups() {
   var el = document.getElementById('tab-groups'), html = '';
+  if (!wcData || !wcData.groups) {
+    el.innerHTML = '<div style="padding:20px;color:var(--text-muted)">Loading live data…</div>';
+    return;
+  }
   var letters = Object.keys(wcData.groups);
+  var teamsIndex = getTeamsIndex();
   letters.forEach(function(letter) {
     var group = wcData.groups[letter];
     var gc = groupColors[letter] || '#6366f1';
@@ -245,7 +254,7 @@ function renderGroups() {
       '<div class="standings-table-wrap"><table class="standings-table"><thead><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th><th></th></tr></thead><tbody>';
     var teams = standingsData[letter] || [];
     teams.forEach(function(t, i) {
-      var flag = (wcData.teams[t.t] && wcData.teams[t.t].flag) ? wcData.teams[t.t].flag + ' ' : '';
+      var flag = (teamsIndex[t.t] && teamsIndex[t.t].flag) ? teamsIndex[t.t].flag + ' ' : '';
       var posClass = '';
       if (i < 2) posClass = ' standings-pos-qualify';
       else if (i === 2) posClass = ' standings-pos-third';
@@ -547,6 +556,7 @@ function renderStats() {
   var el = document.getElementById('tab-stats');
   var html = '';
   var live = (typeof statsData !== 'undefined' && statsData) ? statsData : null;
+  var teamsIndex = getTeamsIndex();
   var overview = live && live.overview ? live.overview : { matchesPlayed: 28, goalsScored: 84, goalsPerMatch: 3.0, teams: 48 };
   var scorers = live && live.topScorers && live.topScorers.length ? live.topScorers : [
     {n:"Lionel Messi",t:"Argentina",g:3},{n:"Jonathan David",t:"Canada",g:3},
@@ -587,7 +597,7 @@ function renderStats() {
   var maxGoals = scorers[0].g;
   // Golden leader card
   var leader = scorers[0];
-  var leaderFlag = (wcData.teams[leader.t] && wcData.teams[leader.t].flag) ? wcData.teams[leader.t].flag : '';
+  var leaderFlag = (teamsIndex[leader.t] && teamsIndex[leader.t].flag) ? teamsIndex[leader.t].flag : '';
   html += '<div class="scorer-leader">';
   html += '<div class="scorer-rank">🥇</div>';
   html += '<div><div class="scorer-name">' + esc(leader.n) + '</div><div class="scorer-team">' + leaderFlag + ' ' + esc(leader.t) + '</div></div>';
@@ -597,7 +607,7 @@ function renderStats() {
   html += '<table class="scorers-table">';
   for (var si = 1; si < scorers.length; si++) {
     var s = scorers[si];
-    var flag = (wcData.teams[s.t] && wcData.teams[s.t].flag) ? wcData.teams[s.t].flag : '';
+    var flag = (teamsIndex[s.t] && teamsIndex[s.t].flag) ? teamsIndex[s.t].flag : '';
     var barW = Math.round((s.g / maxGoals) * 100);
     html += '<tr>';
     html += '<td class="st-rank">' + (si + 1) + '</td>';
