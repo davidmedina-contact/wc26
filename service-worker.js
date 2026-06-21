@@ -1,4 +1,4 @@
-var CACHE = 'wc26-v9';
+var CACHE = 'wc26-v10';
 
 // Only precache assets that rarely change
 var PRECACHE = [

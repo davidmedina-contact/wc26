@@ -1,5 +1,5 @@
 // FIFA World Cup 2026 Guide - Application Logic
-// Data is loaded asynchronously from data.json
+// Data is loaded asynchronously from the serverless bootstrap endpoint
 
 var wcData, jerseyNumbers, matchesData, scorePredictions, teamStrength,
     eloRatings, injuryIntel, actualScores, standingsData, bracketVenues,
@@ -938,8 +938,19 @@ try { var saved = localStorage.getItem('wc2026bracket'); if (saved) bracketState
 // === ASYNC INITIALIZATION ===
 async function init() {
   try {
-    var resp = await fetch('data.json');
-    var data = await resp.json();
+    var data = null;
+    try {
+      var resp = await fetch('/api/data');
+      if (resp.ok) {
+        var livePayload = await resp.json();
+        data = livePayload && livePayload.data ? livePayload.data : livePayload;
+      }
+    } catch (liveErr) {}
+    if (!data) {
+      var fallbackResp = await fetch('data.json');
+      if (!fallbackResp.ok) throw new Error('HTTP ' + fallbackResp.status);
+      data = await fallbackResp.json();
+    }
     // Assign data to globals
     wcData = { groups: data.groups, teams: data.teams };
     jerseyNumbers = data.jerseyNumbers;
@@ -990,17 +1001,12 @@ async function init() {
         else if (tab === 'bracket') renderBracket();
         else if (tab === 'stats') renderStats();
       } catch(e) { console.error('Error restoring tab:', e); }
-      // Fetch live data in background, re-render when ready
-      if (typeof liveApiInit === 'function') liveApiInit().then(function(ok) { if (ok) _liveRefreshUI(); });
       return;
     }
   }
   // Default: render groups
   renderedTabs['groups'] = true;
   try { renderGroups(); } catch(e) { console.error('renderGroups error:', e); }
-
-  // Fetch live data in background, re-render when ready
-  if (typeof liveApiInit === 'function') liveApiInit().then(function(ok) { if (ok) _liveRefreshUI(); });
 }
 
 init();
