@@ -1,0 +1,8 @@
+{
+  "name": "wc26-guide",
+  "private": true,
+  "scripts": {
+    "check": "node --check app.js && node --check service-worker.js && node --check api/data.js && node --test",
+    "test": "node --test"
+  }
+}

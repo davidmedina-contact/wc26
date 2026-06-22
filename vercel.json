@@ -1,27 +1,18 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/data.js": {
+      "maxDuration": 30
+    }
+  },
   "headers": [
     {
-      "source": "/api/cron",
+      "source": "/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "no-store" }
-      ]
-    },
-    {
-      "source": "/api/scores",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, s-maxage=1800, stale-while-revalidate=300" }
-      ]
-    },
-    {
-      "source": "/api/data",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, s-maxage=1800, stale-while-revalidate=300" }
-      ]
-    },
-    {
-      "source": "/api/standings",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, s-maxage=1800, stale-while-revalidate=300" }
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
       ]
     },
     {
@@ -46,12 +37,6 @@
     },
     {
       "source": "/app.js",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/live-api.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
       ]

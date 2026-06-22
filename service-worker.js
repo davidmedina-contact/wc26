@@ -1,4 +1,4 @@
-var CACHE = 'wc26-v12';
+var CACHE = 'wc26-v13';
 
 // Only precache assets that rarely change
 var PRECACHE = [
@@ -9,7 +9,7 @@ var PRECACHE = [
 ];
 
 // Files that change frequently: always fetch fresh, cache as offline fallback
-var NETWORK_FIRST = ['/', '/index.html', '/data.json', '/app.js', '/live-api.js', '/style.css', '/world-cup-2026-schedule.ics'];
+var NETWORK_FIRST = ['/', '/index.html', '/data.json', '/app.js', '/style.css', '/world-cup-2026-schedule.ics'];
 
 // Install: cache core shell assets only (small, fast, reliable)
 self.addEventListener('install', function(e) {
@@ -41,7 +41,7 @@ self.addEventListener('activate', function(e) {
 self.addEventListener('fetch', function(e) {
   var url = new URL(e.request.url);
 
-  // Skip non-GET requests, non-http schemes, and cross-origin requests (live API)
+  // Skip non-GET requests, non-http schemes, and cross-origin requests.
   if (e.request.method !== 'GET' || !url.protocol.startsWith('http')) return;
   if (url.origin !== self.location.origin) return;
 
@@ -54,14 +54,13 @@ self.addEventListener('fetch', function(e) {
     // Network-first: always try fresh, cache as offline fallback
     e.respondWith(
       fetch(e.request).then(function(response) {
-        if (response.ok) {
-          var clone = response.clone();
-          caches.open(CACHE).then(function(cache) { cache.put(e.request, clone); });
+        if (!response.ok) {
+          return caches.match(e.request).then(function(cached) { return cached || response; });
         }
+        var clone = response.clone();
+        caches.open(CACHE).then(function(cache) { cache.put(e.request, clone); });
         return response;
-      }).catch(function() {
-        return caches.match(e.request);
-      })
+      }).catch(function() { return caches.match(e.request); })
     );
   } else {
     // Stale-while-revalidate: serve from cache immediately, update in background
@@ -79,12 +78,5 @@ self.addEventListener('fetch', function(e) {
         });
       })
     );
-  }
-});
-
-// Listen for skipWaiting message from client (user tapped "update" banner)
-self.addEventListener('message', function(e) {
-  if (e.data === 'skipWaiting') {
-    self.skipWaiting();
   }
 });

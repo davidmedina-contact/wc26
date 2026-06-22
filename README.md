@@ -14,31 +14,50 @@ A single-page web app for following the 2026 FIFA World Cup. Installable as a PW
 
 ## Stack
 
-Plain HTML, CSS, and JavaScript — no build step, no framework, no dependencies.
+Plain HTML, CSS, and JavaScript - no build step, no framework, and no runtime dependencies.
 
 | File | Purpose |
 |---|---|
 | `index.html` | Shell, critical CSS, theme init, service worker registration |
 | `app.js` | All UI rendering and interactivity |
-| `live-api.js` | Live score / data fetching |
 | `style.css` | Full stylesheet (design tokens + components) |
 | `data.json` | Teams, squads, groups, matches, ELO ratings, predictions |
+| `api/data.js` | Serverless live-data validation, final scores, standings, and stats |
 | `manifest.json` | PWA manifest |
 | `service-worker.js` | Offline caching + background updates |
-| `vercel.json` | Cache-control headers for each asset |
+| `vercel.json` | Hobby-compatible function and cache configuration |
+
+## Data Flow
+
+The browser makes one same-origin request to `/api/data`. The Vercel Function fetches the match feed, validates completed games, and derives final scores, group standings, and tournament statistics from the same records. The browser does not contact the upstream provider or calculate live tournament data.
+
+Successful responses are cached at Vercel's CDN for 15 minutes. The service worker also retains the last successful `/api/data` response, so a temporary upstream error does not replace known finals with predictions. If there is no cached response, the bundled `data.json` snapshot remains the offline fallback.
+
+See [Operations](docs/OPERATIONS.md) for failure behavior, Vercel Hobby constraints, and the release checklist.
 
 ## Deployment
 
-Deployed on Vercel. Push to `main` to trigger a new deployment.
+Deployed on Vercel Hobby. Push to `main` to trigger a new deployment.
 
 ```bash
 vercel --prod
 ```
 
+Do not add sub-daily Vercel cron expressions on Hobby. Vercel rejects the entire deployment when a cron runs more than once per day.
+
 ## Local Development
 
-No install required. Serve the files with any static server:
+Run the dependency-free checks:
 
 ```bash
-npx serve .
+npm test
+npm run check
 ```
+
+Run the complete app and serverless function through Vercel's local runtime:
+
+```bash
+vercel dev
+```
+
+A plain static server still works for UI development, but `/api/data` will be unavailable and the app will use the bundled snapshot.

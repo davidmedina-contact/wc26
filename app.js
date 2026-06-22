@@ -6,8 +6,8 @@ var wcData, jerseyNumbers, matchesData, scorePredictions, teamStrength,
     groupColors, modelPredictions;
 var statsData;
 
-function dataCacheKey() {
-  return Date.now();
+function isValidBootstrapData(data) {
+  return Boolean(data && data.groups && data.teams && Array.isArray(data.matchesData));
 }
 
 let bracketState = {};
@@ -962,10 +962,11 @@ async function init() {
   try {
     var data = null;
     try {
-      var resp = await fetch('/api/data?cache=' + dataCacheKey());
+      var resp = await fetch('/api/data', { headers: { 'Accept': 'application/json' } });
       if (resp.ok) {
         var livePayload = await resp.json();
         data = livePayload && livePayload.data ? livePayload.data : livePayload;
+        if (!isValidBootstrapData(data)) data = null;
       }
     } catch (liveErr) {}
     if (!data) {
@@ -981,9 +982,9 @@ async function init() {
     teamStrength = data.teamStrength;
     eloRatings = data.eloRatings;
     injuryIntel = data.injuryIntel;
-    actualScores = data.actualScores;
-    standingsData = data.standingsData;
-    statsData = data.statsData;
+    actualScores = data.actualScores || {};
+    standingsData = data.standingsData || {};
+    statsData = data.statsData || null;
     bracketVenues = data.bracketVenues;
     groupColors = data.groupColors;
     modelPredictions = data.modelPredictions;

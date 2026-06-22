@@ -3,8 +3,29 @@
 
 const SNAPSHOT = require('../data.json');
 
-const NAME_MAP = { 'USA': 'United States', 'Turkey': 'Türkiye' };
-function norm(name) { return NAME_MAP[name] || name; }
+const NAME_MAP = {
+  'USA': 'United States',
+  'Turkey': 'Türkiye',
+  'Democratic Republic of the Congo': 'DR Congo',
+};
+function norm(name) { return NAME_MAP[name] || String(name || '').trim(); }
+function isKnownTeam(name) { return Boolean(SNAPSHOT.teams[norm(name)]); }
+
+function parseScore(value) {
+  if (value === null || value === undefined || String(value).trim() === '') return null;
+  const score = Number(value);
+  return Number.isInteger(score) && score >= 0 && score <= 99 ? score : null;
+}
+
+function validFinishedGames(games) {
+  return (Array.isArray(games) ? games : []).filter(game =>
+    String(game.finished).toUpperCase() === 'TRUE' &&
+    isKnownTeam(game.home_team_name_en) &&
+    isKnownTeam(game.away_team_name_en) &&
+    parseScore(game.home_score) !== null &&
+    parseScore(game.away_score) !== null
+  );
+}
 
 const SCORER_ALIASES_RAW = {
   'j quiñones': 'Julián Quiñones',
@@ -268,15 +289,15 @@ function resolveScorerToken(token, homeTeam, awayTeam) {
       if (!globalBest || score > globalBest.score) globalBest = { name: player.n, team: teamName, score };
     });
   });
-  return globalBest && globalBest.score >= 48 ? globalBest : { name: cleaned, team: homeTeam || awayTeam || '', score: 0 };
+  return globalBest && globalBest.score >= 48 ? globalBest : null;
 }
 
 function sumGoals(game) {
-  return (parseInt(game.home_score) || 0) + (parseInt(game.away_score) || 0);
+  return parseScore(game.home_score) + parseScore(game.away_score);
 }
 
 function computeStats(games) {
-  const finishedGames = games.filter(g => String(g.finished).toUpperCase() === 'TRUE');
+  const finishedGames = validFinishedGames(games);
   const finishedGroupGames = finishedGames.filter(g => g.type === 'group');
 
   const scorerTotals = {};
@@ -294,8 +315,8 @@ function computeStats(games) {
   finishedGames.forEach(game => {
     const home = norm(game.home_team_name_en || '');
     const away = norm(game.away_team_name_en || '');
-    const homeScore = parseInt(game.home_score) || 0;
-    const awayScore = parseInt(game.away_score) || 0;
+    const homeScore = parseScore(game.home_score);
+    const awayScore = parseScore(game.away_score);
 
     addConf(home, homeScore, awayScore);
     addConf(away, awayScore, homeScore);
@@ -332,8 +353,8 @@ function computeStats(games) {
     .map(letter => groupTotals[letter]);
 
   const biggestWin = finishedGames.reduce((best, game) => {
-    const homeScore = parseInt(game.home_score) || 0;
-    const awayScore = parseInt(game.away_score) || 0;
+    const homeScore = parseScore(game.home_score);
+    const awayScore = parseScore(game.away_score);
     const margin = Math.abs(homeScore - awayScore);
     if (margin <= (best?.margin || 0)) return best;
     const winner = homeScore > awayScore ? (game.home_team_name_en || '') : (game.away_team_name_en || '');
@@ -384,66 +405,169 @@ function computeStats(games) {
   };
 }
 
-async function fetchStandings() {
-  const [groupsRes, teamsRes] = await Promise.all([
-    fetchJson('https://worldcup26.ir/get/groups', 20000),
-    fetchJson('https://worldcup26.ir/get/teams', 20000),
-  ]);
-
-  const apiGroups = groupsRes?.groups || [];
-  const apiTeams = teamsRes?.teams || [];
-  if (!apiGroups.length || !apiTeams.length) return {};
-
-  const teamById = {};
-  apiTeams.forEach(t => { teamById[t.id] = norm(t.name_en); });
-
+function computeStandings(games) {
   const standings = {};
-  apiGroups.forEach(group => {
-    const letter = group.name;
-    const teams = (group.teams || []).map(t => ({
-      t: teamById[t.team_id] || ('Team ' + t.team_id),
-      p: parseInt(t.mp) || 0,
-      w: parseInt(t.w) || 0,
-      d: parseInt(t.d) || 0,
-      l: parseInt(t.l) || 0,
-      gf: parseInt(t.gf) || 0,
-      ga: parseInt(t.ga) || 0,
-      gd: parseInt(t.gd) || 0,
-      pts: parseInt(t.pts) || 0,
+  Object.keys(SNAPSHOT.groups || {}).forEach(letter => {
+    standings[letter] = SNAPSHOT.groups[letter].teams.map(team => ({
+      t: team, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0,
     }));
-    teams.sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
-    standings[letter] = teams;
   });
 
+  validFinishedGames(games).filter(game => game.type === 'group').forEach(game => {
+    const group = standings[game.group];
+    if (!group) return;
+    const home = group.find(row => row.t === norm(game.home_team_name_en));
+    const away = group.find(row => row.t === norm(game.away_team_name_en));
+    if (!home || !away) return;
+    const homeScore = parseScore(game.home_score);
+    const awayScore = parseScore(game.away_score);
+    home.p += 1; away.p += 1;
+    home.gf += homeScore; home.ga += awayScore;
+    away.gf += awayScore; away.ga += homeScore;
+    if (homeScore > awayScore) {
+      home.w += 1; home.pts += 3; away.l += 1;
+    } else if (awayScore > homeScore) {
+      away.w += 1; away.pts += 3; home.l += 1;
+    } else {
+      home.d += 1; away.d += 1; home.pts += 1; away.pts += 1;
+    }
+  });
+
+  Object.values(standings).forEach(group => {
+    group.forEach(row => { row.gd = row.gf - row.ga; });
+    group.sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.t.localeCompare(b.t));
+  });
   return standings;
 }
 
-module.exports = async (req, res) => {
-  const [gamesResult, standings] = await Promise.all([
-    fetchJson('https://worldcup26.ir/get/games', 20000),
-    fetchStandings(),
-  ]);
-  const scores = {};
-  const liveStats = computeStats(gamesResult?.games || []);
-  for (const e of (gamesResult?.games || [])) {
-    if (String(e.finished).toUpperCase() !== 'TRUE') continue;
-    const home = norm(e.home_team_name_en || '');
-    const away = norm(e.away_team_name_en || '');
-    if (home && away) {
-      scores[`${home}_${away}`] = {
-        h: parseInt(e.home_score) || 0,
-        a: parseInt(e.away_score) || 0,
-        status: 'FT',
-      };
+function readOfficialStandings(groupsResult, games) {
+  const apiGroups = groupsResult?.groups;
+  if (!Array.isArray(apiGroups)) return null;
+
+  const teamById = {};
+  (Array.isArray(games) ? games : []).forEach(game => {
+    if (game.home_team_id && isKnownTeam(game.home_team_name_en)) {
+      teamById[game.home_team_id] = norm(game.home_team_name_en);
     }
+    if (game.away_team_id && isKnownTeam(game.away_team_name_en)) {
+      teamById[game.away_team_id] = norm(game.away_team_name_en);
+    }
+  });
+
+  const standings = {};
+  for (const group of apiGroups) {
+    if (!SNAPSHOT.groups[group.name] || !Array.isArray(group.teams) || group.teams.length !== 4) continue;
+    const rows = group.teams.map(item => {
+      const row = {
+        t: teamById[item.team_id],
+        p: Number(item.mp),
+        w: Number(item.w),
+        d: Number(item.d),
+        l: Number(item.l),
+        gf: Number(item.gf),
+        ga: Number(item.ga),
+        gd: Number(item.gd),
+        pts: Number(item.pts),
+      };
+      const numbers = [row.p, row.w, row.d, row.l, row.gf, row.ga, row.gd, row.pts];
+      const nonNegative = [row.p, row.w, row.d, row.l, row.gf, row.ga, row.pts];
+      const valid = isKnownTeam(row.t) && numbers.every(Number.isInteger) &&
+        nonNegative.every(value => value >= 0) &&
+        row.p === row.w + row.d + row.l && row.gd === row.gf - row.ga && row.pts === (row.w * 3) + row.d;
+      return valid ? row : null;
+    });
+    if (rows.every(Boolean) && new Set(rows.map(row => row.t)).size === 4) standings[group.name] = rows;
   }
+
+  if (Object.keys(standings).length !== Object.keys(SNAPSHOT.groups).length) return null;
+  const expectedAppearances = validFinishedGames(games).filter(game => game.type === 'group').length * 2;
+  const actualAppearances = Object.values(standings).flat().reduce((sum, row) => sum + row.p, 0);
+  return actualAppearances === expectedAppearances ? standings : null;
+}
+
+function expectedFinishedKeys(now) {
+  const cutoff = Number(now || Date.now());
+  return (SNAPSHOT.matchesData || [])
+    .filter(match => !match.stage && isKnownTeam(match.h) && isKnownTeam(match.a))
+    .filter(match => Date.parse(`${match.d}T${match.t}:00-04:00`) + (4 * 60 * 60 * 1000) <= cutoff)
+    .map(match => `${match.h}_${match.a}`);
+}
+
+function buildData(games, now, groupsResult) {
+  const finishedGames = validFinishedGames(games);
+  const scores = {};
+  finishedGames.forEach(game => {
+    const home = norm(game.home_team_name_en);
+    const away = norm(game.away_team_name_en);
+    scores[`${home}_${away}`] = {
+      h: parseScore(game.home_score),
+      a: parseScore(game.away_score),
+      status: 'FT',
+    };
+  });
+
   const data = JSON.parse(JSON.stringify(SNAPSHOT));
-
   data.actualScores = Object.assign({}, data.actualScores, scores);
-  if (Object.keys(standings).length > 0) data.standingsData = standings;
-  if (gamesResult?.games?.length) data.statsData = liveStats;
+  const officialStandings = readOfficialStandings(groupsResult, games);
+  data.standingsData = officialStandings || computeStandings(games);
+  data.statsData = computeStats(games);
 
-  res.setHeader('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=300');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.json({ data, updatedAt: new Date().toISOString() });
+  const missingFinals = expectedFinishedKeys(now).filter(key => !data.actualScores[key]);
+  return {
+    data,
+    finishedMatches: finishedGames.length,
+    missingFinals,
+    standingsSource: officialStandings ? 'official-feed' : 'computed-fallback',
+  };
+}
+
+module.exports = async (req, res) => {
+  if (req.method && req.method !== 'GET') {
+    res.statusCode = 405;
+    res.setHeader('Allow', 'GET');
+    return res.json({ error: 'Method not allowed' });
+  }
+
+  const [gamesResult, groupsResult] = await Promise.all([
+    fetchJson('https://worldcup26.ir/get/games', 20000),
+    fetchJson('https://worldcup26.ir/get/groups', 12000),
+  ]);
+  const games = gamesResult?.games;
+  const hasRecognizedGames = Array.isArray(games) && games.some(game =>
+    isKnownTeam(game.home_team_name_en) && isKnownTeam(game.away_team_name_en)
+  );
+  if (!hasRecognizedGames) {
+    res.statusCode = 502;
+    res.setHeader('Cache-Control', 'no-store');
+    return res.json({ error: 'Live match data is temporarily unavailable' });
+  }
+
+  const result = buildData(games, Date.now(), groupsResult);
+  if (result.missingFinals.length > 0) {
+    res.statusCode = 502;
+    res.setHeader('Cache-Control', 'no-store');
+    return res.json({ error: 'Live match data is incomplete', missingFinals: result.missingFinals });
+  }
+
+  res.statusCode = 200;
+  res.setHeader('Cache-Control', 'public, s-maxage=900, stale-while-revalidate=60');
+  res.json({
+    data: result.data,
+    updatedAt: new Date().toISOString(),
+    meta: {
+      source: 'worldcup26.ir',
+      finishedMatches: result.finishedMatches,
+      standingsSource: result.standingsSource,
+    },
+  });
+};
+
+module.exports._test = {
+  buildData,
+  computeStandings,
+  computeStats,
+  expectedFinishedKeys,
+  parseScore,
+  readOfficialStandings,
+  validFinishedGames,
 };
