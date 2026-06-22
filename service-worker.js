@@ -1,4 +1,4 @@
-var CACHE = 'wc26-v11';
+var CACHE = 'wc26-v12';
 
 // Only precache assets that rarely change
 var PRECACHE = [
@@ -9,7 +9,7 @@ var PRECACHE = [
 ];
 
 // Files that change frequently: always fetch fresh, cache as offline fallback
-var NETWORK_FIRST = ['/data.json', '/app.js', '/live-api.js', '/style.css', '/world-cup-2026-schedule.ics'];
+var NETWORK_FIRST = ['/', '/index.html', '/data.json', '/app.js', '/live-api.js', '/style.css', '/world-cup-2026-schedule.ics'];
 
 // Install: cache core shell assets only (small, fast, reliable)
 self.addEventListener('install', function(e) {
