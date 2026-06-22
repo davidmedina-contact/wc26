@@ -1,21 +1,27 @@
 {
   "headers": [
     {
+      "source": "/api/cron",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    },
+    {
       "source": "/api/scores",
       "headers": [
-        { "key": "Cache-Control", "value": "public, s-maxage=900, stale-while-revalidate=60" }
+        { "key": "Cache-Control", "value": "public, s-maxage=1800, stale-while-revalidate=300" }
       ]
     },
     {
       "source": "/api/data",
       "headers": [
-        { "key": "Cache-Control", "value": "public, s-maxage=900, stale-while-revalidate=60" }
+        { "key": "Cache-Control", "value": "public, s-maxage=1800, stale-while-revalidate=300" }
       ]
     },
     {
       "source": "/api/standings",
       "headers": [
-        { "key": "Cache-Control", "value": "public, s-maxage=900, stale-while-revalidate=60" }
+        { "key": "Cache-Control", "value": "public, s-maxage=1800, stale-while-revalidate=300" }
       ]
     },
     {
@@ -80,6 +86,12 @@
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=3600" }
       ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "*/30 * * * *"
     }
   ]
 }

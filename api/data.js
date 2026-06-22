@@ -270,7 +270,7 @@ module.exports = async (req, res) => {
   if (Object.keys(standings).length > 0) data.standingsData = standings;
   data.statsData = liveStats;
 
-  res.setHeader('Cache-Control', 'public, s-maxage=900, stale-while-revalidate=60');
+  res.setHeader('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=300');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.json({ data, updatedAt: new Date().toISOString() });
 };

@@ -41,7 +41,7 @@ module.exports = async (req, res) => {
     }
   }
 
-  res.setHeader('Cache-Control', 'public, s-maxage=900, stale-while-revalidate=60');
+  res.setHeader('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=300');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.json({ scores, updatedAt: new Date().toISOString() });
 };
