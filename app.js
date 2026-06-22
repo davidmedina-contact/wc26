@@ -7,7 +7,7 @@ var wcData, jerseyNumbers, matchesData, scorePredictions, teamStrength,
 var statsData;
 
 function dataCacheKey() {
-  return Math.floor(Date.now() / (5 * 60 * 1000));
+  return Date.now();
 }
 
 let bracketState = {};
