@@ -6,28 +6,27 @@ function norm(name) { return NAME_MAP[name] || name; }
 
 async function fetchJson(url, timeoutMs) {
   const proxyUrl = 'https://r.jina.ai/' + url.replace(/^https?:\/\//, 'http://');
-  const direct = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) })
-    .then(r => r.text())
-    .catch(() => null);
-  if (direct) {
-    try { return JSON.parse(direct); } catch (e) {}
+  async function request(candidate, timeout) {
+    const response = await fetch(candidate, { signal: AbortSignal.timeout(timeout) });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const body = await response.text();
+    try { return JSON.parse(body); } catch (e) {
+      const start = body.indexOf('{');
+      const end = body.lastIndexOf('}');
+      if (start >= 0 && end > start) return JSON.parse(body.slice(start, end + 1));
+      throw e;
+    }
   }
-  const proxied = await fetch(proxyUrl, { signal: AbortSignal.timeout(timeoutMs + 5000) })
-    .then(r => r.text())
-    .catch(() => null);
-  if (!proxied) return null;
-  const start = proxied.indexOf('{');
-  const end = proxied.lastIndexOf('}');
-  if (start >= 0 && end > start) {
-    try { return JSON.parse(proxied.slice(start, end + 1)); } catch (e) {}
-  }
-  return null;
+  return Promise.any([
+    request(url, timeoutMs),
+    request(proxyUrl, timeoutMs + 5000),
+  ]).catch(() => null);
 }
 
 module.exports = async (req, res) => {
   const [groupsRes, teamsRes] = await Promise.all([
-    fetchJson('http://worldcup26.ir/get/groups', 10000),
-    fetchJson('http://worldcup26.ir/get/teams', 10000),
+    fetchJson('https://worldcup26.ir/get/groups', 20000),
+    fetchJson('https://worldcup26.ir/get/teams', 20000),
   ]);
 
   const apiGroups = groupsRes?.groups || [];
