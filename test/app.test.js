@@ -89,6 +89,16 @@ test('post-match completeness guard detects missing finals', () => {
   assert.ok(result.missingFinals.includes('New Zealand_Egypt'));
 });
 
+test('bundled snapshot covers every final through June 21', () => {
+  const snapshot = require('../data.json');
+  const afterJune21 = Date.parse('2026-06-22T14:00:00Z');
+  const expected = expectedFinishedKeys(afterJune21);
+  assert.equal(expected.length, 40);
+  expected.forEach(key => assert.equal(snapshot.actualScores[key]?.status, 'FT', key));
+  assert.equal(snapshot.statsData.overview.matchesPlayed, 40);
+  assert.equal(snapshot.statsData.overview.goalsScored, 121);
+});
+
 test('client uses one stable same-origin data endpoint', () => {
   const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   assert.match(app, /fetch\('\/api\/data'/);
@@ -105,7 +115,7 @@ test('service worker keeps a last-known-good API response', () => {
 test('Vercel config stays within legacy and current Hobby limits', () => {
   const config = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
   assert.equal(config.crons, undefined);
-  assert.equal(config.functions['api/data.js'].maxDuration, 30);
+  assert.equal(config.functions['api/data.js'].maxDuration, 45);
   assert.ok(config.functions['api/data.js'].maxDuration <= 60);
 });
 

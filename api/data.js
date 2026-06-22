@@ -122,8 +122,8 @@ function levenshtein(a, b) {
   return prev[n];
 }
 
-async function fetchJson(url, timeoutMs) {
-  const proxyUrl = 'https://r.jina.ai/' + url.replace(/^https?:\/\//, 'http://');
+async function fetchJson(url, timeoutMs, attempts) {
+  attempts = attempts || 1;
   async function request(candidate, timeout) {
     const response = await fetch(candidate, { signal: AbortSignal.timeout(timeout) });
     if (!response.ok) throw new Error('HTTP ' + response.status);
@@ -135,10 +135,17 @@ async function fetchJson(url, timeoutMs) {
       throw e;
     }
   }
-  return Promise.any([
-    request(url, timeoutMs),
-    request(proxyUrl, timeoutMs + 5000),
-  ]).catch(() => null);
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const separator = url.includes('?') ? '&' : '?';
+    const candidate = attempt ? `${url}${separator}retry=${Date.now()}` : url;
+    const proxyUrl = 'https://r.jina.ai/' + candidate.replace(/^https?:\/\//, 'http://');
+    const result = await Promise.any([
+      request(candidate, timeoutMs),
+      request(proxyUrl, timeoutMs + 5000),
+    ]).catch(() => null);
+    if (result) return result;
+  }
+  return null;
 }
 
 const TEAM_CONFED = {
@@ -512,7 +519,7 @@ function buildData(games, now, groupsResult) {
   data.standingsData = officialStandings || computeStandings(games);
   data.statsData = computeStats(games);
 
-  const missingFinals = expectedFinishedKeys(now).filter(key => !data.actualScores[key]);
+  const missingFinals = expectedFinishedKeys(now).filter(key => !scores[key]);
   return {
     data,
     finishedMatches: finishedGames.length,
@@ -528,10 +535,7 @@ module.exports = async (req, res) => {
     return res.json({ error: 'Method not allowed' });
   }
 
-  const [gamesResult, groupsResult] = await Promise.all([
-    fetchJson('https://worldcup26.ir/get/games', 20000),
-    fetchJson('https://worldcup26.ir/get/groups', 12000),
-  ]);
+  const gamesResult = await fetchJson('https://worldcup26.ir/get/games', 15000, 2);
   const games = gamesResult?.games;
   const hasRecognizedGames = Array.isArray(games) && games.some(game =>
     isKnownTeam(game.home_team_name_en) && isKnownTeam(game.away_team_name_en)
@@ -542,6 +546,9 @@ module.exports = async (req, res) => {
     return res.json({ error: 'Live match data is temporarily unavailable' });
   }
 
+  // The ordered table is optional. Scores and stats never wait on it before the
+  // critical games feed has succeeded.
+  const groupsResult = await fetchJson('https://worldcup26.ir/get/groups', 5000, 1);
   const result = buildData(games, Date.now(), groupsResult);
   if (result.missingFinals.length > 0) {
     res.statusCode = 502;

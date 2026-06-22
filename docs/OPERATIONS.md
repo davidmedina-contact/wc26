@@ -28,7 +28,7 @@ There is deliberately no sub-daily Vercel Cron Job. As of June 2026, Hobby cron 
 ## Vercel Hobby Compatibility
 
 - One Node.js Function: `api/data.js`.
-- Function `maxDuration` is 30 seconds. This is below the 60-second legacy Hobby maximum and the 300-second Fluid Compute Hobby maximum.
+- Function `maxDuration` is 45 seconds. This is below the 60-second legacy Hobby maximum and the 300-second Fluid Compute Hobby maximum.
 - No database, durable queue, paid scheduler, or Edge Config is required.
 - No cron configuration is present.
 - Function responses are well below Vercel's 4.5 MB response limit.
