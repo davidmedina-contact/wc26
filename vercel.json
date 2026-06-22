@@ -90,7 +90,7 @@
   ],
   "crons": [
     {
-      "path": "/api/cron",
+      "path": "/api/refresh",
       "schedule": "*/30 * * * *"
     }
   ]
