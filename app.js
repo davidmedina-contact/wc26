@@ -6,6 +6,10 @@ var wcData, jerseyNumbers, matchesData, scorePredictions, teamStrength,
     groupColors, modelPredictions;
 var statsData;
 
+function dataCacheKey() {
+  return Math.floor(Date.now() / (5 * 60 * 1000));
+}
+
 let bracketState = {};
 var selectedMatchDate = '2026-06-11';
 
@@ -958,7 +962,7 @@ async function init() {
   try {
     var data = null;
     try {
-      var resp = await fetch('/api/data');
+      var resp = await fetch('/api/data?cache=' + dataCacheKey());
       if (resp.ok) {
         var livePayload = await resp.json();
         data = livePayload && livePayload.data ? livePayload.data : livePayload;
