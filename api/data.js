@@ -2,6 +2,7 @@
 // Returns the static snapshot plus live final scores, standings, and stats.
 
 const SNAPSHOT = require('../data.json');
+const SCORER_OVERRIDES = require('../data/scorer-overrides.json');
 
 const NAME_MAP = {
   'USA': 'United States',
@@ -87,6 +88,15 @@ const SCORER_ALIASES_RAW = {
   'ashmaail saibari': 'Ismael Saibari',
   'nvnv mndz': 'Nuno Mendes',
   'abdalvhid namtvf': 'Abduvohid Nematov',
+  'armin mhmich': 'Ermin Mahmić',
+  'mikhal sadilk': 'Michal Sadílek',
+  'daichi kamada': 'Kamada Daichi',
+  'junya itō': 'Ito Junya',
+  'fin svrman': 'Finn Surman',
+  'hassan mohamed altmbkti': 'Hassan Tambakti',
+  'hliv varla': 'Hélio Varela',
+  'markvs hlmgrn pdrsn': 'Marcus Holmgren Pedersen',
+  'nzir bnbvali': 'Nadhir Benbouali',
 };
 
 function compactName(name) {
@@ -216,10 +226,34 @@ function parseScorerTokens(raw) {
     .filter(Boolean);
 }
 
+function matchKey(game) {
+  return `${norm(game.home_team_name_en)}_${norm(game.away_team_name_en)}`;
+}
+
+function scorerTokensFor(game, side) {
+  const override = SCORER_OVERRIDES[matchKey(game)];
+  if (override && Array.isArray(override[side])) return override[side];
+  return parseScorerTokens(side === 'home' ? game.home_scorers : game.away_scorers);
+}
+
+function isOwnGoalToken(token) {
+  return /\(\s*OG\s*\)|\bown goal\b/i.test(String(token || ''));
+}
+
 function scorerName(token) {
-  if (!token || /(OG)|own goal/i.test(token)) return null;
-  const name = token.replace(/\s+\d.*$/, '').trim();
+  if (!token) return null;
+  const name = token
+    .replace(/\(\s*OG\s*\)|\bown goal\b/ig, '')
+    .replace(/\s+\d.*$/, '')
+    .trim();
   return name || null;
+}
+
+function scorerMinute(token) {
+  const stoppageAfterQuote = String(token || '').match(/(\d+)['′]\+(\d+)['′]?/);
+  if (stoppageAfterQuote) return `${stoppageAfterQuote[1]}+${stoppageAfterQuote[2]}'`;
+  const match = String(token || '').match(/(\d+(?:\+\d+)?['′])/);
+  return match ? match[1].replace('′', "'") : '';
 }
 
 function parseSurname(token) {
@@ -305,6 +339,27 @@ function sumGoals(game) {
   return parseScore(game.home_score) + parseScore(game.away_score);
 }
 
+function formatScorerToken(token, scoringTeam, opponentTeam) {
+  const resolved = resolveScorerToken(token, scoringTeam, opponentTeam);
+  if (!resolved || !resolved.name) return null;
+  const minute = scorerMinute(token);
+  const ogMatch = isOwnGoalToken(token) || (resolved.team && resolved.team !== scoringTeam);
+  const surname = resolved.name.split(' ').slice(-1)[0];
+  return surname + (minute ? ' ' + minute : '') + (ogMatch ? ' (OG)' : '');
+}
+
+function scorerCompletenessIssues(games, scores) {
+  return validFinishedGames(games).reduce((issues, game) => {
+    const key = matchKey(game);
+    const score = scores[key];
+    if (!score) return issues;
+    const expected = (parseScore(game.home_score) || 0) + (parseScore(game.away_score) || 0);
+    const actual = (Array.isArray(score.hs) ? score.hs.length : 0) + (Array.isArray(score.as) ? score.as.length : 0);
+    if (expected !== actual) issues.push({ match: key, expected, actual });
+    return issues;
+  }, []);
+}
+
 function computeStats(games) {
   const finishedGames = validFinishedGames(games);
   const finishedGroupGames = finishedGames.filter(g => g.type === 'group');
@@ -338,10 +393,10 @@ function computeStats(games) {
     addConf(home, homeScore, awayScore);
     addConf(away, awayScore, homeScore);
 
-    parseScorerTokens(game.home_scorers).forEach(token => {
+    scorerTokensFor(game, 'home').forEach(token => {
       addScorer(token, home, away);
     });
-    parseScorerTokens(game.away_scorers).forEach(token => {
+    scorerTokensFor(game, 'away').forEach(token => {
       addScorer(token, away, home);
     });
   });
@@ -563,28 +618,11 @@ function buildData(games, now, groupsResult) {
     const home = norm(game.home_team_name_en);
     const away = norm(game.away_team_name_en);
     // Parse scorer tokens into clean display strings (e.g. "Quiñones 9'")
-    const homeScorers = parseScorerTokens(game.home_scorers)
-      .map(token => {
-        const resolved = resolveScorerToken(token, home, away);
-        if (!resolved || !resolved.name) return null;
-        // Extract minute from original token
-        const minMatch = token.match(/(\d+['′](?:\+\d+['′])?)/);
-        const minute = minMatch ? minMatch[1] : '';
-        const ogMatch = /\(OG\)|own goal/i.test(token) || (resolved.team && resolved.team !== home);
-        const surname = resolved.name.split(' ').slice(-1)[0];
-        return surname + (minute ? ' ' + minute : '') + (ogMatch ? ' (OG)' : '');
-      })
+    const homeScorers = scorerTokensFor(game, 'home')
+      .map(token => formatScorerToken(token, home, away))
       .filter(Boolean);
-    const awayScorers = parseScorerTokens(game.away_scorers)
-      .map(token => {
-        const resolved = resolveScorerToken(token, home, away);
-        if (!resolved || !resolved.name) return null;
-        const minMatch = token.match(/(\d+['′](?:\+\d+['′])?)/);
-        const minute = minMatch ? minMatch[1] : '';
-        const ogMatch = /\(OG\)|own goal/i.test(token) || (resolved.team && resolved.team !== away);
-        const surname = resolved.name.split(' ').slice(-1)[0];
-        return surname + (minute ? ' ' + minute : '') + (ogMatch ? ' (OG)' : '');
-      })
+    const awayScorers = scorerTokensFor(game, 'away')
+      .map(token => formatScorerToken(token, away, home))
       .filter(Boolean);
     scores[`${home}_${away}`] = {
       h: parseScore(game.home_score),
@@ -601,11 +639,13 @@ function buildData(games, now, groupsResult) {
   data.standingsData = officialStandings || computeStandings(games);
   data.statsData = computeStats(games);
 
+  const scorerIssues = scorerCompletenessIssues(finishedGames, scores);
   const missingFinals = expectedFinishedKeys(now).filter(key => !scores[key]);
   return {
     data,
     finishedMatches: finishedGames.length,
     missingFinals,
+    scorerIssues,
     standingsSource: officialStandings ? 'official-feed' : 'computed-fallback',
   };
 }
@@ -646,6 +686,8 @@ module.exports = async (req, res) => {
     meta: {
       source: 'worldcup26.ir',
       finishedMatches: result.finishedMatches,
+      scorerCompleteness: result.scorerIssues.length === 0 ? 'verified' : 'needs-review',
+      scorerIssueCount: result.scorerIssues.length,
       standingsSource: result.standingsSource,
     },
   });
@@ -658,6 +700,7 @@ module.exports._test = {
   expectedFinishedKeys,
   parseScore,
   readOfficialStandings,
+  scorerCompletenessIssues,
   sortGroupStandings,
   validFinishedGames,
 };

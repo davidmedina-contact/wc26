@@ -9,6 +9,7 @@ const {
   computeStandings,
   expectedFinishedKeys,
   parseScore,
+  scorerCompletenessIssues,
   sortGroupStandings,
   validFinishedGames,
 } = handler._test;
@@ -131,6 +132,132 @@ test('scorer aliases preserve every goal event on match cards', () => {
     "Leão 87'",
   ]);
   assert.equal(result.data.statsData.topScorers.some(row => row.n === 'Abduvohid Nematov'), false);
+});
+
+test('reviewed finished matches have complete scorer labels', () => {
+  const reviewedGames = [
+    game({
+      group: 'D',
+      home_team_name_en: 'United States',
+      away_team_name_en: 'Paraguay',
+      home_score: '4',
+      away_score: '1',
+      home_scorers: "{\"D. Bobadilla 7'(OG)\",\"F. Balogun 31'\",\"F. Balogun 45'+5'\",\"G. Reyna 90'+8'\"}",
+      away_scorers: "{\"Maurício 73'\"}",
+    }),
+    game({
+      group: 'F',
+      home_team_name_en: 'Netherlands',
+      away_team_name_en: 'Japan',
+      home_score: '2',
+      away_score: '2',
+      home_scorers: "{\"Virgil van Dijk 51'\",\"C. Summerville 64'\"}",
+      away_scorers: "{\"K. Nakamura 57'\",\"K. Ogawa 89'\"}",
+    }),
+    game({
+      group: 'J',
+      home_team_name_en: 'Austria',
+      away_team_name_en: 'Jordan',
+      home_score: '3',
+      away_score: '1',
+      home_scorers: "{\"Rvmanv Ashmid 21'\",\"Izn Alarb 76'\"}",
+      away_scorers: "{\"Ali Avlvan 50'\"}",
+    }),
+    game({
+      group: 'B',
+      home_team_name_en: 'Switzerland',
+      away_team_name_en: 'Bosnia and Herzegovina',
+      home_score: '4',
+      away_score: '1',
+      home_scorers: "{\"Jvhan Mnzambi 74'\",\"Rvbn Vargas 84'\",\"Jvhan Mnzambi 90'\"}",
+      away_scorers: "{\"Armin Mhmich 90+3'\"}",
+    }),
+    game({
+      group: 'A',
+      home_team_name_en: 'Czech Republic',
+      away_team_name_en: 'South Africa',
+      home_score: '1',
+      away_score: '1',
+      home_scorers: "{\"‫mikhal Sadilk 6'\"}",
+      away_scorers: 'null',
+    }),
+    game({
+      group: 'F',
+      home_team_name_en: 'Tunisia',
+      away_team_name_en: 'Japan',
+      home_score: '0',
+      away_score: '4',
+      home_scorers: 'null',
+      away_scorers: "{\"Daichi Kamada 4'\",\"Aiash Ivida 31'\",\"Junya Itō 69'\",\"Aiash Ivida 83'\"}",
+    }),
+    game({
+      group: 'G',
+      home_team_name_en: 'New Zealand',
+      away_team_name_en: 'Egypt',
+      home_score: '1',
+      away_score: '3',
+      home_scorers: "{\"Fin Svrman 15'\"}",
+      away_scorers: "{\"Mostafa Ziko 58'\",\"Mohamed Salah 67'\",\"Mahmoud Hassan Trezeguet 82'\"}",
+    }),
+    game({
+      group: 'H',
+      home_team_name_en: 'Spain',
+      away_team_name_en: 'Saudi Arabia',
+      home_score: '4',
+      away_score: '0',
+      home_scorers: "{\"Lamine Yamal 10'\",\"Mikel Oyarzabal 21'\",\"Mikel Oyarzabal 24'\",\"Hassan Mohamed Altmbkti 49'\"}",
+      away_scorers: 'null',
+    }),
+    game({
+      group: 'H',
+      home_team_name_en: 'Uruguay',
+      away_team_name_en: 'Cape Verde',
+      home_score: '2',
+      away_score: '2',
+      home_scorers: "{\"Maximiliano Araújo 44'\",\"Agustín Canobbio 45+6'\"}",
+      away_scorers: "{\"Kevin Pina 21'\",\"Hliv Varla 61'\"}",
+    }),
+    game({
+      group: 'I',
+      home_team_name_en: 'Norway',
+      away_team_name_en: 'Senegal',
+      home_score: '3',
+      away_score: '2',
+      home_scorers: "{\"Markvs Hlmgrn Pdrsn 43'\",\"Erling Haaland 48'\",\"Erling Haaland 58'\"}",
+      away_scorers: "{\"Ismaïla Sarr 53'\",\"Ismaïla Sarr 90+3'\"}",
+    }),
+    game({
+      group: 'J',
+      home_team_name_en: 'Jordan',
+      away_team_name_en: 'Algeria',
+      home_score: '1',
+      away_score: '2',
+      home_scorers: "{\"Al Rashdan 36'\"}",
+      away_scorers: "{\"Nzir Bnbvali 69'\",\"Amine Gouiri 82'\"}",
+    }),
+  ];
+
+  const result = buildData(reviewedGames);
+  assert.deepEqual(result.scorerIssues, []);
+  assert.deepEqual(scorerCompletenessIssues(reviewedGames, result.data.actualScores), []);
+  assert.deepEqual(result.data.actualScores['United States_Paraguay'].hs, [
+    "Bobadilla 7' (OG)",
+    "Balogun 31'",
+    "Balogun 45+5'",
+    "Reyna 90+8'",
+  ]);
+  assert.deepEqual(result.data.actualScores.Austria_Jordan.hs, [
+    "Schmid 21'",
+    "Arab 76' (OG)",
+    "Arnautović 90+11'",
+  ]);
+  assert.deepEqual(result.data.actualScores['Czech Republic_South Africa'].as, ["Mokoena 84'"]);
+  assert.deepEqual(result.data.actualScores.Norway_Senegal.hs, [
+    "Pedersen 43'",
+    "Haaland 48'",
+    "Haaland 58'",
+  ]);
+  assert.equal(result.data.statsData.topScorers.some(row => row.n === 'Damián Bobadilla'), false);
 });
 
 test('post-match completeness guard detects missing finals', () => {

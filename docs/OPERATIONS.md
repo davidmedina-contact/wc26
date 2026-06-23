@@ -47,6 +47,13 @@ Current platform references:
 
 The upstream feed is untrusted input. The function allowlists the 48 teams in `data.json`, requires integer scores from 0 through 99, ignores unresolved scorer names, and never marks a game FT without both scores. This follows OWASP's guidance to validate data from partner and supplier feeds: [Input Validation Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html).
 
+Scorer strings from the upstream feed are not treated as complete event data.
+They can contain inconsistent transliteration, unlabeled own goals, missing
+tokens, and unusual stoppage-time formats. Known verified corrections live in
+`data/scorer-overrides.json` with source URLs. After building `/api/data`, the
+function validates that each finished match has scorer labels equal to the final
+score total and reports `meta.scorerCompleteness`.
+
 The schedule-aware completeness check prevents a partial feed from silently removing finals. It uses the tournament's June/July Eastern Time schedule and allows four hours from kickoff before requiring a final result.
 
 FIFA remains the manual cross-check for fixtures and published statistics:
@@ -62,9 +69,10 @@ FIFA remains the manual cross-check for fixtures and published statistics:
 3. Deploy with `npm run deploy`.
 4. Verify `/service-worker.js` reports the expected cache version.
 5. Verify `/api/data` returns HTTP 200, nonzero stats, and all matches older than four hours have `status: "FT"`.
-6. Test Groups, Matches, Bracket, Stats, search, and theme controls in a fresh browser tab.
-7. In an installed PWA or simulated service-worker session, confirm reopening the app refreshes `/api/data` with a no-cache request and does not downgrade from a newer local payload to the bundled snapshot.
-8. Confirm response security and cache headers on the production domain.
+6. Verify `/api/data` reports `meta.scorerCompleteness: "verified"` and `meta.scorerIssueCount: 0`.
+7. Test Groups, Matches, Bracket, Stats, search, and theme controls in a fresh browser tab.
+8. In an installed PWA or simulated service-worker session, confirm reopening the app refreshes `/api/data` with a no-cache request and does not downgrade from a newer local payload to the bundled snapshot.
+9. Confirm response security and cache headers on the production domain.
 
 Use `npm run deploy` for production releases, including serverless-only changes
 that alter visible scores, standings, stats, or refresh behavior. The

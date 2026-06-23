@@ -1,0 +1,40 @@
+{
+  "Austria_Jordan": {
+    "home": [
+      "Romano Schmid 21'",
+      "Yazan Al Arab 76' (OG)",
+      "Marko Arnautović 90+11'"
+    ],
+    "away": [
+      "Ali Olwan 50'"
+    ],
+    "sources": [
+      "https://www.theguardian.com/football/live/2026/jun/17/fifa-world-cup-2026-live-austria-v-jordan-updates-aut-vs-jor-group-j-match-score-latest"
+    ]
+  },
+  "Switzerland_Bosnia and Herzegovina": {
+    "home": [
+      "Johan Manzambi 74'",
+      "Ruben Vargas 84'",
+      "Johan Manzambi 90'",
+      "Granit Xhaka 90+6'"
+    ],
+    "away": [
+      "Ermin Mahmić 90+3'"
+    ],
+    "sources": [
+      "https://www.theguardian.com/football/live/2026/jun/18/switzerland-v-bosnia-and-herzegovina-world-cup-2026-live"
+    ]
+  },
+  "Czech Republic_South Africa": {
+    "home": [
+      "Michal Sadílek 6'"
+    ],
+    "away": [
+      "Teboho Mokoena 84'"
+    ],
+    "sources": [
+      "https://cadenaser.com/nacional/2026/06/18/republica-checa-1-1-sudafrica-resumen-resultado-y-goles-del-partido-del-grupo-a-del-mundial-2026-cadena-ser/"
+    ]
+  }
+}

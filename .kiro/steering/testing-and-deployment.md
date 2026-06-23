@@ -116,6 +116,27 @@ Rules from the June 2026 standings-order incident:
   command. If one says `vercel --prod`, it is stale unless it explicitly means a
   non-visible backend-only hotfix.
 
+### Lessons learned: scorer strings are not event data
+
+Free score feeds may expose scorer fields, but these are not reliable event
+objects. They can have transliterated names, missing goals, own goals listed on
+the benefiting team's side, and stoppage-time formats like `45'+5'`. Treat them
+as untrusted labels that require validation.
+
+Rules from the June 2026 scorer-card incident:
+
+- The invariant is mandatory: for every finished match, displayed scorer labels
+  must equal the final score total.
+- Own goals count in match-card labels for the benefiting team but must not count
+  toward top-scorer stats.
+- Known verified corrections belong in `data/scorer-overrides.json` with source
+  URLs, not as silent one-off code branches.
+- Parser aliases are acceptable only for complete provider tokens that resolve
+  to known squad players; they are not a substitute for missing event data.
+- Before deploying scorer changes, run the full live-feed audit against all
+  finished matches and confirm `/api/data` reports `meta.scorerCompleteness:
+  "verified"` and `meta.scorerIssueCount: 0`.
+
 ## Static vs Dynamic Data Architecture
 
 The app uses a split architecture:
