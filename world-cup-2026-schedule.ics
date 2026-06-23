@@ -3,13 +3,13 @@ VERSION:2.0
 PRODID:-//FIFA WC 2026 Guide//EN
 CALSCALE:GREGORIAN
 X-WR-CALNAME:FIFA World Cup 2026
-X-WR-TIMEZONE:America/Los_Angeles
+X-WR-TIMEZONE:America/New_York
 BEGIN:VEVENT
-UID:2dcd5d3da07424b0@wc2026
+UID:8082ce399607fb94@wc2026
 DTSTART:20260611T190000Z
 DTEND:20260611T210000Z
 SUMMARY:[WC] Mexico vs. South Africa
-DESCRIPTION:🏟️ Mexico City (Azteca)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Mexico 1-1 South Africa\n   xG: 1.5 - 1.1
+DESCRIPTION:Group A\nStadium: Mexico City (Azteca)\nKickoff: 3:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Mexico 1-1 South Africa
 LOCATION:Mexico City (Azteca)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -18,11 +18,11 @@ DESCRIPTION:Starting soon: [WC] Mexico vs. South Africa
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:93edff51992d2208@wc2026
+UID:9ce595a2dca4833f@wc2026
 DTSTART:20260612T020000Z
 DTEND:20260612T040000Z
 SUMMARY:[WC] South Korea vs. Czech Republic
-DESCRIPTION:🏟️ Guadalajara (Akron)\n⏰ 7:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: South Korea 1-1 Czech Republic\n   xG: 1.5 - 1.1
+DESCRIPTION:Group A\nStadium: Guadalajara (Akron)\nKickoff: 10:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: South Korea 1-1 Czech Republic
 LOCATION:Guadalajara (Akron)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -31,11 +31,11 @@ DESCRIPTION:Starting soon: [WC] South Korea vs. Czech Republic
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:6c80c9f521c3b6f3@wc2026
+UID:a1b8aabafe325701@wc2026
 DTSTART:20260612T190000Z
 DTEND:20260612T210000Z
 SUMMARY:[WC] Canada vs. Bosnia and Herzegovina
-DESCRIPTION:🏟️ Toronto (BMO Field)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Canada 1-2 Bosnia and Herzegovina\n   xG: 1.4 - 1.2
+DESCRIPTION:Group B\nStadium: Toronto (BMO Field)\nKickoff: 3:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Canada 1-2 Bosnia and Herzegovina
 LOCATION:Toronto (BMO Field)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -44,11 +44,11 @@ DESCRIPTION:Starting soon: [WC] Canada vs. Bosnia and Herzegovina
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:f3da21869c174c1c@wc2026
+UID:9c81ef1dd6d5fd88@wc2026
 DTSTART:20260613T010000Z
 DTEND:20260613T030000Z
 SUMMARY:[WC] United States vs. Paraguay
-DESCRIPTION:🏟️ Los Angeles (SoFi)\n⏰ 6:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: United States 2-1 Paraguay\n   xG: 1.4 - 1.2
+DESCRIPTION:Group D\nStadium: Los Angeles (SoFi)\nKickoff: 9:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: United States 2-1 Paraguay
 LOCATION:Los Angeles (SoFi)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -57,11 +57,11 @@ DESCRIPTION:Starting soon: [WC] United States vs. Paraguay
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:21b8a6f7db6c804a@wc2026
+UID:5ef01615679dc0c0@wc2026
 DTSTART:20260613T190000Z
 DTEND:20260613T210000Z
 SUMMARY:[WC] Qatar vs. Switzerland
-DESCRIPTION:🏟️ San Francisco (Levi's)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Qatar 1-1 Switzerland\n   xG: 1.1 - 1.5
+DESCRIPTION:Group B\nStadium: San Francisco (Levi's)\nKickoff: 3:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Qatar 1-1 Switzerland
 LOCATION:San Francisco (Levi's)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -70,11 +70,11 @@ DESCRIPTION:Starting soon: [WC] Qatar vs. Switzerland
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:3408dc02904d4ec5@wc2026
+UID:b33faef66e4da299@wc2026
 DTSTART:20260613T220000Z
 DTEND:20260614T000000Z
 SUMMARY:[WC] Brazil vs. Morocco
-DESCRIPTION:🏟️ New Jersey (MetLife)\n⏰ 3:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Brazil 1-0 Morocco\n   xG: 1.4 - 1.2
+DESCRIPTION:Group C\nStadium: New Jersey (MetLife)\nKickoff: 6:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Brazil 1-0 Morocco
 LOCATION:New Jersey (MetLife)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -83,11 +83,11 @@ DESCRIPTION:Starting soon: [WC] Brazil vs. Morocco
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:aa075ce244bcd98a@wc2026
+UID:62f2f1afb560d67f@wc2026
 DTSTART:20260614T010000Z
 DTEND:20260614T030000Z
 SUMMARY:[WC] Haiti vs. Scotland
-DESCRIPTION:🏟️ Boston (Gillette)\n⏰ 6:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Haiti 1-0 Scotland\n   xG: 1.1 - 1.5
+DESCRIPTION:Group C\nStadium: Boston (Gillette)\nKickoff: 9:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Haiti 1-0 Scotland
 LOCATION:Boston (Gillette)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -96,11 +96,11 @@ DESCRIPTION:Starting soon: [WC] Haiti vs. Scotland
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:37495a115658b0e7@wc2026
+UID:6855edd8d34d1941@wc2026
 DTSTART:20260614T040000Z
 DTEND:20260614T060000Z
 SUMMARY:[WC] Australia vs. Türkiye
-DESCRIPTION:🏟️ Vancouver (BC Place)\n⏰ 9:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Australia 1-2 Türkiye\n   xG: 1.3 - 1.4
+DESCRIPTION:Group D\nStadium: Vancouver (BC Place)\nKickoff: 12:00 AM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Australia 1-2 Türkiye
 LOCATION:Vancouver (BC Place)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -109,11 +109,11 @@ DESCRIPTION:Starting soon: [WC] Australia vs. Türkiye
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:43b418e092563eff@wc2026
+UID:8bd4f51fd2aeb3e1@wc2026
 DTSTART:20260614T170000Z
 DTEND:20260614T190000Z
 SUMMARY:[WC] Germany vs. Curaçao
-DESCRIPTION:🏟️ Houston (NRG)\n⏰ 10:00 AM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Germany 1-0 Curaçao\n   xG: 1.8 - 0.9
+DESCRIPTION:Group E\nStadium: Houston (NRG)\nKickoff: 1:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Germany 1-0 Curaçao
 LOCATION:Houston (NRG)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -122,24 +122,24 @@ DESCRIPTION:Starting soon: [WC] Germany vs. Curaçao
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:f646ecbfee71bf92@wc2026
+UID:9969d8ea3c4097a1@wc2026
 DTSTART:20260614T200000Z
 DTEND:20260614T220000Z
-SUMMARY:[WC] R32: Netherlands vs. Japan
-DESCRIPTION:🏟️ Dallas (AT&T)\n⏰ 1:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Netherlands vs. Japan
+DESCRIPTION:Group F\nStadium: Dallas (AT&T)\nKickoff: 4:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Dallas (AT&T)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: Netherlands vs. Japan
+DESCRIPTION:Starting soon: [WC] Netherlands vs. Japan
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:2a20365547c24dd9@wc2026
+UID:4754528477fcf979@wc2026
 DTSTART:20260614T230000Z
 DTEND:20260615T010000Z
 SUMMARY:[WC] Ivory Coast vs. Ecuador
-DESCRIPTION:🏟️ Philadelphia (Lincoln Financial)\n⏰ 4:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Ivory Coast 1-1 Ecuador\n   xG: 1.2 - 1.5
+DESCRIPTION:Group E\nStadium: Philadelphia (Lincoln Financial)\nKickoff: 7:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Ivory Coast 1-1 Ecuador
 LOCATION:Philadelphia (Lincoln Financial)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -148,24 +148,24 @@ DESCRIPTION:Starting soon: [WC] Ivory Coast vs. Ecuador
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:c078b3fd783f5925@wc2026
+UID:6d6ded5a1d7a0ab1@wc2026
 DTSTART:20260615T020000Z
 DTEND:20260615T040000Z
-SUMMARY:[WC] R32: Sweden vs. Tunisia
-DESCRIPTION:🏟️ Monterrey (BBVA)\n⏰ 7:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Sweden vs. Tunisia
+DESCRIPTION:Group F\nStadium: Monterrey (BBVA)\nKickoff: 10:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)
 LOCATION:Monterrey (BBVA)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: Sweden vs. Tunisia
+DESCRIPTION:Starting soon: [WC] Sweden vs. Tunisia
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:9657a30e716fe22e@wc2026
+UID:c17cece23efbf2f2@wc2026
 DTSTART:20260615T160000Z
 DTEND:20260615T180000Z
 SUMMARY:[WC] Spain vs. Cape Verde
-DESCRIPTION:🏟️ Atlanta (Mercedes-Benz)\n⏰ 9:00 AM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Spain 1-0 Cape Verde\n   xG: 2.0 - 0.7
+DESCRIPTION:Group H\nStadium: Atlanta (Mercedes-Benz)\nKickoff: 12:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Spain 1-0 Cape Verde
 LOCATION:Atlanta (Mercedes-Benz)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -174,11 +174,11 @@ DESCRIPTION:Starting soon: [WC] Spain vs. Cape Verde
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:908f1236ac968d2d@wc2026
+UID:00518e1f4f39d798@wc2026
 DTSTART:20260615T190000Z
 DTEND:20260615T210000Z
 SUMMARY:[WC] Belgium vs. Egypt
-DESCRIPTION:🏟️ Seattle (Lumen Field)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Belgium 1-0 Egypt\n   xG: 1.5 - 1.2
+DESCRIPTION:Group G\nStadium: Seattle (Lumen Field)\nKickoff: 3:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Belgium 1-0 Egypt
 LOCATION:Seattle (Lumen Field)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -187,11 +187,11 @@ DESCRIPTION:Starting soon: [WC] Belgium vs. Egypt
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:b745c2b4487b4b3b@wc2026
+UID:2fd31f74534dfd53@wc2026
 DTSTART:20260615T220000Z
 DTEND:20260616T000000Z
 SUMMARY:[WC] Saudi Arabia vs. Uruguay
-DESCRIPTION:🏟️ Miami (Hard Rock)\n⏰ 3:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Saudi Arabia 1-1 Uruguay\n   xG: 1.1 - 1.6
+DESCRIPTION:Group H\nStadium: Miami (Hard Rock)\nKickoff: 6:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Saudi Arabia 1-1 Uruguay
 LOCATION:Miami (Hard Rock)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -200,11 +200,11 @@ DESCRIPTION:Starting soon: [WC] Saudi Arabia vs. Uruguay
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:1f0ae0337018ead1@wc2026
+UID:af175bee94df089a@wc2026
 DTSTART:20260616T010000Z
 DTEND:20260616T030000Z
 SUMMARY:[WC] Iran vs. New Zealand
-DESCRIPTION:🏟️ Los Angeles (SoFi)\n⏰ 6:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Iran 1-0 New Zealand\n   xG: 1.5 - 1.2
+DESCRIPTION:Group G\nStadium: Los Angeles (SoFi)\nKickoff: 9:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Iran 1-0 New Zealand
 LOCATION:Los Angeles (SoFi)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -213,11 +213,11 @@ DESCRIPTION:Starting soon: [WC] Iran vs. New Zealand
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:a182026bdf374fd8@wc2026
+UID:5d3062f3b57049db@wc2026
 DTSTART:20260616T190000Z
 DTEND:20260616T210000Z
 SUMMARY:[WC] France vs. Senegal
-DESCRIPTION:🏟️ New Jersey (MetLife)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: France 2-0 Senegal\n   xG: 1.6 - 1.0
+DESCRIPTION:Group I\nStadium: New Jersey (MetLife)\nKickoff: 3:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: France 2-0 Senegal
 LOCATION:New Jersey (MetLife)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -226,11 +226,11 @@ DESCRIPTION:Starting soon: [WC] France vs. Senegal
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:1eb2cb304f644746@wc2026
+UID:d621f45df7f8ddc4@wc2026
 DTSTART:20260616T220000Z
 DTEND:20260617T000000Z
 SUMMARY:[WC] Iraq vs. Norway
-DESCRIPTION:🏟️ Boston (Gillette)\n⏰ 3:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Iraq 1-2 Norway\n   xG: 1.2 - 1.5
+DESCRIPTION:Group I\nStadium: Boston (Gillette)\nKickoff: 6:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Iraq 1-2 Norway
 LOCATION:Boston (Gillette)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -239,11 +239,11 @@ DESCRIPTION:Starting soon: [WC] Iraq vs. Norway
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:d4262eea9966cc34@wc2026
+UID:01968cb7d7a5a027@wc2026
 DTSTART:20260617T010000Z
 DTEND:20260617T030000Z
 SUMMARY:[WC] Argentina vs. Algeria
-DESCRIPTION:🏟️ Kansas City (Arrowhead)\n⏰ 6:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Argentina 1-1 Algeria\n   xG: 1.7 - 0.9
+DESCRIPTION:Group J\nStadium: Kansas City (Arrowhead)\nKickoff: 9:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Argentina 1-1 Algeria
 LOCATION:Kansas City (Arrowhead)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -252,11 +252,11 @@ DESCRIPTION:Starting soon: [WC] Argentina vs. Algeria
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:8f529d61f1acac85@wc2026
+UID:54723f6841761ad1@wc2026
 DTSTART:20260617T040000Z
 DTEND:20260617T060000Z
 SUMMARY:[WC] Austria vs. Jordan
-DESCRIPTION:🏟️ San Francisco (Levi's)\n⏰ 9:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Austria 2-1 Jordan\n   xG: 1.5 - 1.1
+DESCRIPTION:Group J\nStadium: San Francisco (Levi's)\nKickoff: 12:00 AM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Austria 2-1 Jordan
 LOCATION:San Francisco (Levi's)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -265,11 +265,11 @@ DESCRIPTION:Starting soon: [WC] Austria vs. Jordan
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:9ebe77864aade3a6@wc2026
+UID:1c5b1c0eb7f22f7a@wc2026
 DTSTART:20260617T170000Z
 DTEND:20260617T190000Z
 SUMMARY:[WC] Portugal vs. DR Congo
-DESCRIPTION:🏟️ Houston (NRG)\n⏰ 10:00 AM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Portugal 1-0 DR Congo\n   xG: 1.7 - 1.0
+DESCRIPTION:Group K\nStadium: Houston (NRG)\nKickoff: 1:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Portugal 1-0 DR Congo
 LOCATION:Houston (NRG)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -278,11 +278,11 @@ DESCRIPTION:Starting soon: [WC] Portugal vs. DR Congo
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:d25a0118b04c6a5c@wc2026
+UID:f0b3d0b3c29d3e5c@wc2026
 DTSTART:20260617T200000Z
 DTEND:20260617T220000Z
 SUMMARY:[WC] England vs. Croatia
-DESCRIPTION:🏟️ Dallas (AT&T)\n⏰ 1:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: England 1-0 Croatia\n   xG: 1.6 - 1.1
+DESCRIPTION:Group L\nStadium: Dallas (AT&T)\nKickoff: 4:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: England 1-0 Croatia
 LOCATION:Dallas (AT&T)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -291,11 +291,11 @@ DESCRIPTION:Starting soon: [WC] England vs. Croatia
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:20c65e825486b128@wc2026
+UID:e325d48d561a8727@wc2026
 DTSTART:20260617T230000Z
 DTEND:20260618T010000Z
 SUMMARY:[WC] Ghana vs. Panama
-DESCRIPTION:🏟️ Toronto (BMO Field)\n⏰ 4:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Ghana 1-0 Panama\n   xG: 1.4 - 1.3
+DESCRIPTION:Group L\nStadium: Toronto (BMO Field)\nKickoff: 7:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Ghana 1-0 Panama
 LOCATION:Toronto (BMO Field)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -304,11 +304,11 @@ DESCRIPTION:Starting soon: [WC] Ghana vs. Panama
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:6498d400651cf96f@wc2026
+UID:2017bd5e26a01c56@wc2026
 DTSTART:20260618T020000Z
 DTEND:20260618T040000Z
 SUMMARY:[WC] Uzbekistan vs. Colombia
-DESCRIPTION:🏟️ Mexico City (Azteca)\n⏰ 7:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Uzbekistan 0-2 Colombia\n   xG: 1.0 - 1.7
+DESCRIPTION:Group K\nStadium: Mexico City (Azteca)\nKickoff: 10:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Uzbekistan 0-2 Colombia
 LOCATION:Mexico City (Azteca)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -317,11 +317,11 @@ DESCRIPTION:Starting soon: [WC] Uzbekistan vs. Colombia
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:1229033775277e92@wc2026
+UID:a4925599256b33e7@wc2026
 DTSTART:20260618T160000Z
 DTEND:20260618T180000Z
 SUMMARY:[WC] Czech Republic vs. South Africa
-DESCRIPTION:🏟️ Atlanta (Mercedes-Benz)\n⏰ 9:00 AM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Czech Republic 1-2 South Africa\n   xG: 1.3 - 1.3
+DESCRIPTION:Group A\nStadium: Atlanta (Mercedes-Benz)\nKickoff: 12:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Czech Republic 1-2 South Africa
 LOCATION:Atlanta (Mercedes-Benz)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -330,11 +330,11 @@ DESCRIPTION:Starting soon: [WC] Czech Republic vs. South Africa
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:9dff9967cae95221@wc2026
+UID:52799b695b1c6911@wc2026
 DTSTART:20260618T190000Z
 DTEND:20260618T210000Z
 SUMMARY:[WC] Switzerland vs. Bosnia and Herzegovina
-DESCRIPTION:🏟️ Los Angeles (SoFi)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Switzerland 0-1 Bosnia and Herzegovina\n   xG: 1.5 - 1.1
+DESCRIPTION:Group B\nStadium: Los Angeles (SoFi)\nKickoff: 3:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Switzerland 0-1 Bosnia and Herzegovina
 LOCATION:Los Angeles (SoFi)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -343,11 +343,11 @@ DESCRIPTION:Starting soon: [WC] Switzerland vs. Bosnia and Herzegovina
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:02967779cf799bd8@wc2026
+UID:04a67dcdd8ba5da1@wc2026
 DTSTART:20260618T220000Z
 DTEND:20260619T000000Z
 SUMMARY:[WC] Canada vs. Qatar
-DESCRIPTION:🏟️ Vancouver (BC Place)\n⏰ 3:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Canada 1-0 Qatar\n   xG: 1.5 - 1.2
+DESCRIPTION:Group B\nStadium: Vancouver (BC Place)\nKickoff: 6:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Canada 1-0 Qatar
 LOCATION:Vancouver (BC Place)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -356,11 +356,11 @@ DESCRIPTION:Starting soon: [WC] Canada vs. Qatar
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:3d773cf900b959eb@wc2026
+UID:dd4f53b7c49525c5@wc2026
 DTSTART:20260619T010000Z
 DTEND:20260619T030000Z
 SUMMARY:[WC] Mexico vs. South Korea
-DESCRIPTION:🏟️ Guadalajara (Akron)\n⏰ 6:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Mexico 0-1 South Korea\n   xG: 1.3 - 1.3
+DESCRIPTION:Group A\nStadium: Guadalajara (Akron)\nKickoff: 9:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Mexico 0-1 South Korea
 LOCATION:Guadalajara (Akron)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -369,11 +369,11 @@ DESCRIPTION:Starting soon: [WC] Mexico vs. South Korea
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:3486bc9aec9aa781@wc2026
-DTSTART:20260619T040000Z
-DTEND:20260619T060000Z
+UID:c2c7a7e639774d5b@wc2026
+DTSTART:20260620T030000Z
+DTEND:20260620T050000Z
 SUMMARY:[WC] Türkiye vs. Paraguay
-DESCRIPTION:🏟️ San Francisco (Levi's)\n⏰ 9:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Türkiye 0-1 Paraguay\n   xG: 1.4 - 1.2
+DESCRIPTION:Group D\nStadium: San Francisco (Levi's)\nKickoff: 11:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Türkiye 0-1 Paraguay
 LOCATION:San Francisco (Levi's)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -382,11 +382,11 @@ DESCRIPTION:Starting soon: [WC] Türkiye vs. Paraguay
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:5522679832c7b41e@wc2026
+UID:20868040c103eb64@wc2026
 DTSTART:20260619T190000Z
 DTEND:20260619T210000Z
 SUMMARY:[WC] United States vs. Australia
-DESCRIPTION:🏟️ Seattle (Lumen Field)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: United States 1-0 Australia\n   xG: 1.4 - 1.2
+DESCRIPTION:Group D\nStadium: Seattle (Lumen Field)\nKickoff: 3:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: United States 1-0 Australia
 LOCATION:Seattle (Lumen Field)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -395,11 +395,11 @@ DESCRIPTION:Starting soon: [WC] United States vs. Australia
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:bd7a4e01e1ea1585@wc2026
+UID:e158ea4c36160bb0@wc2026
 DTSTART:20260619T220000Z
 DTEND:20260620T000000Z
 SUMMARY:[WC] Scotland vs. Morocco
-DESCRIPTION:🏟️ Boston (Gillette)\n⏰ 3:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Scotland 0-1 Morocco\n   xG: 1.1 - 1.5
+DESCRIPTION:Group C\nStadium: Boston (Gillette)\nKickoff: 6:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Scotland 0-1 Morocco
 LOCATION:Boston (Gillette)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -408,11 +408,11 @@ DESCRIPTION:Starting soon: [WC] Scotland vs. Morocco
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:f6c9b1e7bf69f061@wc2026
+UID:a18bbc2e1019e98d@wc2026
 DTSTART:20260620T003000Z
 DTEND:20260620T023000Z
 SUMMARY:[WC] Brazil vs. Haiti
-DESCRIPTION:🏟️ Philadelphia (Lincoln Financial)\n⏰ 5:30 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Brazil 1-1 Haiti\n   xG: 1.8 - 0.9
+DESCRIPTION:Group C\nStadium: Philadelphia (Lincoln Financial)\nKickoff: 8:30 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Brazil 1-1 Haiti
 LOCATION:Philadelphia (Lincoln Financial)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -421,24 +421,24 @@ DESCRIPTION:Starting soon: [WC] Brazil vs. Haiti
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:0acdc94dde5c08d0@wc2026
+UID:0c751a41bcdff6ca@wc2026
 DTSTART:20260620T170000Z
 DTEND:20260620T190000Z
-SUMMARY:[WC] R32: Netherlands vs. Sweden
-DESCRIPTION:🏟️ Houston (NRG)\n⏰ 10:00 AM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Netherlands vs. Sweden
+DESCRIPTION:Group F\nStadium: Houston (NRG)\nKickoff: 1:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Houston (NRG)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: Netherlands vs. Sweden
+DESCRIPTION:Starting soon: [WC] Netherlands vs. Sweden
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:40f5fe07188e267f@wc2026
+UID:5bdefe0526b0ac0c@wc2026
 DTSTART:20260620T200000Z
 DTEND:20260620T220000Z
 SUMMARY:[WC] Germany vs. Ivory Coast
-DESCRIPTION:🏟️ Toronto (BMO Field)\n⏰ 1:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Germany 2-0 Ivory Coast\n   xG: 1.5 - 1.1
+DESCRIPTION:Group E\nStadium: Toronto (BMO Field)\nKickoff: 4:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Germany 2-0 Ivory Coast
 LOCATION:Toronto (BMO Field)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -447,11 +447,11 @@ DESCRIPTION:Starting soon: [WC] Germany vs. Ivory Coast
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:003a56d2b534d9cc@wc2026
+UID:d8813fdb6f4d4917@wc2026
 DTSTART:20260621T000000Z
 DTEND:20260621T020000Z
 SUMMARY:[WC] Ecuador vs. Curaçao
-DESCRIPTION:🏟️ Kansas City (Arrowhead)\n⏰ 5:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Ecuador 1-1 Curaçao\n   xG: 1.7 - 1.0
+DESCRIPTION:Group E\nStadium: Kansas City (Arrowhead)\nKickoff: 8:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Ecuador 1-1 Curaçao
 LOCATION:Kansas City (Arrowhead)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -460,24 +460,24 @@ DESCRIPTION:Starting soon: [WC] Ecuador vs. Curaçao
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:1f3d431c1861244d@wc2026
+UID:ba985936ecd489f4@wc2026
 DTSTART:20260621T040000Z
 DTEND:20260621T060000Z
-SUMMARY:[WC] R32: Tunisia vs. Japan
-DESCRIPTION:🏟️ Monterrey (BBVA)\n⏰ 9:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Tunisia vs. Japan
+DESCRIPTION:Group F\nStadium: Monterrey (BBVA)\nKickoff: 12:00 AM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)
 LOCATION:Monterrey (BBVA)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: Tunisia vs. Japan
+DESCRIPTION:Starting soon: [WC] Tunisia vs. Japan
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:c06babbc15f0b6fa@wc2026
+UID:793449cc0cb71d50@wc2026
 DTSTART:20260621T160000Z
 DTEND:20260621T180000Z
 SUMMARY:[WC] Spain vs. Saudi Arabia
-DESCRIPTION:🏟️ Atlanta (Mercedes-Benz)\n⏰ 9:00 AM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Spain 3-0 Saudi Arabia\n   xG: 1.9 - 0.8
+DESCRIPTION:Group H\nStadium: Atlanta (Mercedes-Benz)\nKickoff: 12:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Spain 3-0 Saudi Arabia
 LOCATION:Atlanta (Mercedes-Benz)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -486,11 +486,11 @@ DESCRIPTION:Starting soon: [WC] Spain vs. Saudi Arabia
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:1b3a669a20548f65@wc2026
+UID:12ab86deaddcc7dc@wc2026
 DTSTART:20260621T190000Z
 DTEND:20260621T210000Z
 SUMMARY:[WC] Belgium vs. Iran
-DESCRIPTION:🏟️ Los Angeles (SoFi)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Belgium 1-0 Iran\n   xG: 1.5 - 1.2
+DESCRIPTION:Group G\nStadium: Los Angeles (SoFi)\nKickoff: 3:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Belgium 1-0 Iran
 LOCATION:Los Angeles (SoFi)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -499,11 +499,11 @@ DESCRIPTION:Starting soon: [WC] Belgium vs. Iran
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:ef996b65efc9475c@wc2026
+UID:f6006d94e8c468b2@wc2026
 DTSTART:20260621T220000Z
 DTEND:20260622T000000Z
 SUMMARY:[WC] Uruguay vs. Cape Verde
-DESCRIPTION:🏟️ Miami (Hard Rock)\n⏰ 3:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Uruguay 2-0 Cape Verde\n   xG: 1.7 - 1.0
+DESCRIPTION:Group H\nStadium: Miami (Hard Rock)\nKickoff: 6:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Uruguay 2-0 Cape Verde
 LOCATION:Miami (Hard Rock)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -512,11 +512,11 @@ DESCRIPTION:Starting soon: [WC] Uruguay vs. Cape Verde
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:a36cef5a5e8c840c@wc2026
+UID:8ed3ae18f0795bd3@wc2026
 DTSTART:20260622T010000Z
 DTEND:20260622T030000Z
 SUMMARY:[WC] New Zealand vs. Egypt
-DESCRIPTION:🏟️ Vancouver (BC Place)\n⏰ 6:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: New Zealand 0-1 Egypt\n   xG: 1.2 - 1.5
+DESCRIPTION:Group G\nStadium: Vancouver (BC Place)\nKickoff: 9:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: New Zealand 0-1 Egypt
 LOCATION:Vancouver (BC Place)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -525,11 +525,11 @@ DESCRIPTION:Starting soon: [WC] New Zealand vs. Egypt
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:d2800ebc62314a6a@wc2026
+UID:cc95096168af7faa@wc2026
 DTSTART:20260622T170000Z
 DTEND:20260622T190000Z
 SUMMARY:[WC] Argentina vs. Austria
-DESCRIPTION:🏟️ Dallas (AT&T)\n⏰ 10:00 AM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Argentina 1-1 Austria\n   xG: 1.7 - 0.9
+DESCRIPTION:Group J\nStadium: Dallas (AT&T)\nKickoff: 1:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Argentina 1-1 Austria
 LOCATION:Dallas (AT&T)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -538,11 +538,11 @@ DESCRIPTION:Starting soon: [WC] Argentina vs. Austria
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:2bb750cc6f06fb51@wc2026
+UID:0eaf3d8c18957644@wc2026
 DTSTART:20260622T210000Z
 DTEND:20260622T230000Z
 SUMMARY:[WC] France vs. Iraq
-DESCRIPTION:🏟️ Philadelphia (Lincoln Financial)\n⏰ 2:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: France 2-1 Iraq\n   xG: 1.8 - 0.9
+DESCRIPTION:Group I\nStadium: Philadelphia (Lincoln Financial)\nKickoff: 5:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: France 2-1 Iraq
 LOCATION:Philadelphia (Lincoln Financial)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -551,11 +551,11 @@ DESCRIPTION:Starting soon: [WC] France vs. Iraq
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:c6c5aacd04ee585f@wc2026
+UID:ae51213a22e9bb61@wc2026
 DTSTART:20260623T000000Z
 DTEND:20260623T020000Z
 SUMMARY:[WC] Norway vs. Senegal
-DESCRIPTION:🏟️ New Jersey (MetLife)\n⏰ 5:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Norway 1-0 Senegal\n   xG: 1.3 - 1.3
+DESCRIPTION:Group I\nStadium: New Jersey (MetLife)\nKickoff: 8:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Norway 1-0 Senegal
 LOCATION:New Jersey (MetLife)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -564,11 +564,11 @@ DESCRIPTION:Starting soon: [WC] Norway vs. Senegal
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:57a1fc6aa4088b81@wc2026
+UID:acfa60c7804bf944@wc2026
 DTSTART:20260623T030000Z
 DTEND:20260623T050000Z
 SUMMARY:[WC] Jordan vs. Algeria
-DESCRIPTION:🏟️ San Francisco (Levi's)\n⏰ 8:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Jordan 1-0 Algeria\n   xG: 1.2 - 1.5
+DESCRIPTION:Group J\nStadium: San Francisco (Levi's)\nKickoff: 11:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Jordan 1-0 Algeria
 LOCATION:San Francisco (Levi's)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -577,11 +577,11 @@ DESCRIPTION:Starting soon: [WC] Jordan vs. Algeria
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:90c5dd798da75d0c@wc2026
+UID:00eb0974f443c24b@wc2026
 DTSTART:20260623T170000Z
 DTEND:20260623T190000Z
 SUMMARY:[WC] Portugal vs. Uzbekistan
-DESCRIPTION:🏟️ Houston (NRG)\n⏰ 10:00 AM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Portugal 0-1 Uzbekistan\n   xG: 1.7 - 1.0
+DESCRIPTION:Group K\nStadium: Houston (NRG)\nKickoff: 1:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Portugal 0-1 Uzbekistan
 LOCATION:Houston (NRG)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -590,11 +590,11 @@ DESCRIPTION:Starting soon: [WC] Portugal vs. Uzbekistan
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:7a84e7362379c783@wc2026
+UID:6ff37c7574a4c2f5@wc2026
 DTSTART:20260623T200000Z
 DTEND:20260623T220000Z
 SUMMARY:[WC] England vs. Ghana
-DESCRIPTION:🏟️ Boston (Gillette)\n⏰ 1:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: England 2-1 Ghana\n   xG: 1.7 - 1.0
+DESCRIPTION:Group L\nStadium: Boston (Gillette)\nKickoff: 4:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: England 2-1 Ghana
 LOCATION:Boston (Gillette)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -603,11 +603,11 @@ DESCRIPTION:Starting soon: [WC] England vs. Ghana
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:6997f305e3952c7f@wc2026
+UID:b47c7ff2e4ccf245@wc2026
 DTSTART:20260623T230000Z
 DTEND:20260624T010000Z
 SUMMARY:[WC] Panama vs. Croatia
-DESCRIPTION:🏟️ Toronto (BMO Field)\n⏰ 4:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Panama 1-0 Croatia\n   xG: 1.2 - 1.5
+DESCRIPTION:Group L\nStadium: Toronto (BMO Field)\nKickoff: 7:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Panama 1-0 Croatia
 LOCATION:Toronto (BMO Field)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -616,11 +616,11 @@ DESCRIPTION:Starting soon: [WC] Panama vs. Croatia
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:80acb9ae9185e22b@wc2026
+UID:38fa911927dc1814@wc2026
 DTSTART:20260624T020000Z
 DTEND:20260624T040000Z
 SUMMARY:[WC] Colombia vs. DR Congo
-DESCRIPTION:🏟️ Guadalajara (Akron)\n⏰ 7:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Colombia 2-0 DR Congo\n   xG: 1.6 - 1.0
+DESCRIPTION:Group K\nStadium: Guadalajara (Akron)\nKickoff: 10:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Colombia 2-0 DR Congo
 LOCATION:Guadalajara (Akron)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -629,11 +629,11 @@ DESCRIPTION:Starting soon: [WC] Colombia vs. DR Congo
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:4e57c5e5382f2060@wc2026
+UID:e981fac0ac3ed21b@wc2026
 DTSTART:20260624T190000Z
 DTEND:20260624T210000Z
 SUMMARY:[WC] Switzerland vs. Canada
-DESCRIPTION:🏟️ Vancouver (BC Place)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Switzerland 2-1 Canada\n   xG: 1.4 - 1.2
+DESCRIPTION:Group B\nStadium: Vancouver (BC Place)\nKickoff: 3:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Switzerland 2-1 Canada
 LOCATION:Vancouver (BC Place)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -642,11 +642,11 @@ DESCRIPTION:Starting soon: [WC] Switzerland vs. Canada
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:37c5bcd581781cb1@wc2026
+UID:307202ef796b431c@wc2026
 DTSTART:20260624T190000Z
 DTEND:20260624T210000Z
 SUMMARY:[WC] Bosnia and Herzegovina vs. Qatar
-DESCRIPTION:🏟️ Seattle (Lumen Field)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Bosnia and Herzegovina 1-1 Qatar\n   xG: 1.3 - 1.3
+DESCRIPTION:Group B\nStadium: Seattle (Lumen Field)\nKickoff: 3:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Bosnia and Herzegovina 1-1 Qatar
 LOCATION:Seattle (Lumen Field)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -655,11 +655,11 @@ DESCRIPTION:Starting soon: [WC] Bosnia and Herzegovina vs. Qatar
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:f3debc59eea4b571@wc2026
+UID:4e0f0bfbacf72d86@wc2026
 DTSTART:20260624T220000Z
 DTEND:20260625T000000Z
 SUMMARY:[WC] Scotland vs. Brazil
-DESCRIPTION:🏟️ Miami (Hard Rock)\n⏰ 3:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Scotland 0-2 Brazil\n   xG: 1.0 - 1.6
+DESCRIPTION:Group C\nStadium: Miami (Hard Rock)\nKickoff: 6:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Scotland 0-2 Brazil
 LOCATION:Miami (Hard Rock)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -668,11 +668,11 @@ DESCRIPTION:Starting soon: [WC] Scotland vs. Brazil
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:4f7b54f5bc624672@wc2026
+UID:48b8ac39df6b5331@wc2026
 DTSTART:20260624T220000Z
 DTEND:20260625T000000Z
 SUMMARY:[WC] Morocco vs. Haiti
-DESCRIPTION:🏟️ Atlanta (Mercedes-Benz)\n⏰ 3:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Morocco 1-1 Haiti\n   xG: 1.7 - 1.0
+DESCRIPTION:Group C\nStadium: Atlanta (Mercedes-Benz)\nKickoff: 6:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Morocco 1-1 Haiti
 LOCATION:Atlanta (Mercedes-Benz)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -681,11 +681,11 @@ DESCRIPTION:Starting soon: [WC] Morocco vs. Haiti
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:da83c243ecbe99cc@wc2026
+UID:68098fcd222e82f2@wc2026
 DTSTART:20260625T010000Z
 DTEND:20260625T030000Z
 SUMMARY:[WC] Czech Republic vs. Mexico
-DESCRIPTION:🏟️ Mexico City (Azteca)\n⏰ 6:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Czech Republic 1-1 Mexico\n   xG: 1.1 - 1.5
+DESCRIPTION:Group A\nStadium: Mexico City (Azteca)\nKickoff: 9:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Czech Republic 1-1 Mexico
 LOCATION:Mexico City (Azteca)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -694,11 +694,11 @@ DESCRIPTION:Starting soon: [WC] Czech Republic vs. Mexico
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:2c642917bcbffbee@wc2026
+UID:c20b3847bcc2047a@wc2026
 DTSTART:20260625T010000Z
 DTEND:20260625T030000Z
 SUMMARY:[WC] South Africa vs. South Korea
-DESCRIPTION:🏟️ Monterrey (BBVA)\n⏰ 6:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: South Africa 0-2 South Korea\n   xG: 1.1 - 1.5
+DESCRIPTION:Group A\nStadium: Monterrey (BBVA)\nKickoff: 9:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: South Africa 0-2 South Korea
 LOCATION:Monterrey (BBVA)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -707,11 +707,11 @@ DESCRIPTION:Starting soon: [WC] South Africa vs. South Korea
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:1ea302a2af88bf24@wc2026
+UID:4ff7308efa8cd9bd@wc2026
 DTSTART:20260625T200000Z
 DTEND:20260625T220000Z
 SUMMARY:[WC] Curaçao vs. Ivory Coast
-DESCRIPTION:🏟️ Philadelphia (Lincoln Financial)\n⏰ 1:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Curaçao 0-2 Ivory Coast\n   xG: 1.1 - 1.5
+DESCRIPTION:Group E\nStadium: Philadelphia (Lincoln Financial)\nKickoff: 4:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Curaçao 0-2 Ivory Coast
 LOCATION:Philadelphia (Lincoln Financial)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -720,11 +720,11 @@ DESCRIPTION:Starting soon: [WC] Curaçao vs. Ivory Coast
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:42ec6e377016d39c@wc2026
+UID:f73553653135b776@wc2026
 DTSTART:20260625T200000Z
 DTEND:20260625T220000Z
 SUMMARY:[WC] Ecuador vs. Germany
-DESCRIPTION:🏟️ New Jersey (MetLife)\n⏰ 1:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Ecuador 2-1 Germany\n   xG: 1.2 - 1.4
+DESCRIPTION:Group E\nStadium: New Jersey (MetLife)\nKickoff: 4:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Ecuador 2-1 Germany
 LOCATION:New Jersey (MetLife)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -733,37 +733,37 @@ DESCRIPTION:Starting soon: [WC] Ecuador vs. Germany
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:fb5f8cd6e0b45d97@wc2026
+UID:6dd38fe2ad13427d@wc2026
 DTSTART:20260625T230000Z
 DTEND:20260626T010000Z
-SUMMARY:[WC] R32: Japan vs. Sweden
-DESCRIPTION:🏟️ Dallas (AT&T)\n⏰ 4:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Japan vs. Sweden
+DESCRIPTION:Group F\nStadium: Dallas (AT&T)\nKickoff: 7:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Dallas (AT&T)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: Japan vs. Sweden
+DESCRIPTION:Starting soon: [WC] Japan vs. Sweden
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:72a8f460305c1077@wc2026
+UID:fed3dc1f871633ab@wc2026
 DTSTART:20260625T230000Z
 DTEND:20260626T010000Z
-SUMMARY:[WC] R32: Tunisia vs. Netherlands
-DESCRIPTION:🏟️ Kansas City (Arrowhead)\n⏰ 4:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Tunisia vs. Netherlands
+DESCRIPTION:Group F\nStadium: Kansas City (Arrowhead)\nKickoff: 7:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)
 LOCATION:Kansas City (Arrowhead)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: Tunisia vs. Netherlands
+DESCRIPTION:Starting soon: [WC] Tunisia vs. Netherlands
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:f52b1784d5b69613@wc2026
+UID:c0f6e82fe2c511ab@wc2026
 DTSTART:20260626T020000Z
 DTEND:20260626T040000Z
 SUMMARY:[WC] Türkiye vs. United States
-DESCRIPTION:🏟️ Los Angeles (SoFi)\n⏰ 7:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Türkiye 1-1 United States\n   xG: 1.3 - 1.4
+DESCRIPTION:Group D\nStadium: Los Angeles (SoFi)\nKickoff: 10:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Türkiye 1-1 United States
 LOCATION:Los Angeles (SoFi)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -772,11 +772,11 @@ DESCRIPTION:Starting soon: [WC] Türkiye vs. United States
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:1caf48e37064980b@wc2026
+UID:723a0f6d60fe6faa@wc2026
 DTSTART:20260626T020000Z
 DTEND:20260626T040000Z
 SUMMARY:[WC] Paraguay vs. Australia
-DESCRIPTION:🏟️ San Francisco (Levi's)\n⏰ 7:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Paraguay 1-0 Australia\n   xG: 1.3 - 1.3
+DESCRIPTION:Group D\nStadium: San Francisco (Levi's)\nKickoff: 10:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Paraguay 1-0 Australia
 LOCATION:San Francisco (Levi's)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -785,11 +785,11 @@ DESCRIPTION:Starting soon: [WC] Paraguay vs. Australia
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:0f83849f4d6a328c@wc2026
+UID:74371b0a40aca56c@wc2026
 DTSTART:20260626T190000Z
 DTEND:20260626T210000Z
 SUMMARY:[WC] Norway vs. France
-DESCRIPTION:🏟️ Boston (Gillette)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Norway 1-2 France\n   xG: 1.0 - 1.6
+DESCRIPTION:Group I\nStadium: Boston (Gillette)\nKickoff: 3:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Norway 1-2 France
 LOCATION:Boston (Gillette)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -798,11 +798,11 @@ DESCRIPTION:Starting soon: [WC] Norway vs. France
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:9c4ac24d51b6fd84@wc2026
+UID:75e591bfa423211f@wc2026
 DTSTART:20260626T190000Z
 DTEND:20260626T210000Z
 SUMMARY:[WC] Senegal vs. Iraq
-DESCRIPTION:🏟️ Toronto (BMO Field)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Senegal 1-2 Iraq\n   xG: 1.4 - 1.2
+DESCRIPTION:Group I\nStadium: Toronto (BMO Field)\nKickoff: 3:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Senegal 1-2 Iraq
 LOCATION:Toronto (BMO Field)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -811,11 +811,11 @@ DESCRIPTION:Starting soon: [WC] Senegal vs. Iraq
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:4c68e622f0b940e3@wc2026
+UID:7a30eea58293390b@wc2026
 DTSTART:20260627T000000Z
 DTEND:20260627T020000Z
 SUMMARY:[WC] Cape Verde vs. Saudi Arabia
-DESCRIPTION:🏟️ Houston (NRG)\n⏰ 5:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Cape Verde 1-0 Saudi Arabia\n   xG: 1.2 - 1.4
+DESCRIPTION:Group H\nStadium: Houston (NRG)\nKickoff: 8:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Cape Verde 1-0 Saudi Arabia
 LOCATION:Houston (NRG)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -824,11 +824,11 @@ DESCRIPTION:Starting soon: [WC] Cape Verde vs. Saudi Arabia
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:8234a2b3d1d00683@wc2026
+UID:91b30b0e34e8f067@wc2026
 DTSTART:20260627T000000Z
 DTEND:20260627T020000Z
 SUMMARY:[WC] Uruguay vs. Spain
-DESCRIPTION:🏟️ Guadalajara (Akron)\n⏰ 5:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Uruguay 1-2 Spain\n   xG: 1.0 - 1.6
+DESCRIPTION:Group H\nStadium: Guadalajara (Akron)\nKickoff: 8:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Uruguay 1-2 Spain
 LOCATION:Guadalajara (Akron)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -837,11 +837,11 @@ DESCRIPTION:Starting soon: [WC] Uruguay vs. Spain
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:75f90e8b9749552b@wc2026
+UID:fb59956591ccac11@wc2026
 DTSTART:20260627T030000Z
 DTEND:20260627T050000Z
 SUMMARY:[WC] Egypt vs. Iran
-DESCRIPTION:🏟️ Seattle (Lumen Field)\n⏰ 8:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Egypt 2-1 Iran\n   xG: 1.3 - 1.3
+DESCRIPTION:Group G\nStadium: Seattle (Lumen Field)\nKickoff: 11:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Egypt 2-1 Iran
 LOCATION:Seattle (Lumen Field)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -850,11 +850,11 @@ DESCRIPTION:Starting soon: [WC] Egypt vs. Iran
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:a33659bd8875e46c@wc2026
+UID:d21fe25cd51e0a70@wc2026
 DTSTART:20260627T030000Z
 DTEND:20260627T050000Z
 SUMMARY:[WC] New Zealand vs. Belgium
-DESCRIPTION:🏟️ Vancouver (BC Place)\n⏰ 8:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: New Zealand 0-2 Belgium\n   xG: 1.0 - 1.6
+DESCRIPTION:Group G\nStadium: Vancouver (BC Place)\nKickoff: 11:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: New Zealand 0-2 Belgium
 LOCATION:Vancouver (BC Place)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -863,11 +863,11 @@ DESCRIPTION:Starting soon: [WC] New Zealand vs. Belgium
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:2881d3870bffbcb6@wc2026
+UID:6c83b377a6c7f269@wc2026
 DTSTART:20260627T210000Z
 DTEND:20260627T230000Z
 SUMMARY:[WC] Panama vs. England
-DESCRIPTION:🏟️ New Jersey (MetLife)\n⏰ 2:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Panama 1-2 England\n   xG: 0.9 - 1.7
+DESCRIPTION:Group L\nStadium: New Jersey (MetLife)\nKickoff: 5:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Panama 1-2 England
 LOCATION:New Jersey (MetLife)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -876,11 +876,11 @@ DESCRIPTION:Starting soon: [WC] Panama vs. England
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:77aa0bcd9721aa6f@wc2026
+UID:8d862fe9f6812ea1@wc2026
 DTSTART:20260627T210000Z
 DTEND:20260627T230000Z
 SUMMARY:[WC] Croatia vs. Ghana
-DESCRIPTION:🏟️ Philadelphia (Lincoln Financial)\n⏰ 2:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Croatia 0-1 Ghana\n   xG: 1.4 - 1.2
+DESCRIPTION:Group L\nStadium: Philadelphia (Lincoln Financial)\nKickoff: 5:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Croatia 0-1 Ghana
 LOCATION:Philadelphia (Lincoln Financial)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -889,11 +889,11 @@ DESCRIPTION:Starting soon: [WC] Croatia vs. Ghana
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:ef17a7c0702253ae@wc2026
+UID:0c9e14566c7a6584@wc2026
 DTSTART:20260627T233000Z
 DTEND:20260628T013000Z
 SUMMARY:[WC] Colombia vs. Portugal
-DESCRIPTION:🏟️ Miami (Hard Rock)\n⏰ 4:30 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Colombia 1-0 Portugal\n   xG: 1.3 - 1.3
+DESCRIPTION:Group K\nStadium: Miami (Hard Rock)\nKickoff: 7:30 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Colombia 1-0 Portugal
 LOCATION:Miami (Hard Rock)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -902,11 +902,11 @@ DESCRIPTION:Starting soon: [WC] Colombia vs. Portugal
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:6a703fa7a82700f9@wc2026
+UID:a60f2e814c12589f@wc2026
 DTSTART:20260627T233000Z
 DTEND:20260628T013000Z
 SUMMARY:[WC] DR Congo vs. Uzbekistan
-DESCRIPTION:🏟️ Atlanta (Mercedes-Benz)\n⏰ 4:30 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: DR Congo 1-2 Uzbekistan\n   xG: 1.4 - 1.3
+DESCRIPTION:Group K\nStadium: Atlanta (Mercedes-Benz)\nKickoff: 7:30 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: DR Congo 1-2 Uzbekistan
 LOCATION:Atlanta (Mercedes-Benz)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -915,11 +915,11 @@ DESCRIPTION:Starting soon: [WC] DR Congo vs. Uzbekistan
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:08815c066bb9501d@wc2026
+UID:d6e77b88675f6c84@wc2026
 DTSTART:20260628T020000Z
 DTEND:20260628T040000Z
 SUMMARY:[WC] Algeria vs. Austria
-DESCRIPTION:🏟️ Kansas City (Arrowhead)\n⏰ 7:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Algeria 0-1 Austria\n   xG: 1.3 - 1.3
+DESCRIPTION:Group J\nStadium: Kansas City (Arrowhead)\nKickoff: 10:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)\nPrediction: Algeria 0-1 Austria
 LOCATION:Kansas City (Arrowhead)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -928,11 +928,11 @@ DESCRIPTION:Starting soon: [WC] Algeria vs. Austria
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:4e0f7e7ec0394f78@wc2026
+UID:999635ac5bb02573@wc2026
 DTSTART:20260628T020000Z
 DTEND:20260628T040000Z
 SUMMARY:[WC] Jordan vs. Argentina
-DESCRIPTION:🏟️ Dallas (AT&T)\n⏰ 7:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n📊 Prediction: Jordan 1-2 Argentina\n   xG: 0.8 - 1.9
+DESCRIPTION:Group J\nStadium: Dallas (AT&T)\nKickoff: 10:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)\nPrediction: Jordan 1-2 Argentina
 LOCATION:Dallas (AT&T)
 BEGIN:VALARM
 TRIGGER:-PT15M
@@ -941,419 +941,419 @@ DESCRIPTION:Starting soon: [WC] Jordan vs. Argentina
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:0cee13ebe97160cb@wc2026
+UID:b97a025dfb1e4c50@wc2026
 DTSTART:20260628T190000Z
 DTEND:20260628T210000Z
-SUMMARY:[WC] R32: 2nd Group A vs. 2nd Group B
-DESCRIPTION:🏟️ Los Angeles (SoFi)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n🔮 Likely matchup (Elo prediction): South Korea vs. Canada
+SUMMARY:[WC] Round of 32: 2nd Group A vs. 2nd Group B
+DESCRIPTION:Group R32\nStadium: Los Angeles (SoFi)\nKickoff: 3:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Los Angeles (SoFi)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: 2nd Group A vs. 2nd Group B
+DESCRIPTION:Starting soon: [WC] Round of 32: 2nd Group A vs. 2nd Group B
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:2ac547200f664597@wc2026
+UID:3e423e28b622d654@wc2026
 DTSTART:20260629T170000Z
 DTEND:20260629T190000Z
-SUMMARY:[WC] R32: 1st Group C vs. 2nd Group F
-DESCRIPTION:🏟️ Houston (NRG)\n⏰ 10:00 AM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n🔮 Likely matchup (Elo prediction): Brazil vs. Japan
+SUMMARY:[WC] Round of 32: 1st Group C vs. 2nd Group F
+DESCRIPTION:Group R32\nStadium: Houston (NRG)\nKickoff: 1:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Houston (NRG)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: 1st Group C vs. 2nd Group F
+DESCRIPTION:Starting soon: [WC] Round of 32: 1st Group C vs. 2nd Group F
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:461c4f30272607a4@wc2026
+UID:b154a70d5d90c1ba@wc2026
 DTSTART:20260629T203000Z
 DTEND:20260629T223000Z
-SUMMARY:[WC] R32: 1st Group E vs. Best 3rd
-DESCRIPTION:🏟️ Boston (Gillette)\n⏰ 1:30 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n🔮 Likely matchup (Elo prediction): Germany vs. 3rd place qualifier
+SUMMARY:[WC] Round of 32: 1st Group E vs. Best 3rd
+DESCRIPTION:Group R32\nStadium: Boston (Gillette)\nKickoff: 4:30 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Boston (Gillette)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: 1st Group E vs. Best 3rd
+DESCRIPTION:Starting soon: [WC] Round of 32: 1st Group E vs. Best 3rd
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:62e63bdd7388c300@wc2026
+UID:14ee756660cca9eb@wc2026
 DTSTART:20260630T010000Z
 DTEND:20260630T030000Z
-SUMMARY:[WC] R32: 1st Group F vs. 2nd Group C
-DESCRIPTION:🏟️ Monterrey (BBVA)\n⏰ 6:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n🔮 Likely matchup (Elo prediction): Netherlands vs. Morocco
+SUMMARY:[WC] Round of 32: 1st Group F vs. 2nd Group C
+DESCRIPTION:Group R32\nStadium: Monterrey (BBVA)\nKickoff: 9:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)
 LOCATION:Monterrey (BBVA)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: 1st Group F vs. 2nd Group C
+DESCRIPTION:Starting soon: [WC] Round of 32: 1st Group F vs. 2nd Group C
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:52da9e6a4dbe42b1@wc2026
+UID:766b2daba18a38e8@wc2026
 DTSTART:20260630T170000Z
 DTEND:20260630T190000Z
-SUMMARY:[WC] R32: 2nd Group E vs. 2nd Group I
-DESCRIPTION:🏟️ Dallas (AT&T)\n⏰ 10:00 AM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n🔮 Likely matchup (Elo prediction): Ecuador vs. Norway
+SUMMARY:[WC] Round of 32: 2nd Group E vs. 2nd Group I
+DESCRIPTION:Group R32\nStadium: Dallas (AT&T)\nKickoff: 1:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Dallas (AT&T)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: 2nd Group E vs. 2nd Group I
+DESCRIPTION:Starting soon: [WC] Round of 32: 2nd Group E vs. 2nd Group I
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:230c16b8cfe7b0f3@wc2026
+UID:158c7fd459a94ec2@wc2026
 DTSTART:20260630T210000Z
 DTEND:20260630T230000Z
-SUMMARY:[WC] R32: 1st Group I vs. Best 3rd
-DESCRIPTION:🏟️ New Jersey (MetLife)\n⏰ 2:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n🔮 Likely matchup (Elo prediction): France vs. 3rd place qualifier
+SUMMARY:[WC] Round of 32: 1st Group I vs. Best 3rd
+DESCRIPTION:Group R32\nStadium: New Jersey (MetLife)\nKickoff: 5:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:New Jersey (MetLife)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: 1st Group I vs. Best 3rd
+DESCRIPTION:Starting soon: [WC] Round of 32: 1st Group I vs. Best 3rd
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:5d401dbfde0ffbd1@wc2026
+UID:c73142115c278e1a@wc2026
 DTSTART:20260701T010000Z
 DTEND:20260701T030000Z
-SUMMARY:[WC] R32: 1st Group A vs. Best 3rd
-DESCRIPTION:🏟️ Mexico City (Azteca)\n⏰ 6:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n🔮 Likely matchup (Elo prediction): Mexico vs. 3rd place qualifier
+SUMMARY:[WC] Round of 32: 1st Group A vs. Best 3rd
+DESCRIPTION:Group R32\nStadium: Mexico City (Azteca)\nKickoff: 9:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Mexico City (Azteca)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: 1st Group A vs. Best 3rd
+DESCRIPTION:Starting soon: [WC] Round of 32: 1st Group A vs. Best 3rd
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:700a097731716bb1@wc2026
+UID:492b7e518bc8de15@wc2026
 DTSTART:20260701T160000Z
 DTEND:20260701T180000Z
-SUMMARY:[WC] R32: 1st Group L vs. Best 3rd
-DESCRIPTION:🏟️ Atlanta (Mercedes-Benz)\n⏰ 9:00 AM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n🔮 Likely matchup (Elo prediction): England vs. 3rd place qualifier
+SUMMARY:[WC] Round of 32: 1st Group L vs. Best 3rd
+DESCRIPTION:Group R32\nStadium: Atlanta (Mercedes-Benz)\nKickoff: 12:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Atlanta (Mercedes-Benz)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: 1st Group L vs. Best 3rd
+DESCRIPTION:Starting soon: [WC] Round of 32: 1st Group L vs. Best 3rd
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:5c1c6dfc13b79c8c@wc2026
+UID:b49e745d8385fcee@wc2026
 DTSTART:20260701T200000Z
 DTEND:20260701T220000Z
-SUMMARY:[WC] R32: 1st Group G vs. Best 3rd
-DESCRIPTION:🏟️ Seattle (Lumen Field)\n⏰ 1:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n🔮 Likely matchup (Elo prediction): Belgium vs. 3rd place qualifier
+SUMMARY:[WC] Round of 32: 1st Group G vs. Best 3rd
+DESCRIPTION:Group R32\nStadium: Seattle (Lumen Field)\nKickoff: 4:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Seattle (Lumen Field)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: 1st Group G vs. Best 3rd
+DESCRIPTION:Starting soon: [WC] Round of 32: 1st Group G vs. Best 3rd
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:e1248817d75b1455@wc2026
+UID:49df0ac9cb55d1fc@wc2026
 DTSTART:20260702T000000Z
 DTEND:20260702T020000Z
-SUMMARY:[WC] R32: 1st Group D vs. Best 3rd
-DESCRIPTION:🏟️ San Francisco (Levi's)\n⏰ 5:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n🔮 Likely matchup (Elo prediction): United States vs. 3rd place qualifier
+SUMMARY:[WC] Round of 32: 1st Group D vs. Best 3rd
+DESCRIPTION:Group R32\nStadium: San Francisco (Levi's)\nKickoff: 8:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:San Francisco (Levi's)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: 1st Group D vs. Best 3rd
+DESCRIPTION:Starting soon: [WC] Round of 32: 1st Group D vs. Best 3rd
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:36238e620632f234@wc2026
+UID:cf2e397302d87f14@wc2026
 DTSTART:20260702T190000Z
 DTEND:20260702T210000Z
-SUMMARY:[WC] R32: 1st Group H vs. 2nd Group J
-DESCRIPTION:🏟️ Los Angeles (SoFi)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n🔮 Likely matchup (Elo prediction): Spain vs. Austria
+SUMMARY:[WC] Round of 32: 1st Group H vs. 2nd Group J
+DESCRIPTION:Group R32\nStadium: Los Angeles (SoFi)\nKickoff: 3:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Los Angeles (SoFi)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: 1st Group H vs. 2nd Group J
+DESCRIPTION:Starting soon: [WC] Round of 32: 1st Group H vs. 2nd Group J
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:3e910a205a6fbed4@wc2026
+UID:e13f88c3991431fd@wc2026
 DTSTART:20260702T230000Z
 DTEND:20260703T010000Z
-SUMMARY:[WC] R32: 2nd Group K vs. 2nd Group L
-DESCRIPTION:🏟️ Toronto (BMO Field)\n⏰ 4:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n🔮 Likely matchup (Elo prediction): Colombia vs. Croatia
+SUMMARY:[WC] Round of 32: 2nd Group K vs. 2nd Group L
+DESCRIPTION:Group R32\nStadium: Toronto (BMO Field)\nKickoff: 7:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Toronto (BMO Field)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: 2nd Group K vs. 2nd Group L
+DESCRIPTION:Starting soon: [WC] Round of 32: 2nd Group K vs. 2nd Group L
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:4760dc6fbd6b4e08@wc2026
+UID:e2730f16562f8dbb@wc2026
 DTSTART:20260703T030000Z
 DTEND:20260703T050000Z
-SUMMARY:[WC] R32: 1st Group B vs. Best 3rd
-DESCRIPTION:🏟️ Vancouver (BC Place)\n⏰ 8:00 PM PDT\n\n📺 Watch:\n• FS1 (paid cable/streaming)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n🔮 Likely matchup (Elo prediction): Switzerland vs. 3rd place qualifier
+SUMMARY:[WC] Round of 32: 1st Group B vs. Best 3rd
+DESCRIPTION:Group R32\nStadium: Vancouver (BC Place)\nKickoff: 11:00 PM ET\nTV: FS1 (cable/streaming), Telemundo (Spanish)
 LOCATION:Vancouver (BC Place)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: 1st Group B vs. Best 3rd
+DESCRIPTION:Starting soon: [WC] Round of 32: 1st Group B vs. Best 3rd
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:c71660bb04e2d97c@wc2026
+UID:530e7f1646e34b6d@wc2026
 DTSTART:20260703T180000Z
 DTEND:20260703T200000Z
-SUMMARY:[WC] R32: 2nd Group D vs. 2nd Group G
-DESCRIPTION:🏟️ Dallas (AT&T)\n⏰ 11:00 AM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n🔮 Likely matchup (Elo prediction): Türkiye vs. Egypt
+SUMMARY:[WC] Round of 32: 2nd Group D vs. 2nd Group G
+DESCRIPTION:Group R32\nStadium: Dallas (AT&T)\nKickoff: 2:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Dallas (AT&T)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: 2nd Group D vs. 2nd Group G
+DESCRIPTION:Starting soon: [WC] Round of 32: 2nd Group D vs. 2nd Group G
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:9c7e6886d68a04ca@wc2026
+UID:46c792a39271944b@wc2026
 DTSTART:20260703T220000Z
 DTEND:20260704T000000Z
-SUMMARY:[WC] R32: 1st Group J vs. 2nd Group H
-DESCRIPTION:🏟️ Miami (Hard Rock)\n⏰ 3:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n🔮 Likely matchup (Elo prediction): Argentina vs. Uruguay
+SUMMARY:[WC] Round of 32: 1st Group J vs. 2nd Group H
+DESCRIPTION:Group R32\nStadium: Miami (Hard Rock)\nKickoff: 6:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Miami (Hard Rock)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: 1st Group J vs. 2nd Group H
+DESCRIPTION:Starting soon: [WC] Round of 32: 1st Group J vs. 2nd Group H
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:b412f357f4b258e7@wc2026
+UID:1acdc73b2b9a43e1@wc2026
 DTSTART:20260704T013000Z
 DTEND:20260704T033000Z
-SUMMARY:[WC] R32: 1st Group K vs. Best 3rd
-DESCRIPTION:🏟️ Kansas City (Arrowhead)\n⏰ 6:30 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)\n\n🔮 Likely matchup (Elo prediction): Portugal vs. 3rd place qualifier
+SUMMARY:[WC] Round of 32: 1st Group K vs. Best 3rd
+DESCRIPTION:Group R32\nStadium: Kansas City (Arrowhead)\nKickoff: 9:30 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Kansas City (Arrowhead)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R32: 1st Group K vs. Best 3rd
+DESCRIPTION:Starting soon: [WC] Round of 32: 1st Group K vs. Best 3rd
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:30fcfa92b161372c@wc2026
+UID:40a33eb357bd4c0f@wc2026
 DTSTART:20260704T170000Z
 DTEND:20260704T190000Z
-SUMMARY:[WC] R16: TBD vs. TBD
-DESCRIPTION:🏟️ Houston (NRG)\n⏰ 10:00 AM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Round of 16: TBD vs. TBD
+DESCRIPTION:Group R16\nStadium: Houston (NRG)\nKickoff: 1:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Houston (NRG)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R16: TBD vs. TBD
+DESCRIPTION:Starting soon: [WC] Round of 16: TBD vs. TBD
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:30fcfa92b161372c@wc2026
+UID:63cedcf52bde681a@wc2026
 DTSTART:20260704T210000Z
 DTEND:20260704T230000Z
-SUMMARY:[WC] R16: TBD vs. TBD
-DESCRIPTION:🏟️ Philadelphia (Lincoln Financial)\n⏰ 2:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Round of 16: TBD vs. TBD
+DESCRIPTION:Group R16\nStadium: Philadelphia (Lincoln Financial)\nKickoff: 5:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Philadelphia (Lincoln Financial)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R16: TBD vs. TBD
+DESCRIPTION:Starting soon: [WC] Round of 16: TBD vs. TBD
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:f33a39aaae14ad8c@wc2026
+UID:65c4a57d0ea5488f@wc2026
 DTSTART:20260705T200000Z
 DTEND:20260705T220000Z
-SUMMARY:[WC] R16: TBD vs. TBD
-DESCRIPTION:🏟️ New Jersey (MetLife)\n⏰ 1:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Round of 16: TBD vs. TBD
+DESCRIPTION:Group R16\nStadium: New Jersey (MetLife)\nKickoff: 4:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:New Jersey (MetLife)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R16: TBD vs. TBD
+DESCRIPTION:Starting soon: [WC] Round of 16: TBD vs. TBD
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:f33a39aaae14ad8c@wc2026
+UID:a341066578ed3c0c@wc2026
 DTSTART:20260706T000000Z
 DTEND:20260706T020000Z
-SUMMARY:[WC] R16: TBD vs. TBD
-DESCRIPTION:🏟️ Mexico City (Azteca)\n⏰ 5:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Round of 16: TBD vs. TBD
+DESCRIPTION:Group R16\nStadium: Mexico City (Azteca)\nKickoff: 8:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Mexico City (Azteca)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R16: TBD vs. TBD
+DESCRIPTION:Starting soon: [WC] Round of 16: TBD vs. TBD
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:34d8243615bf57eb@wc2026
+UID:547f7c0073f6ad62@wc2026
 DTSTART:20260706T190000Z
 DTEND:20260706T210000Z
-SUMMARY:[WC] R16: TBD vs. TBD
-DESCRIPTION:🏟️ Dallas (AT&T)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Round of 16: TBD vs. TBD
+DESCRIPTION:Group R16\nStadium: Dallas (AT&T)\nKickoff: 3:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Dallas (AT&T)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R16: TBD vs. TBD
+DESCRIPTION:Starting soon: [WC] Round of 16: TBD vs. TBD
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:34d8243615bf57eb@wc2026
+UID:c2ee809068711bbd@wc2026
 DTSTART:20260707T000000Z
 DTEND:20260707T020000Z
-SUMMARY:[WC] R16: TBD vs. TBD
-DESCRIPTION:🏟️ Seattle (Lumen Field)\n⏰ 5:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Round of 16: TBD vs. TBD
+DESCRIPTION:Group R16\nStadium: Seattle (Lumen Field)\nKickoff: 8:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Seattle (Lumen Field)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R16: TBD vs. TBD
+DESCRIPTION:Starting soon: [WC] Round of 16: TBD vs. TBD
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:f396ca222f6466f3@wc2026
+UID:373341bec18a2017@wc2026
 DTSTART:20260707T160000Z
 DTEND:20260707T180000Z
-SUMMARY:[WC] R16: TBD vs. TBD
-DESCRIPTION:🏟️ Atlanta (Mercedes-Benz)\n⏰ 9:00 AM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Round of 16: TBD vs. TBD
+DESCRIPTION:Group R16\nStadium: Atlanta (Mercedes-Benz)\nKickoff: 12:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Atlanta (Mercedes-Benz)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R16: TBD vs. TBD
+DESCRIPTION:Starting soon: [WC] Round of 16: TBD vs. TBD
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:f396ca222f6466f3@wc2026
+UID:cd8f98ec549101af@wc2026
 DTSTART:20260707T200000Z
 DTEND:20260707T220000Z
-SUMMARY:[WC] R16: TBD vs. TBD
-DESCRIPTION:🏟️ Vancouver (BC Place)\n⏰ 1:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Round of 16: TBD vs. TBD
+DESCRIPTION:Group R16\nStadium: Vancouver (BC Place)\nKickoff: 4:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Vancouver (BC Place)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] R16: TBD vs. TBD
+DESCRIPTION:Starting soon: [WC] Round of 16: TBD vs. TBD
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:75b23c9d854a63b9@wc2026
+UID:4b7b6d6832d0fcd2@wc2026
 DTSTART:20260709T200000Z
 DTEND:20260709T220000Z
-SUMMARY:[WC] Quarter-Final
-DESCRIPTION:🏟️ Boston (Gillette)\n⏰ 1:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Quarter-Final: TBD vs. TBD
+DESCRIPTION:Group QF\nStadium: Boston (Gillette)\nKickoff: 4:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Boston (Gillette)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] Quarter-Final
+DESCRIPTION:Starting soon: [WC] Quarter-Final: TBD vs. TBD
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:3d133081c0149faf@wc2026
+UID:5ebfe6972e623793@wc2026
 DTSTART:20260710T190000Z
 DTEND:20260710T210000Z
-SUMMARY:[WC] Quarter-Final
-DESCRIPTION:🏟️ Los Angeles (SoFi)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Quarter-Final: TBD vs. TBD
+DESCRIPTION:Group QF\nStadium: Los Angeles (SoFi)\nKickoff: 3:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Los Angeles (SoFi)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] Quarter-Final
+DESCRIPTION:Starting soon: [WC] Quarter-Final: TBD vs. TBD
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:bb8e92829af2952a@wc2026
+UID:a8ca3cb371ef1802@wc2026
 DTSTART:20260711T210000Z
 DTEND:20260711T230000Z
-SUMMARY:[WC] Quarter-Final
-DESCRIPTION:🏟️ Miami (Hard Rock)\n⏰ 2:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Quarter-Final: TBD vs. TBD
+DESCRIPTION:Group QF\nStadium: Miami (Hard Rock)\nKickoff: 5:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Miami (Hard Rock)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] Quarter-Final
+DESCRIPTION:Starting soon: [WC] Quarter-Final: TBD vs. TBD
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:bb8e92829af2952a@wc2026
+UID:58c59cd631f5a12c@wc2026
 DTSTART:20260712T010000Z
 DTEND:20260712T030000Z
-SUMMARY:[WC] Quarter-Final
-DESCRIPTION:🏟️ Kansas City (Arrowhead)\n⏰ 6:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Quarter-Final: TBD vs. TBD
+DESCRIPTION:Group QF\nStadium: Kansas City (Arrowhead)\nKickoff: 9:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Kansas City (Arrowhead)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] Quarter-Final
+DESCRIPTION:Starting soon: [WC] Quarter-Final: TBD vs. TBD
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:b591d74f261c80af@wc2026
+UID:acc2be0942d85d85@wc2026
 DTSTART:20260714T190000Z
 DTEND:20260714T210000Z
-SUMMARY:[WC] Semi-Final
-DESCRIPTION:🏟️ Dallas (AT&T)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Semi-Final: TBD vs. TBD
+DESCRIPTION:Group SF\nStadium: Dallas (AT&T)\nKickoff: 3:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Dallas (AT&T)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] Semi-Final
+DESCRIPTION:Starting soon: [WC] Semi-Final: TBD vs. TBD
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:84d077987e6dbdfc@wc2026
+UID:ecac4027233143a0@wc2026
 DTSTART:20260715T190000Z
 DTEND:20260715T210000Z
-SUMMARY:[WC] Semi-Final
-DESCRIPTION:🏟️ Atlanta (Mercedes-Benz)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] Semi-Final: TBD vs. TBD
+DESCRIPTION:Group SF\nStadium: Atlanta (Mercedes-Benz)\nKickoff: 3:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Atlanta (Mercedes-Benz)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] Semi-Final
+DESCRIPTION:Starting soon: [WC] Semi-Final: TBD vs. TBD
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:e338c954f1e697d8@wc2026
+UID:21fe8bafe02c431a@wc2026
 DTSTART:20260718T210000Z
 DTEND:20260718T230000Z
-SUMMARY:[WC] 3rd Place Match
-DESCRIPTION:🏟️ Miami (Hard Rock)\n⏰ 2:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] 3rd Place: TBD vs. TBD
+DESCRIPTION:Group 3RD\nStadium: Miami (Hard Rock)\nKickoff: 5:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:Miami (Hard Rock)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] 3rd Place Match
+DESCRIPTION:Starting soon: [WC] 3rd Place: TBD vs. TBD
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:349245b19536a7d2@wc2026
+UID:504dc143adc6601f@wc2026
 DTSTART:20260719T190000Z
 DTEND:20260719T210000Z
-SUMMARY:[WC] FINAL
-DESCRIPTION:🏟️ New Jersey (MetLife)\n⏰ 12:00 PM PDT\n\n📺 Watch:\n• FOX (free OTA)\n• Telemundo (free OTA, Spanish)\n• FOX One (paid streaming)\n• Peacock (paid streaming, Spanish)
+SUMMARY:[WC] FINAL: TBD vs. TBD
+DESCRIPTION:Group FIN\nStadium: New Jersey (MetLife)\nKickoff: 3:00 PM ET\nTV: FOX (free OTA), Telemundo (Spanish)
 LOCATION:New Jersey (MetLife)
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
-DESCRIPTION:Starting soon: [WC] FINAL
+DESCRIPTION:Starting soon: [WC] FINAL: TBD vs. TBD
 END:VALARM
 END:VEVENT
 END:VCALENDAR

@@ -506,10 +506,36 @@ function buildData(games, now, groupsResult) {
   finishedGames.forEach(game => {
     const home = norm(game.home_team_name_en);
     const away = norm(game.away_team_name_en);
+    // Parse scorer tokens into clean display strings (e.g. "Quiñones 9'")
+    const homeScorers = parseScorerTokens(game.home_scorers)
+      .map(token => {
+        const resolved = resolveScorerToken(token, home, away);
+        if (!resolved || !resolved.name) return null;
+        // Extract minute from original token
+        const minMatch = token.match(/(\d+['′](?:\+\d+['′])?)/);
+        const minute = minMatch ? minMatch[1] : '';
+        const ogMatch = /\(OG\)|own goal/i.test(token);
+        const surname = resolved.name.split(' ').slice(-1)[0];
+        return surname + (minute ? ' ' + minute : '') + (ogMatch ? ' (OG)' : '');
+      })
+      .filter(Boolean);
+    const awayScorers = parseScorerTokens(game.away_scorers)
+      .map(token => {
+        const resolved = resolveScorerToken(token, home, away);
+        if (!resolved || !resolved.name) return null;
+        const minMatch = token.match(/(\d+['′](?:\+\d+['′])?)/);
+        const minute = minMatch ? minMatch[1] : '';
+        const ogMatch = /\(OG\)|own goal/i.test(token);
+        const surname = resolved.name.split(' ').slice(-1)[0];
+        return surname + (minute ? ' ' + minute : '') + (ogMatch ? ' (OG)' : '');
+      })
+      .filter(Boolean);
     scores[`${home}_${away}`] = {
       h: parseScore(game.home_score),
       a: parseScore(game.away_score),
       status: 'FT',
+      hs: homeScorers.length > 0 ? homeScorers : undefined,
+      as: awayScorers.length > 0 ? awayScorers : undefined,
     };
   });
 

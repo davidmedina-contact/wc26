@@ -109,7 +109,8 @@ test('service worker keeps a last-known-good API response', () => {
   const worker = fs.readFileSync(path.join(root, 'service-worker.js'), 'utf8');
   assert.match(worker, /if \(!response\.ok\)/);
   assert.match(worker, /caches\.match\(e\.request\)/);
-  assert.match(worker, /wc26-v13/);
+  assert.match(worker, /wc26-v19/);
+  assert.match(worker, /BUILD_TS/);
 });
 
 test('Vercel config stays within legacy and current Hobby limits', () => {

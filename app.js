@@ -159,22 +159,27 @@ function openTeamModal(teamName) {
   // 1. Squad summary, 2. Players to watch, 3. Fitness, 4. Call-ups, 5. Snubs
   var analysisHtml = '';
   if (analysis.overview) analysisHtml += '<p class="analysis" style="margin-bottom:12px">' + analysis.overview + '</p>';
-  if (analysis.watch) analysisHtml += '<div class="analysis-block" style="border-left-color:#6366f1"><span class="analysis-tag tag-watch">👀 PLAYERS TO WATCH</span><p class="analysis">' + analysis.watch + '</p></div>';
-  if (injuryNote) analysisHtml += '<div class="analysis-block" style="border-left-color:var(--color-warning, #f59e0b)"><span class="analysis-tag" style="background:rgba(245,158,11,0.12);color:var(--color-warning, #f59e0b)">🏥 FITNESS & INJURIES</span>' + injuryNote + '</div>';
-  if (analysis.callups) analysisHtml += '<div class="analysis-block" style="border-left-color:#22c55e"><span class="analysis-tag tag-callup">📥 CALL-UPS</span><p class="analysis">' + analysis.callups + '</p></div>';
-  if (analysis.snubs) analysisHtml += '<div class="analysis-block" style="border-left-color:#ef4444"><span class="analysis-tag tag-snub">❌ SNUBS</span><p class="analysis">' + analysis.snubs + '</p></div>';
+  if (analysis.watch) analysisHtml += '<div class="analysis-block" style="border-left-color:#6366f1"><span class="analysis-tag tag-watch">' + icon('eye',{size:12}) + ' PLAYERS TO WATCH</span><p class="analysis">' + analysis.watch + '</p></div>';
+  if (injuryNote) analysisHtml += '<div class="analysis-block" style="border-left-color:var(--color-warning, #f59e0b)"><span class="analysis-tag" style="background:rgba(245,158,11,0.12);color:var(--color-warning, #f59e0b)">' + icon('pulse',{size:12}) + ' FITNESS & INJURIES</span>' + injuryNote + '</div>';
+  if (analysis.callups) analysisHtml += '<div class="analysis-block" style="border-left-color:#22c55e"><span class="analysis-tag tag-callup">' + icon('userPlus',{size:12}) + ' CALL-UPS</span><p class="analysis">' + analysis.callups + '</p></div>';
+  if (analysis.snubs) analysisHtml += '<div class="analysis-block" style="border-left-color:#ef4444"><span class="analysis-tag tag-snub">' + icon('userX',{size:12}) + ' SNUBS</span><p class="analysis">' + analysis.snubs + '</p></div>';
 
-  el.innerHTML = '<button class="modal-close" onclick="closeModal()">✕</button>' +
-    '<div class="modal-header"><span class="tc-flag">' + team.flag + '</span><div><h2>' + teamName + '</h2><div style="font-size:0.85rem;color:var(--text-muted)">Group ' + g + '</div></div></div>' +
-    '<div class="modal-mgr">👔 <strong>' + team.manager.name + '</strong> (' + team.manager.nat + ')</div>' +
-    '<div class="modal-section"><h3 style="color:' + gc + '">⭐ Top 5 Players</h3><div class="top5-grid">' +
+  el.innerHTML = '<div class="modal-hero" style="--gc:' + gc + '">' +
+      '<button class="modal-close" onclick="closeModal()" aria-label="Back">' + icon('arrowLeft',{size:18}) + '</button>' +
+      '<span class="modal-flag">' + team.flag + '</span>' +
+      '<div class="modal-hero-info">' +
+        '<h2>' + teamName + '</h2>' +
+        '<div class="modal-hero-meta"><span class="modal-group-pill" style="background:' + gc + '">Group ' + g + '</span><span class="modal-mgr-line">' + icon('user',{size:13}) + ' ' + team.manager.name + ' (' + team.manager.nat + ')</span></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="modal-section"><h3 style="color:' + gc + ';border-color:' + gc + '">' + icon('star') + ' Top 5 Players</h3><div class="top5-grid">' +
     team.top5.map(function(name) {
       var pos = getPlayerPos(name);
       return '<a href="' + wikiLink(name) + '" target="_blank" rel="noopener" class="top5-chip-link"><span class="top5-chip"><span class="top5-pos">' + pos + '</span> ' + name + ' <span class="top5-wiki">↗</span></span></a>';
     }).join('') +
     '</div></div>' +
-    '<div class="modal-section"><h3 style="color:' + gc + '">📋 Squad Analysis</h3>' + analysisHtml + '</div>' +
-    '<div class="modal-section"><h3 style="color:' + gc + '">👥 Full Squad (' + team.squad.length + ' players)</h3><div style="overflow-x:auto"><table class="squad-tbl"><thead><tr><th>Kit</th><th>Player</th><th>Pos</th><th>Age</th><th>Club</th></tr></thead><tbody>' +
+    '<div class="modal-section"><h3 style="color:' + gc + ';border-color:' + gc + '">' + icon('clipboard') + ' Squad Analysis</h3>' + analysisHtml + '</div>' +
+    '<div class="modal-section"><h3 style="color:' + gc + ';border-color:' + gc + '">' + icon('users') + ' Full Squad (' + team.squad.length + ' players)</h3><div style="overflow-x:auto"><table class="squad-tbl"><thead><tr><th>Kit</th><th>Player</th><th>Pos</th><th>Age</th><th>Club</th></tr></thead><tbody>' +
     team.squad.map(function(p, i) {
       var isStar = team.top5.indexOf(p.n) >= 0;
       var wiki = 'https://en.wikipedia.org/wiki/' + encodeURIComponent(p.n.replace(/ /g,'_'));
@@ -185,33 +190,78 @@ function openTeamModal(teamName) {
     }).join('') +
     '</tbody></table></div></div>';
 
-  // Team matches section
+  // Team matches section — FotMob-style fixtures list
   var teamMatches = matchesData.filter(function(m) { return m.h === teamName || m.a === teamName; });
   if (teamMatches.length > 0) {
-    el.innerHTML += '<div class="modal-section"><h3 style="color:' + gc + '">📅 Group Stage Matches</h3><div class="modal-matches">';
+    // Sort by date
+    teamMatches.sort(function(a, b) { return a.d.localeCompare(b.d) || a.t.localeCompare(b.t); });
+    var completedMatches = [];
+    var upcomingMatches = [];
     teamMatches.forEach(function(m) {
-      var pdt = etToLocal(m.t, m.d);
-      var dateInfo = formatDatePill(m.d);
-      var hFlag = wcData.teams[m.h] ? wcData.teams[m.h].flag : '';
-      var aFlag = wcData.teams[m.a] ? wcData.teams[m.a].flag : '';
-      var opponent = m.h === teamName ? m.a : m.h;
-      var oppFlag = m.h === teamName ? aFlag : hFlag;
-      var homeAway = m.h === teamName ? 'vs' : 'at';
-      el.innerHTML += '<div class="modal-match-row" onclick="goToMatch(\'' + m.d + '\')">' +
-        '<div class="mmr-date">' + dateInfo.day + ' ' + dateInfo.date + '</div>' +
-        '<div class="mmr-teams"><span>' + oppFlag + '</span> ' + homeAway + ' <strong>' + opponent + '</strong></div>' +
-        '<div class="mmr-time">' + pdt + ' · <span class="bc-tag ' + (m.net==='FOX'?'bc-free':'bc-paid') + '" style="font-size:0.65rem">' + m.net + '</span>' + (teamStrength[m.h]&&teamStrength[m.a]? ' <span class="mmr-pred" style="font-size:0.65rem;color:var(--text-muted)">' + getMatchPrediction(m.h,m.a).h + '-' + getMatchPrediction(m.h,m.a).d + '-' + getMatchPrediction(m.h,m.a).a + '</span>':'') + '</div>' +
-        '<div class="mmr-goto">View day →</div>' +
-      '</div>';
+      var key = m.h + '_' + m.a;
+      var score = (typeof actualScores !== 'undefined' && actualScores[key]) ? actualScores[key] : null;
+      if (score && score.status === 'FT') completedMatches.push(m);
+      else upcomingMatches.push(m);
     });
+
+    el.innerHTML += '<div class="modal-section"><h3 style="color:' + gc + ';border-color:' + gc + '">' + icon('calendar') + ' Fixtures</h3><div class="modal-matches">';
+
+    // Completed matches
+    if (completedMatches.length > 0) {
+      el.innerHTML += '<div class="mmr-section-label">Results</div>';
+      completedMatches.forEach(function(m) {
+        var key = m.h + '_' + m.a;
+        var score = actualScores[key];
+        var dateInfo = formatDatePill(m.d);
+        var hFlag = wcData.teams[m.h] ? wcData.teams[m.h].flag : '';
+        var aFlag = wcData.teams[m.a] ? wcData.teams[m.a].flag : '';
+        var hGoals = parseInt(score.h), aGoals = parseInt(score.a);
+        var result = '';
+        if (m.h === teamName) result = hGoals > aGoals ? 'w' : hGoals < aGoals ? 'l' : 'd';
+        else result = aGoals > hGoals ? 'w' : aGoals < hGoals ? 'l' : 'd';
+
+        el.innerHTML += '<div class="mmr-row mmr-result-' + result + '" onclick="goToMatch(\'' + m.d + '\')">' +
+          '<div class="mmr-dot"></div>' +
+          '<div class="mmr-date">' + dateInfo.day + ' ' + dateInfo.date + '</div>' +
+          '<div class="mmr-home">' + m.h + ' ' + hFlag + '</div>' +
+          '<div class="mmr-center">' + score.h + ' - ' + score.a + '</div>' +
+          '<div class="mmr-away">' + aFlag + ' ' + m.a + '</div>' +
+        '</div>';
+      });
+    }
+
+    // Upcoming matches
+    if (upcomingMatches.length > 0) {
+      el.innerHTML += '<div class="mmr-section-label">Upcoming</div>';
+      upcomingMatches.forEach(function(m) {
+        var pdt = etToLocal(m.t, m.d);
+        var dateInfo = formatDatePill(m.d);
+        var hFlag = wcData.teams[m.h] ? wcData.teams[m.h].flag : '';
+        var aFlag = wcData.teams[m.a] ? wcData.teams[m.a].flag : '';
+        var venue = m.v ? '<div class="mmr-venue">' + m.v + '</div>' : '';
+
+        el.innerHTML += '<div class="mmr-row mmr-upcoming" onclick="goToMatch(\'' + m.d + '\')">' +
+          '<div class="mmr-date">' + dateInfo.day + ' ' + dateInfo.date + '</div>' +
+          '<div class="mmr-home">' + m.h + ' ' + hFlag + '</div>' +
+          '<div class="mmr-center mmr-time">' + pdt + '</div>' +
+          '<div class="mmr-away">' + aFlag + ' ' + m.a + '</div>' +
+          venue +
+        '</div>';
+      });
+    }
+
     el.innerHTML += '</div></div>';
   }
 
   document.getElementById('modal').classList.add('visible');
+  document.body.style.overflow = 'hidden';
   document.getElementById('searchResults').classList.remove('visible');
 }
 
-function closeModal() { document.getElementById('modal').classList.remove('visible'); }
+function closeModal() {
+  document.getElementById('modal').classList.remove('visible');
+  document.body.style.overflow = '';
+}
 
 function goToMatch(dateStr) {
   closeModal();
@@ -242,37 +292,248 @@ function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
+// === UI: Inline SVG icon system (unified visual language with the tab bar) ===
+var ICONS = {
+  star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+  clipboard: '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
+  users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  userPlus: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="11" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>',
+  userX: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="11" cy="7" r="4"/><line x1="17" y1="8" x2="22" y2="13"/><line x1="22" y1="8" x2="17" y2="13"/>',
+  eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+  pulse: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  pin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+  stadium: '<ellipse cx="12" cy="12" rx="10" ry="6"/><ellipse cx="12" cy="12" rx="3.5" ry="2"/>',
+  target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  barChart: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  globe: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+  award: '<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+  reset: '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
+  x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  arrowLeft: '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>'
+};
+
+// Returns an inline SVG string. opts: {size, cls, fill}
+function icon(name, opts) {
+  opts = opts || {};
+  var size = opts.size || 16;
+  var cls = opts.cls ? ' ' + opts.cls : '';
+  var fill = opts.fill || 'none';
+  return '<svg class="ui-icon' + cls + '" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="' + fill + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[name] || '') + '</svg>';
+}
+
+
+// === UI: Match Strip (Live Now / Next Up) ===
+function renderMatchStrip() {
+  var el = document.getElementById('matchStrip');
+  if (!el || !matchesData || !matchesData.length) { if (el) el.innerHTML = ''; return; }
+  var now = new Date();
+  var todayStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  
+  // Find live match (match happening right now based on kickoff + ~2h window)
+  var liveMatch = null, nextMatch = null;
+  for (var i = 0; i < matchesData.length; i++) {
+    var m = matchesData[i];
+    var kickoff = getMatchKickoffDate(m);
+    var endTime = new Date(kickoff.getTime() + 120 * 60000);
+    if (now >= kickoff && now <= endTime) { liveMatch = m; break; }
+  }
+  if (!liveMatch) {
+    // Find next upcoming match
+    var upcoming = matchesData.filter(function(m) { return getMatchKickoffDate(m) > now; });
+    upcoming.sort(function(a, b) { return getMatchKickoffDate(a) - getMatchKickoffDate(b); });
+    if (upcoming.length) nextMatch = upcoming[0];
+  }
+
+  var target = liveMatch || nextMatch;
+  if (!target) { el.innerHTML = ''; return; }
+
+  var hFlag = wcData && wcData.teams[target.h] ? wcData.teams[target.h].flag : '';
+  var aFlag = wcData && wcData.teams[target.a] ? wcData.teams[target.a].flag : '';
+  var predKey = target.h + '_' + target.a;
+  var actual = (typeof actualScores !== 'undefined' && actualScores[predKey]) ? actualScores[predKey] : null;
+
+  var html = '';
+  if (liveMatch) {
+    html += '<span class="ms-label ms-label-live">LIVE</span>';
+    html += '<span class="ms-teams">' + hFlag + ' ' + target.h + ' vs ' + target.a + ' ' + aFlag + '</span>';
+    if (actual) html += '<span class="ms-score">' + actual.h + ' - ' + actual.a + '</span>';
+  } else {
+    html += '<span class="ms-label ms-label-next">NEXT</span>';
+    html += '<span class="ms-teams">' + hFlag + ' ' + target.h + ' vs ' + target.a + ' ' + aFlag + '</span>';
+    var pdt = etToLocal(target.t, target.d);
+    html += '<span class="ms-time">' + pdt + ' ' + localTz + '</span>';
+  }
+  el.innerHTML = html;
+}
+
+function getMatchKickoffDate(m) {
+  var parts = m.t.split(':');
+  var etHour = parseInt(parts[0]);
+  var etMin = parseInt(parts[1]);
+  var utcHour = etHour + 4;
+  var dateParts = m.d.split('-');
+  var utcDay = parseInt(dateParts[2]);
+  var utcMonth = parseInt(dateParts[1]) - 1;
+  var utcYear = parseInt(dateParts[0]);
+  if (utcHour >= 24) { utcHour -= 24; utcDay += 1; }
+  return new Date(Date.UTC(utcYear, utcMonth, utcDay, utcHour, etMin));
+}
+
+// === UI: Search Toggle ===
+function toggleSearch() {
+  var box = document.getElementById('searchBox');
+  if (!box) return;
+  var isOpen = box.classList.contains('open');
+  if (isOpen) {
+    closeSearch();
+  } else {
+    box.classList.add('open');
+    var input = document.getElementById('searchInput');
+    if (input) { input.value = ''; input.focus(); }
+  }
+}
+function closeSearch() {
+  var box = document.getElementById('searchBox');
+  if (box) box.classList.remove('open');
+}
+
+// === UI: Updated indicator (transient refresh confirmation) ===
+// Pattern: show "Updating…" while fetching, briefly confirm "Updated just now"
+// on completion, then auto-dismiss. A permanently parked overlay competes with
+// content for attention; a transient toast gives the same reassurance without
+// the lingering visual noise.
+var lastDataFetchTime = null;
+var updatedAgoHideTimer = null;
+
+function setAgoText() {
+  var el = document.getElementById('updatedAgo');
+  if (!el || !lastDataFetchTime) return;
+  var diff = Math.floor((Date.now() - lastDataFetchTime) / 60000);
+  if (diff < 1) el.textContent = 'Updated just now';
+  else if (diff === 1) el.textContent = 'Updated 1m ago';
+  else el.textContent = 'Updated ' + diff + 'm ago';
+}
+
+function showUpdatedAgo() {
+  lastDataFetchTime = Date.now();
+  setAgoText();
+  var el = document.getElementById('updatedAgo');
+  if (el) el.classList.add('visible');
+  // Auto-dismiss after confirmation window (6s to survive iOS PWA launch animation)
+  if (updatedAgoHideTimer) clearTimeout(updatedAgoHideTimer);
+  updatedAgoHideTimer = setTimeout(function() {
+    var elx = document.getElementById('updatedAgo');
+    if (elx) elx.classList.remove('visible');
+  }, 6000);
+}
+
+// === UI: Match Card Expand/Collapse (Phase 5) ===
+function toggleMatchDetails(btn) {
+  var details = btn.previousElementSibling;
+  if (!details) return;
+  var isOpen = details.classList.contains('open');
+  details.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+
+// === UI: Form Sparkline (Phase 7) ===
+function getTeamForm(teamName) {
+  if (!matchesData || !actualScores) return [];
+  var form = [];
+  for (var i = 0; i < matchesData.length; i++) {
+    var m = matchesData[i];
+    if (m.h !== teamName && m.a !== teamName) continue;
+    var key = m.h + '_' + m.a;
+    var score = actualScores[key];
+    if (!score) continue;
+    var hGoals = parseInt(score.h), aGoals = parseInt(score.a);
+    if (isNaN(hGoals) || isNaN(aGoals)) continue;
+    if (m.h === teamName) {
+      if (hGoals > aGoals) form.push('w');
+      else if (hGoals < aGoals) form.push('l');
+      else form.push('d');
+    } else {
+      if (aGoals > hGoals) form.push('w');
+      else if (aGoals < hGoals) form.push('l');
+      else form.push('d');
+    }
+  }
+  return form.slice(-5);
+}
+function renderFormDots(teamName) {
+  var form = getTeamForm(teamName);
+  if (!form.length) return '';
+  var html = '<span class="form-dots">';
+  form.forEach(function(r) { html += '<span class="form-dot form-dot-' + r + '"></span>'; });
+  html += '</span>';
+  return html;
+}
+
 function renderGroups() {
-  var el = document.getElementById('tab-groups'), html = '';
+  var el = document.getElementById('tab-groups');
   if (!wcData || !wcData.groups) {
-    el.innerHTML = '<div style="padding:20px;color:var(--text-muted)">Loading live data…</div>';
+    // If no data yet and no shell, show placeholder
+    if (!el.hasAttribute('data-shell')) {
+      el.innerHTML = '<div style="padding:20px;color:var(--text-muted)">Loading live data…</div>';
+    }
     return;
   }
-  var letters = Object.keys(wcData.groups);
-  var teamsIndex = getTeamsIndex();
-  letters.forEach(function(letter) {
-    var group = wcData.groups[letter];
-    var gc = groupColors[letter] || '#6366f1';
-    html += '<div class="group-section group-' + letter + '">' +
-      '<div class="group-header"><div class="group-badge">' + letter + '</div><div><div class="group-title">Group ' + letter + '</div><div class="group-region">📍 ' + group.region + '</div></div></div>' +
-      '<div class="standings-table-wrap"><table class="standings-table"><thead><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th><th></th></tr></thead><tbody>';
-    var teams = standingsData[letter] || [];
-    teams.forEach(function(t, i) {
-      var flag = (teamsIndex[t.t] && teamsIndex[t.t].flag) ? teamsIndex[t.t].flag + ' ' : '';
-      var posClass = '';
-      if (i < 2) posClass = ' standings-pos-qualify';
-      else if (i === 2) posClass = ' standings-pos-third';
-      html += '<tr class="standings-row' + posClass + '" data-team="' + t.t + '">' +
-        '<td>' + (i+1) + '</td>' +
-        '<td>' + flag + t.t + '</td>' +
-        '<td>' + t.p + '</td><td>' + t.w + '</td><td>' + t.d + '</td><td>' + t.l + '</td>' +
-        '<td>' + t.gf + '</td><td>' + t.ga + '</td><td>' + t.gd + '</td>' +
-        '<td class="pts">' + t.pts + '</td>' +
-        '<td class="standings-chevron">›</td></tr>';
+
+  // Check if static shell is present — hydrate in-place instead of rebuilding
+  if (el.hasAttribute('data-shell')) {
+    hydrateGroupShell(el);
+    el.removeAttribute('data-shell');
+  } else {
+    // Full rebuild (used on re-renders after tab switch, data refresh, etc.)
+    var html = '';
+    var letters = Object.keys(wcData.groups);
+    var teamsIndex = getTeamsIndex();
+
+    // Jump bar
+    html += '<div class="group-jumpbar" id="groupJumpbar">';
+    letters.forEach(function(letter) { html += '<a class="jumpbar-pill" href="#grp-' + letter + '">' + letter + '</a>'; });
+    html += '</div>';
+
+    letters.forEach(function(letter) {
+      var group = wcData.groups[letter];
+      var gc = groupColors[letter] || '#6366f1';
+      // Matchday progress: count how many games this group has completed
+      var groupMatches = matchesData ? matchesData.filter(function(m) { return m.g === letter && !m.stage; }) : [];
+      var played = 0;
+      if (actualScores) { groupMatches.forEach(function(m) { if (actualScores[m.h + '_' + m.a]) played++; }); }
+      var totalMD = groupMatches.length || 6;
+      var mdNum = Math.min(3, Math.ceil((played / (totalMD / 3)) || 0));
+      var mdLabel = played > 0 ? ' · MD ' + mdNum + '/3' : '';
+
+      html += '<div class="group-section group-' + letter + '" id="grp-' + letter + '">' +
+        '<div class="group-header"><div class="group-badge">' + letter + '</div><div><div class="group-title">Group ' + letter + '<span class="group-md">' + mdLabel + '</span></div><div class="group-region">' + group.region + '</div></div></div>' +
+        '<div class="standings-table-wrap"><table class="standings-table"><thead><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th><th></th></tr></thead><tbody>';
+      var teams = standingsData[letter] || [];
+      teams.forEach(function(t, i) {
+        var flag = (teamsIndex[t.t] && teamsIndex[t.t].flag) ? teamsIndex[t.t].flag + ' ' : '';
+        var posClass = '';
+        if (i < 2) posClass = ' standings-pos-qualify';
+        else if (i === 2) posClass = ' standings-pos-third';
+        var formHtml = renderFormDots(t.t);
+        html += '<tr class="standings-row' + posClass + '" data-team="' + t.t + '">' +
+          '<td>' + (i+1) + '</td>' +
+          '<td>' + flag + t.t + formHtml + '</td>' +
+          '<td>' + t.p + '</td><td>' + t.w + '</td><td>' + t.d + '</td><td>' + t.l + '</td>' +
+          '<td>' + t.gf + '</td><td>' + t.ga + '</td><td>' + t.gd + '</td>' +
+          '<td class="pts">' + t.pts + '</td>' +
+          '<td class="standings-chevron">›</td></tr>';
+      });
+      html += '</tbody></table></div></div>';
     });
-    html += '</tbody></table></div></div>';
-  });
-  el.innerHTML = html;
+    el.innerHTML = html;
+  }
+
+  // Initialize jump bar interaction + intersection observer
+  initGroupJumpbar();
+
   // Event delegation for team card clicks
   if (!el._hasTeamListener) {
     el._hasTeamListener = true;
@@ -283,6 +544,106 @@ function renderGroups() {
       }
     });
   }
+}
+
+// Hydrate the static HTML shell with real standings data
+function hydrateGroupShell(el) {
+  var teamsIndex = getTeamsIndex();
+  var letters = Object.keys(wcData.groups);
+  letters.forEach(function(letter) {
+    var standings = standingsData[letter] || [];
+    if (!standings.length) return;
+    var section = el.querySelector('.group-' + letter);
+    if (!section) return;
+    var rows = section.querySelectorAll('.standings-row');
+
+    // Rebuild rows in correct sorted order
+    var tbody = section.querySelector('tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    standings.forEach(function(t, i) {
+      var flag = (teamsIndex[t.t] && teamsIndex[t.t].flag) ? teamsIndex[t.t].flag + ' ' : '';
+      var posClass = '';
+      if (i < 2) posClass = ' standings-pos-qualify';
+      else if (i === 2) posClass = ' standings-pos-third';
+      var tr = document.createElement('tr');
+      tr.className = 'standings-row' + posClass;
+      tr.setAttribute('data-team', t.t);
+      var formHtml = renderFormDots(t.t);
+      tr.innerHTML = '<td>' + (i+1) + '</td>' +
+        '<td>' + flag + t.t + formHtml + '</td>' +
+        '<td>' + t.p + '</td><td>' + t.w + '</td><td>' + t.d + '</td><td>' + t.l + '</td>' +
+        '<td>' + t.gf + '</td><td>' + t.ga + '</td><td>' + t.gd + '</td>' +
+        '<td class="pts">' + t.pts + '</td>' +
+        '<td class="standings-chevron">›</td>';
+      tbody.appendChild(tr);
+    });
+  });
+  // Remove loading pulse
+  el.classList.remove('shell-loading');
+
+  // Inject jump bar at the top of the groups tab (for the shell path)
+  if (!el.querySelector('.group-jumpbar')) {
+    var letters = Object.keys(wcData.groups);
+    var barHtml = '<div class="group-jumpbar" id="groupJumpbar">';
+    letters.forEach(function(letter) { barHtml += '<a class="jumpbar-pill" href="#grp-' + letter + '">' + letter + '</a>'; });
+    barHtml += '</div>';
+    el.insertAdjacentHTML('afterbegin', barHtml);
+    // Add id anchors to each group section
+    letters.forEach(function(letter) {
+      var section = el.querySelector('.group-' + letter);
+      if (section && !section.id) section.id = 'grp-' + letter;
+    });
+  }
+
+  // Add matchday progress to group headers
+  if (matchesData && actualScores) {
+    var letters2 = Object.keys(wcData.groups);
+    letters2.forEach(function(letter) {
+      var section = el.querySelector('.group-' + letter);
+      if (!section) return;
+      var titleEl = section.querySelector('.group-title');
+      if (!titleEl || titleEl.querySelector('.group-md')) return;
+      var groupMatches = matchesData.filter(function(m) { return m.g === letter && !m.stage; });
+      var played = 0;
+      groupMatches.forEach(function(m) { if (actualScores[m.h + '_' + m.a]) played++; });
+      var totalMD = groupMatches.length || 6;
+      var mdNum = Math.min(3, Math.ceil((played / (totalMD / 3)) || 0));
+      if (played > 0) titleEl.insertAdjacentHTML('beforeend', '<span class="group-md"> · MD ' + mdNum + '/3</span>');
+    });
+  }
+}
+
+// === Group Jump Bar Interaction ===
+function initGroupJumpbar() {
+  var bar = document.getElementById('groupJumpbar');
+  if (!bar) return;
+
+  // Smooth scroll on click (prevent default hash jump)
+  bar.addEventListener('click', function(e) {
+    var pill = e.target.closest('.jumpbar-pill');
+    if (!pill) return;
+    e.preventDefault();
+    var target = document.querySelector(pill.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  // IntersectionObserver to highlight the active group letter
+  var pills = bar.querySelectorAll('.jumpbar-pill');
+  var sections = document.querySelectorAll('#tab-groups .group-section');
+  if (!sections.length || !('IntersectionObserver' in window)) return;
+
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var id = entry.target.id; // "grp-A", "grp-B", etc.
+        var letter = id.replace('grp-', '');
+        pills.forEach(function(p) { p.classList.toggle('active', p.textContent === letter); });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(function(s) { observer.observe(s); });
 }
 
 
@@ -358,8 +719,29 @@ function renderBracket() {
     return (wcData.teams[teamName] && wcData.teams[teamName].flag) ? wcData.teams[teamName].flag + ' ' : '';
   }
 
+  // Helper: render a knockout match card with tap hints and pick state
+  var totalKoPicks = 0, madeKoPicks = 0;
+  function koMatchCard(matchId, homeTeam, awayTeam, label, venue) {
+    totalKoPicks++;
+    var winner = bracketState['ko_' + matchId];
+    if (winner) madeKoPicks++;
+    var needsPick = !winner && wcData.teams[homeTeam] && wcData.teams[awayTeam];
+    var matchCls = needsPick ? ' needs-pick' : '';
+    var hint = needsPick ? '<span class="bracket-tap-hint">tap to pick</span>' : '';
+    var homeUnpicked = !winner && wcData.teams[homeTeam] ? ' unpicked' : '';
+    var awayUnpicked = !winner && wcData.teams[awayTeam] ? ' unpicked' : '';
+    var h = '<div class="bracket-match' + matchCls + '"><div class="bracket-match-lbl">' + label + hint + '</div>';
+    h += '<div class="bracket-team' + (winner === homeTeam ? ' winner' : homeUnpicked) + '" data-ko="' + matchId + '" data-pick="home">' +
+      '<span class="bt-name">' + getFlag(homeTeam) + homeTeam + '</span></div>';
+    h += '<div class="bracket-team' + (winner === awayTeam ? ' winner' : awayUnpicked) + '" data-ko="' + matchId + '" data-pick="away">' +
+      '<span class="bt-name">' + getFlag(awayTeam) + awayTeam + '</span></div>';
+    if (venue) h += '<div class="bracket-venue-lbl">' + venue + '</div>';
+    h += '</div>';
+    return h;
+  }
+
   // Build HTML
-  var html = '<div class="bracket-info"><h3>Elimination Bracket</h3><p>Pick 1st, 2nd, and 3rd place per group (click teams in order). Best 8 third-place teams auto-qualify for R32.</p><button id="resetBtn">↺ Reset</button></div>';
+  var html = '<div class="bracket-info"><h3>Elimination Bracket</h3><p>Pick 1st, 2nd, and 3rd place per group (click teams in order). Best 8 third-place teams auto-qualify for R32.</p><button id="resetBtn">' + icon('reset',{size:14}) + ' Reset</button></div>';
 
   // === GROUP PICKS ===
   html += '<div class="bracket-round-title">Group Stage Picks</div>';
@@ -392,16 +774,7 @@ function renderBracket() {
     var matchId = m[0];
     var homeTeam = resolveSlot(m[1]);
     var awayTeam = resolveSlot(m[2]);
-    var winner = bracketState['ko_' + matchId];
-    html += '<div class="bracket-match"><div class="bracket-match-lbl">' + matchId + ' · ' + m[1] + ' vs ' + m[2] + '</div>';
-    html += '<div class="bracket-team' + (winner === homeTeam ? ' winner' : '') + '" data-ko="' + matchId + '" data-pick="home">' +
-      '<span class="bt-name">' + getFlag(homeTeam) + homeTeam + '</span></div>';
-    html += '<div class="bracket-team' + (winner === awayTeam ? ' winner' : '') + '" data-ko="' + matchId + '" data-pick="away">' +
-      '<span class="bt-name">' + getFlag(awayTeam) + awayTeam + '</span></div>';
-    if (bracketVenues[matchId]) {
-      html += '<div class="bracket-venue-lbl">' + bracketVenues[matchId] + '</div>';
-    }
-    html += '</div>';
+    html += koMatchCard(matchId, homeTeam, awayTeam, matchId + ' · ' + m[1] + ' vs ' + m[2], bracketVenues[matchId]);
   });
   html += '</div>';
 
@@ -412,16 +785,7 @@ function renderBracket() {
     var matchId = 'R16_' + i;
     var home = bracketState['ko_' + pair[0]] || 'W ' + pair[0];
     var away = bracketState['ko_' + pair[1]] || 'W ' + pair[1];
-    var winner = bracketState['ko_' + matchId];
-    html += '<div class="bracket-match"><div class="bracket-match-lbl">R16 · W' + pair[0] + ' vs W' + pair[1] + '</div>';
-    html += '<div class="bracket-team' + (winner === home ? ' winner' : '') + '" data-ko="' + matchId + '" data-pick="home">' +
-      '<span class="bt-name">' + getFlag(home) + home + '</span></div>';
-    html += '<div class="bracket-team' + (winner === away ? ' winner' : '') + '" data-ko="' + matchId + '" data-pick="away">' +
-      '<span class="bt-name">' + getFlag(away) + away + '</span></div>';
-    if (bracketVenues[matchId]) {
-      html += '<div class="bracket-venue-lbl">' + bracketVenues[matchId] + '</div>';
-    }
-    html += '</div>';
+    html += koMatchCard(matchId, home, away, 'R16 · W' + pair[0] + ' vs W' + pair[1], bracketVenues[matchId]);
   });
   html += '</div>';
 
@@ -433,16 +797,7 @@ function renderBracket() {
     var r16a = 'R16_' + pair[0], r16b = 'R16_' + pair[1];
     var home = bracketState['ko_' + r16a] || 'W R16.' + (pair[0]+1);
     var away = bracketState['ko_' + r16b] || 'W R16.' + (pair[1]+1);
-    var winner = bracketState['ko_' + matchId];
-    html += '<div class="bracket-match"><div class="bracket-match-lbl">QF' + (i+1) + '</div>';
-    html += '<div class="bracket-team' + (winner === home ? ' winner' : '') + '" data-ko="' + matchId + '" data-pick="home">' +
-      '<span class="bt-name">' + getFlag(home) + home + '</span></div>';
-    html += '<div class="bracket-team' + (winner === away ? ' winner' : '') + '" data-ko="' + matchId + '" data-pick="away">' +
-      '<span class="bt-name">' + getFlag(away) + away + '</span></div>';
-    if (bracketVenues[matchId]) {
-      html += '<div class="bracket-venue-lbl">' + bracketVenues[matchId] + '</div>';
-    }
-    html += '</div>';
+    html += koMatchCard(matchId, home, away, 'QF' + (i+1), bracketVenues[matchId]);
   });
   html += '</div>';
 
@@ -454,35 +809,29 @@ function renderBracket() {
     var qfa = 'QF_' + pair[0], qfb = 'QF_' + pair[1];
     var home = bracketState['ko_' + qfa] || 'W QF' + (pair[0]+1);
     var away = bracketState['ko_' + qfb] || 'W QF' + (pair[1]+1);
-    var winner = bracketState['ko_' + matchId];
-    html += '<div class="bracket-match"><div class="bracket-match-lbl">SF' + (i+1) + '</div>';
-    html += '<div class="bracket-team' + (winner === home ? ' winner' : '') + '" data-ko="' + matchId + '" data-pick="home">' +
-      '<span class="bt-name">' + getFlag(home) + home + '</span></div>';
-    html += '<div class="bracket-team' + (winner === away ? ' winner' : '') + '" data-ko="' + matchId + '" data-pick="away">' +
-      '<span class="bt-name">' + getFlag(away) + away + '</span></div>';
-    if (bracketVenues[matchId]) {
-      html += '<div class="bracket-venue-lbl">' + bracketVenues[matchId] + '</div>';
-    }
-    html += '</div>';
+    html += koMatchCard(matchId, home, away, 'SF' + (i+1), bracketVenues[matchId]);
   });
   html += '</div>';
 
   // === FINAL ===
-  html += '<div class="bracket-round-title">🏆 Final</div>';
+  html += '<div class="bracket-round-title">' + icon('trophy',{size:14}) + ' Final</div>';
   html += '<div class="bracket-grid">';
   var finalHome = bracketState['ko_SF_0'] || 'W SF1';
   var finalAway = bracketState['ko_SF_1'] || 'W SF2';
+  html += koMatchCard('FINAL', finalHome, finalAway, 'Final · MetLife Stadium', null);
   var champion = bracketState['ko_FINAL'];
-  html += '<div class="bracket-match"><div class="bracket-match-lbl">Final · MetLife Stadium</div>';
-  html += '<div class="bracket-team' + (champion === finalHome ? ' winner' : '') + '" data-ko="FINAL" data-pick="home">' +
-    '<span class="bt-name">' + getFlag(finalHome) + finalHome + '</span></div>';
-  html += '<div class="bracket-team' + (champion === finalAway ? ' winner' : '') + '" data-ko="FINAL" data-pick="away">' +
-    '<span class="bt-name">' + getFlag(finalAway) + finalAway + '</span></div>';
-  html += '</div>';
   if (champion && wcData.teams[champion]) {
-    html += '<div style="text-align:center;padding:20px;font-size:1.5rem">🏆 ' + wcData.teams[champion].flag + ' <strong>' + champion + '</strong> wins the World Cup!</div>';
+    html += '<div style="text-align:center;padding:20px;font-size:1.5rem">' + icon('trophy',{size:28,cls:'champion-trophy'}) + ' ' + wcData.teams[champion].flag + ' <strong>' + champion + '</strong> wins the World Cup!</div>';
   }
   html += '</div>';
+
+  // Insert progress bar after bracket-info (before group picks)
+  var progressPct = totalKoPicks > 0 ? Math.round((madeKoPicks / totalKoPicks) * 100) : 0;
+  var progressHtml = '<div class="bracket-progress"><div class="bracket-progress-bar"><div class="bracket-progress-fill" style="width:' + progressPct + '%"></div></div><span class="bracket-progress-label">' + madeKoPicks + '/' + totalKoPicks + ' picks made</span></div>';
+  // Insert after bracket-info closing tag
+  html = html.replace('</div>\n', '</div>\n'); // no-op placeholder
+  // Actually just prepend it after the info section by finding the first bracket-round-title
+  html = html.replace('<div class="bracket-round-title">Group Stage Picks', progressHtml + '<div class="bracket-round-title">Group Stage Picks');
 
   el.innerHTML = html;
 
@@ -590,20 +939,20 @@ function renderStats() {
   // Tournament overview
   html += '<h2 style="margin-bottom:16px;font-size:1.1rem">Tournament Statistics</h2>';
   html += '<div class="stats-grid">';
-  html += '<div class="stat-card"><div class="stat-val" style="color:var(--accent)">' + overview.matchesPlayed + '</div><div class="stat-lbl">Matches Played</div></div>';
-  html += '<div class="stat-card"><div class="stat-val" style="color:#22c55e">' + overview.goalsScored + '</div><div class="stat-lbl">Goals Scored</div></div>';
-  html += '<div class="stat-card"><div class="stat-val" style="color:#f59e0b">' + overview.goalsPerMatch.toFixed(1) + '</div><div class="stat-lbl">Goals/Match</div></div>';
-  html += '<div class="stat-card"><div class="stat-val" style="color:#ec4899">' + overview.teams + '</div><div class="stat-lbl">Teams</div></div>';
+  html += '<div class="stat-card"><div class="stat-val stat-val-accent">' + overview.matchesPlayed + '</div><div class="stat-lbl">Matches Played</div></div>';
+  html += '<div class="stat-card"><div class="stat-val stat-val-green">' + overview.goalsScored + '</div><div class="stat-lbl">Goals Scored</div></div>';
+  html += '<div class="stat-card"><div class="stat-val stat-val-amber">' + overview.goalsPerMatch.toFixed(1) + '</div><div class="stat-lbl">Goals/Match</div></div>';
+  html += '<div class="stat-card"><div class="stat-val stat-val-pink">' + overview.teams + '</div><div class="stat-lbl">Teams</div></div>';
   html += '</div>';
   
   // Top Scorers
-  html += '<div class="modal-section"><h3 style="color:var(--accent)">⚽ Top Scorers</h3>';
+  html += '<div class="modal-section"><h3 style="color:var(--accent)">' + icon('target') + ' Top Scorers</h3>';
   var maxGoals = scorers[0].g;
   // Golden leader card
   var leader = scorers[0];
   var leaderFlag = (teamsIndex[leader.t] && teamsIndex[leader.t].flag) ? teamsIndex[leader.t].flag : '';
   html += '<div class="scorer-leader">';
-  html += '<div class="scorer-rank">🥇</div>';
+  html += '<div class="scorer-rank">' + icon('trophy',{size:22}) + '</div>';
   html += '<div><div class="scorer-name">' + esc(leader.n) + '</div><div class="scorer-team">' + leaderFlag + ' ' + esc(leader.t) + '</div></div>';
   html += '<div class="scorer-goals-badge">' + leader.g + '</div>';
   html += '</div>';
@@ -622,25 +971,43 @@ function renderStats() {
   }
   html += '</table></div>';
   
-  // Group Goals
-  html += '<div class="modal-section"><h3 style="color:var(--accent)">📊 Goals by Group</h3>';
-  html += '<table class="standings-table"><thead><tr><th>Group</th><th>Matches</th><th>Goals</th><th>Avg/Match</th></tr></thead><tbody>';
+  // Group Goals — horizontal bar chart
+  html += '<div class="modal-section"><h3 style="color:var(--accent)">' + icon('barChart') + ' Goals by Group</h3>';
+  var maxGroupGoals = Math.max.apply(null, groupGoals.map(function(gg) { return gg.goals; })) || 1;
+  html += '<div class="stat-bars">';
   groupGoals.forEach(function(gg) {
-    html += '<tr><td style="font-weight:700;color:' + (groupColors[gg.g]||'var(--accent)') + '">Group ' + gg.g + '</td><td>' + gg.m + '</td><td style="font-weight:600">' + gg.goals + '</td><td>' + (gg.goals/gg.m).toFixed(1) + '</td></tr>';
+    var pct = Math.round((gg.goals / maxGroupGoals) * 100);
+    var gc = groupColors[gg.g] || 'var(--accent)';
+    html += '<div class="stat-bar-row">' +
+      '<span class="stat-bar-label" style="color:' + gc + '">Grp ' + gg.g + '</span>' +
+      '<div class="stat-bar-track"><div class="stat-bar-fill" style="width:' + pct + '%;background:' + gc + '"></div></div>' +
+      '<span class="stat-bar-val">' + gg.goals + '</span>' +
+    '</div>';
   });
-  html += '</tbody></table></div>';
+  html += '</div></div>';
   
-  // Confederation stats
-  html += '<div class="modal-section"><h3 style="color:var(--accent)">🌍 Goals by Confederation</h3>';
-  html += '<table class="standings-table"><thead><tr><th>Confederation</th><th>Scored</th><th>Conceded</th><th>+/-</th></tr></thead><tbody>';
+  // Confederation stats — dual bar (scored vs conceded)
+  html += '<div class="modal-section"><h3 style="color:var(--accent)">' + icon('globe') + ' Goals by Confederation</h3>';
+  var maxConfGoals = Math.max.apply(null, confStats.map(function(cs) { return Math.max(cs.s, cs.con); })) || 1;
+  html += '<div class="stat-bars">';
   confStats.forEach(function(cs) {
     var diff = cs.s - cs.con;
-    html += '<tr><td style="font-weight:500">' + cs.c + '</td><td>' + cs.s + '</td><td>' + cs.con + '</td><td style="color:' + (diff>=0?'var(--green, #22c55e)':'var(--red, #ef4444)') + '">' + (diff>=0?'+':'') + diff + '</td></tr>';
+    var sPct = Math.round((cs.s / maxConfGoals) * 100);
+    var cPct = Math.round((cs.con / maxConfGoals) * 100);
+    html += '<div class="stat-bar-row stat-bar-dual">' +
+      '<span class="stat-bar-label">' + cs.c + '</span>' +
+      '<div class="stat-bar-dual-wrap">' +
+        '<div class="stat-bar-track"><div class="stat-bar-fill stat-bar-scored" style="width:' + sPct + '%"></div></div>' +
+        '<div class="stat-bar-track"><div class="stat-bar-fill stat-bar-conceded" style="width:' + cPct + '%"></div></div>' +
+      '</div>' +
+      '<span class="stat-bar-val stat-bar-diff ' + (diff >= 0 ? 'positive' : 'negative') + '">' + (diff >= 0 ? '+' : '') + diff + '</span>' +
+    '</div>';
   });
-  html += '</tbody></table></div>';
+  html += '<div class="stat-bar-legend"><span class="stat-bar-legend-dot stat-bar-scored"></span> Scored <span class="stat-bar-legend-dot stat-bar-conceded"></span> Conceded</div>';
+  html += '</div></div>';
   
   // Key records
-  html += '<div class="modal-section"><h3 style="color:var(--accent)">🏅 Records & Milestones</h3>';
+  html += '<div class="modal-section"><h3 style="color:var(--accent)">' + icon('award') + ' Records &amp; Milestones</h3>';
   html += '<table class="key-dates"><tbody>';
   records.forEach(function(record) {
     html += '<tr><td>' + esc(record.label) + '</td><td>' + esc(record.detail) + '</td></tr>';
@@ -769,7 +1136,7 @@ function renderMatches() {
   }
 
   // Download calendar button + Date nav pills
-  var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><button class="today-btn" onclick="jumpToToday()">Today</button><a href="world-cup-2026-schedule.ics" download class="cal-download-btn">📅 Add All Matches to Calendar</a></div>';
+  var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><button class="today-btn" onclick="jumpToToday()">Today</button><a href="world-cup-2026-schedule.ics" download class="cal-download-btn">' + icon('calendar',{size:15}) + ' Add All Matches to Calendar</a></div>';
   html += '<div class="date-nav" id="dateNav">';
   dates.forEach(function(dateStr) {
     var info = formatDatePill(dateStr);
@@ -813,7 +1180,7 @@ function renderMatches() {
       var aClick = wcData.teams[m.a] ? ' data-team="' + m.a + '" style="cursor:pointer"' : '';
 
       html += '<div class="match-card">';
-      // Header: meta info
+      // Header: meta info + venue inline (FotMob/Apple Sports pattern)
       html += '<div class="mc-header">';
       if (isKnockout) {
         html += '<span class="mc-stage-label">' + m.stage + '</span>';
@@ -823,6 +1190,10 @@ function renderMatches() {
       }
       html += '<span class="mc-countdown">' + pdt + ' ' + localTz + '</span>';
       html += '</div>';
+      // Venue line — always visible, compact
+      if (m.v) {
+        html += '<div class="mc-venue-line">' + m.v + '</div>';
+      }
       // Body: teams centered
       html += '<div class="mc-body">';
       html += '<div class="mc-team mc-team-home"' + hClick + '><span class="mc-name">' + m.h + '</span><span class="mc-flag">' + hFlag + '</span></div>';
@@ -838,6 +1209,7 @@ function renderMatches() {
         html += '</div></div>';
       } else if (scorePred && !isKnockout) {
         html += '<div class="mc-score"><div>';
+        html += '<div class="mc-pred-label">PRED</div>';
         html += '<div class="mc-pred-score">' + scorePred.h + ' - ' + scorePred.a + '</div>';
         html += '<div class="mc-xg">xG ' + scorePred.xgH + ' - ' + scorePred.xgA + '</div>';
         html += '</div></div>';
@@ -846,29 +1218,43 @@ function renderMatches() {
       }
       html += '<div class="mc-team mc-team-away"' + aClick + '><span class="mc-flag">' + aFlag + '</span><span class="mc-name">' + m.a + '</span></div>';
       html += '</div>';
-      // Prediction bar (only for group stage matches)
-      if (!isKnockout && teamStrength[m.h] && teamStrength[m.a]) {
-        var pred = getMatchPrediction(m.h, m.a);
-        html += '<div class="mc-pred">';
-        html += '<div class="pred-bar">';
-        html += '<div class="pred-seg pred-home" style="width:' + pred.h + '%"><span>' + pred.h + '%</span></div>';
-        html += '<div class="pred-seg pred-draw" style="width:' + pred.d + '%"><span>' + pred.d + '%</span></div>';
-        html += '<div class="pred-seg pred-away" style="width:' + pred.a + '%"><span>' + pred.a + '%</span></div>';
-        html += '</div>';
-        html += '<div class="pred-label">Win probability · Elo-Poisson model (Opta/PELE data)</div>';
+      // Scorers row for finished matches
+      if (actual && (actual.hs || actual.as)) {
+        html += '<div class="mc-scorers">';
+        html += '<div class="mc-scorers-home">' + (actual.hs ? actual.hs.map(function(s) { return esc(s); }).join('<br>') : '') + '</div>';
+        html += '<div class="mc-scorers-away">' + (actual.as ? actual.as.map(function(s) { return esc(s); }).join('<br>') : '') + '</div>';
         html += '</div>';
       }
-      // Footer: venue + broadcast
-      html += '<div class="mc-footer">';
-      var capacityStr = m.capacity ? ' · <span class="mc-capacity">🏟 ' + m.capacity.toLocaleString() + '</span>' : '';
-      html += '<span class="mc-venue">📍 ' + m.v + capacityStr + '</span>';
-      html += '<div class="mc-broadcast">';
-      if (m.net === 'FOX') {
-        html += '<span class="bc-tag bc-free">📡 FOX</span><span class="bc-tag bc-free">🇪🇸 TMD</span>';
-      } else {
-        html += '<span class="bc-tag bc-paid">📺 FS1</span><span class="bc-tag bc-free">🇪🇸 TMD</span>';
+      // Collapsible details: prediction + broadcast
+      var hasDetails = (!isKnockout && teamStrength[m.h] && teamStrength[m.a]) || m.net;
+      if (hasDetails) {
+        html += '<div class="mc-details">';
+        // Prediction bar (only for group stage matches)
+        if (!isKnockout && teamStrength[m.h] && teamStrength[m.a]) {
+          var pred = getMatchPrediction(m.h, m.a);
+          html += '<div class="mc-pred">';
+          html += '<div class="pred-bar">';
+          html += '<div class="pred-seg pred-home" style="width:' + pred.h + '%"><span>' + pred.h + '%</span></div>';
+          html += '<div class="pred-seg pred-draw" style="width:' + pred.d + '%"><span>' + pred.d + '%</span></div>';
+          html += '<div class="pred-seg pred-away" style="width:' + pred.a + '%"><span>' + pred.a + '%</span></div>';
+          html += '</div>';
+          html += '<div class="pred-label">Win probability · Elo-Poisson model</div>';
+          html += '</div>';
+        }
+        // Broadcast + capacity
+        html += '<div class="mc-footer">';
+        if (m.capacity) html += '<span class="mc-capacity">' + icon('stadium',{size:13}) + ' ' + m.capacity.toLocaleString() + '</span>';
+        html += '<div class="mc-broadcast">';
+        if (m.net === 'FOX') {
+          html += '<span class="bc-tag bc-free">FOX</span><span class="bc-tag bc-free">TMD</span>';
+        } else {
+          html += '<span class="bc-tag bc-paid">FS1</span><span class="bc-tag bc-free">TMD</span>';
+        }
+        html += '</div></div>';
+        html += '</div>';
+        html += '<button class="mc-expand-btn" onclick="toggleMatchDetails(this)" aria-label="Show details"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>';
       }
-      html += '</div></div></div>';
+      html += '</div>';
     });
     html += '</div>';
   }
@@ -929,12 +1315,9 @@ function getEffectiveTheme() {
 function applyTheme() {
   var effective = getEffectiveTheme();
   document.documentElement.setAttribute('data-theme', effective);
-  var fab = document.getElementById('themeFab');
-  if (fab) {
-    var icons = {system: '\uD83D\uDCBB', light: '\u2600\uFE0F', dark: '\uD83C\uDF19'};
-    fab.textContent = icons[themePreference] || '\u2699\uFE0F';
-    fab.title = 'Theme: ' + themePreference;
-  }
+  document.documentElement.setAttribute('data-theme-pref', themePreference);
+  var btn = document.getElementById('themeBtn');
+  if (btn) btn.title = 'Theme: ' + themePreference;
 }
 
 function cycleTheme() {
@@ -958,79 +1341,256 @@ try { var saved = localStorage.getItem('wc2026bracket'); if (saved) bracketState
 
 
 // === ASYNC INITIALIZATION ===
-async function init() {
-  try {
-    var data = null;
-    try {
-      var resp = await fetch('/api/data', { headers: { 'Accept': 'application/json' } });
-      if (resp.ok) {
-        var livePayload = await resp.json();
-        data = livePayload && livePayload.data ? livePayload.data : livePayload;
-        if (!isValidBootstrapData(data)) data = null;
-      }
-    } catch (liveErr) {}
-    if (!data) {
-      var fallbackResp = await fetch('data.json');
-      if (!fallbackResp.ok) throw new Error('HTTP ' + fallbackResp.status);
-      data = await fallbackResp.json();
-    }
-    // Assign data to globals
-    wcData = { groups: data.groups, teams: data.teams };
-    jerseyNumbers = data.jerseyNumbers;
-    matchesData = data.matchesData;
-    scorePredictions = data.scorePredictions;
-    teamStrength = data.teamStrength;
-    eloRatings = data.eloRatings;
-    injuryIntel = data.injuryIntel;
-    actualScores = data.actualScores || {};
-    standingsData = data.standingsData || {};
-    statsData = data.statsData || null;
-    bracketVenues = data.bracketVenues;
-    groupColors = data.groupColors;
-    modelPredictions = data.modelPredictions;
-  } catch(e) {
-    console.error('Failed to load data:', e);
-    document.body.innerHTML = '<div style="text-align:center;padding:4rem 1rem;color:var(--text)"><h2>Failed to load data</h2><p>Please refresh the page.</p></div>';
-    return;
-  }
+var DATA_CACHE_KEY = 'wc26-data-cache';
 
-  // Remove loading skeleton
+function assignDataGlobals(data) {
+  wcData = { groups: data.groups, teams: data.teams };
+  jerseyNumbers = data.jerseyNumbers;
+  matchesData = data.matchesData;
+  scorePredictions = data.scorePredictions;
+  teamStrength = data.teamStrength;
+  eloRatings = data.eloRatings;
+  injuryIntel = data.injuryIntel;
+  actualScores = data.actualScores || {};
+  standingsData = data.standingsData || {};
+  statsData = data.statsData || null;
+  bracketVenues = data.bracketVenues;
+  groupColors = data.groupColors;
+  modelPredictions = data.modelPredictions;
+}
+
+function showReadyUI() {
   var skeleton = document.getElementById('loading-skeleton');
   if (skeleton) skeleton.remove();
-  document.querySelector('.container').classList.remove('loading');
+  var container = document.querySelector('.container');
+  if (container) container.classList.remove('loading');
+  var groupsEl = document.getElementById('tab-groups');
+  if (groupsEl) groupsEl.classList.remove('shell-loading');
+}
 
-  // Restore state from URL hash on load
+function showUpdatingIndicator() {
+  // Show "Updating…" and keep it visible until the fetch completes (cancel any
+  // pending auto-hide so it doesn't disappear mid-refresh).
+  if (updatedAgoHideTimer) clearTimeout(updatedAgoHideTimer);
+  var el = document.getElementById('updatedAgo');
+  if (el) { el.textContent = 'Updating\u2026'; el.classList.add('visible'); }
+}
+
+function hideUpdatingIndicator() {
+  showUpdatedAgo();
+}
+
+function renderActiveTab() {
   var hash = window.location.hash.replace('#', '');
   if (hash) {
     var parts = hash.split('/');
     var tab = parts[0];
     var validTabs = ['groups', 'matches', 'bracket', 'stats'];
     if (validTabs.indexOf(tab) >= 0) {
-      // Activate the correct tab button
       var btns = document.querySelectorAll('.nav-tab');
       var tabIndex = validTabs.indexOf(tab);
       btns.forEach(function(b, i) { b.classList.toggle('active', i === tabIndex); });
       document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
       document.getElementById('tab-' + tab).classList.add('active');
       document.body.setAttribute('data-active-tab', tab);
-      // Restore match date if present
-      if (tab === 'matches' && parts[1]) {
-        selectedMatchDate = parts[1];
-      }
-      // Render the restored tab
+      if (tab === 'matches' && parts[1]) selectedMatchDate = parts[1];
       renderedTabs[tab] = true;
       try {
         if (tab === 'groups') renderGroups();
         else if (tab === 'matches') renderMatches();
         else if (tab === 'bracket') renderBracket();
         else if (tab === 'stats') renderStats();
-      } catch(e) { console.error('Error restoring tab:', e); }
+      } catch(e) { console.error('Error rendering ' + tab + ':', e); }
+      renderMatchStrip();
       return;
     }
   }
-  // Default: render groups
   renderedTabs['groups'] = true;
   try { renderGroups(); } catch(e) { console.error('renderGroups error:', e); }
+  renderMatchStrip();
 }
 
+function refreshActiveTab() {
+  var activeTab = document.body.getAttribute('data-active-tab');
+  if (!activeTab) {
+    var activeEl = document.querySelector('.tab-content.active');
+    if (activeEl) activeTab = activeEl.id.replace('tab-', '');
+  }
+  if (activeTab) {
+    renderedTabs[activeTab] = false;
+    ensureTabRendered(activeTab);
+  }
+  renderMatchStrip();
+}
+
+async function fetchFreshData() {
+  var data = null;
+  try {
+    var resp = await fetch('/api/data', { headers: { 'Accept': 'application/json' } });
+    if (resp.ok) {
+      var livePayload = await resp.json();
+      data = livePayload && livePayload.data ? livePayload.data : livePayload;
+      if (!isValidBootstrapData(data)) data = null;
+    }
+  } catch (e) {}
+  if (!data) {
+    var fallbackResp = await fetch('data.json');
+    if (fallbackResp.ok) {
+      data = await fallbackResp.json();
+    }
+  }
+  return data;
+}
+
+async function init() {
+  // Step 1: Load static data synchronously from inline <script> tag
+  // This is available instantly — no network needed
+  var staticEl = document.getElementById('static-data');
+  var staticData = null;
+  if (staticEl) {
+    try { staticData = JSON.parse(staticEl.textContent); } catch(e) {}
+  }
+
+  // Step 2: If we have static data, render immediately with it
+  if (staticData && isValidBootstrapData(staticData)) {
+    // Merge any cached dynamic data from localStorage
+    var cachedDynamic = null;
+    try {
+      var raw = localStorage.getItem(DATA_CACHE_KEY);
+      if (raw) cachedDynamic = JSON.parse(raw);
+    } catch(e) {}
+
+    // Apply static data as the base
+    assignDataGlobals(staticData);
+
+    // Overlay cached dynamic data if available
+    if (cachedDynamic) {
+      if (cachedDynamic.actualScores) actualScores = cachedDynamic.actualScores;
+      if (cachedDynamic.standingsData) standingsData = cachedDynamic.standingsData;
+      if (cachedDynamic.statsData) statsData = cachedDynamic.statsData;
+    }
+
+    showReadyUI();
+    renderActiveTab();
+    showUpdatingIndicator();
+
+    // Step 3: Fetch fresh dynamic data in background
+    try {
+      var freshData = await fetchFreshData();
+      if (freshData && isValidBootstrapData(freshData)) {
+        // Only update dynamic fields from fresh data
+        actualScores = freshData.actualScores || actualScores;
+        standingsData = freshData.standingsData || standingsData;
+        statsData = freshData.statsData || statsData;
+        refreshActiveTab();
+        // Cache the dynamic fields for next cold load
+        try {
+          localStorage.setItem(DATA_CACHE_KEY, JSON.stringify({
+            actualScores: actualScores,
+            standingsData: standingsData,
+            statsData: statsData
+          }));
+        } catch(e) {}
+      }
+    } catch(e) {}
+    hideUpdatingIndicator();
+  } else {
+    // Fallback: no inline static data (shouldn't happen in production)
+    // Try localStorage full cache, then network
+    var cachedData = null;
+    try {
+      var raw2 = localStorage.getItem(DATA_CACHE_KEY);
+      if (raw2) cachedData = JSON.parse(raw2);
+    } catch(e) {}
+
+    if (cachedData && isValidBootstrapData(cachedData)) {
+      assignDataGlobals(cachedData);
+      showReadyUI();
+      renderActiveTab();
+    } else {
+      try {
+        var data = await fetchFreshData();
+        if (!data) throw new Error('No data available');
+        assignDataGlobals(data);
+        try { localStorage.setItem(DATA_CACHE_KEY, JSON.stringify(data)); } catch(e) {}
+      } catch(e) {
+        console.error('Failed to load data:', e);
+        document.body.innerHTML = '<div style="text-align:center;padding:4rem 1rem;color:var(--text)"><h2>Failed to load data</h2><p>Please refresh the page.</p></div>';
+        return;
+      }
+      showReadyUI();
+      renderActiveTab();
+    }
+  }
+}
+
+// Attach click listener to group shell immediately (before data loads)
+// so team modals work while standings are still loading
+(function() {
+  var el = document.getElementById('tab-groups');
+  if (el && !el._hasTeamListener) {
+    el._hasTeamListener = true;
+    el.addEventListener('click', function(e) {
+      var row = e.target.closest('.standings-row[data-team]');
+      if (row && row.dataset.team) {
+        if (typeof wcData !== 'undefined' && wcData && wcData.teams && wcData.teams[row.dataset.team]) {
+          openTeamModal(row.dataset.team);
+        } else {
+          // Data not loaded yet — show brief loading state in modal
+          var modalEl = document.getElementById('modalContent');
+          if (modalEl) {
+            modalEl.innerHTML = '<div class="modal-hero" style="--gc:#6366f1"><button class="modal-close" onclick="closeModal()" aria-label="Back">' + icon('arrowLeft',{size:18}) + '</button></div>' +
+              '<div style="text-align:center;padding:3rem 1rem;color:var(--text-muted)">' +
+              '<div class="modal-spinner"></div>' +
+              '<p>Loading ' + row.dataset.team + ' details…</p></div>';
+            document.getElementById('modal').classList.add('visible');
+            document.body.style.overflow = 'hidden';
+            // Re-open once data arrives
+            var checkInterval = setInterval(function() {
+              if (typeof wcData !== 'undefined' && wcData && wcData.teams && wcData.teams[row.dataset.team]) {
+                clearInterval(checkInterval);
+                openTeamModal(row.dataset.team);
+              }
+            }, 200);
+            // Give up after 10s
+            setTimeout(function() { clearInterval(checkInterval); }, 10000);
+          }
+        }
+      }
+    });
+  }
+})();
+
 init();
+
+// === STALE-WHILE-REVALIDATE: Listen for fresh data from service worker ===
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'DATA_UPDATED') {
+      fetch('/api/data', { headers: { 'Accept': 'application/json' } }).then(function(resp) {
+        if (!resp.ok) return fetch('data.json');
+        return resp;
+      }).then(function(resp) {
+        if (!resp || !resp.ok) return null;
+        return resp.json();
+      }).then(function(payload) {
+        if (!payload) return;
+        var data = payload && payload.data ? payload.data : payload;
+        if (!isValidBootstrapData(data)) return;
+        // Only update dynamic fields
+        actualScores = data.actualScores || actualScores;
+        standingsData = data.standingsData || standingsData;
+        statsData = data.statsData || statsData;
+        refreshActiveTab();
+        showUpdatedAgo();
+        try {
+          localStorage.setItem(DATA_CACHE_KEY, JSON.stringify({
+            actualScores: actualScores,
+            standingsData: standingsData,
+            statsData: statsData
+          }));
+        } catch(e) {}
+      }).catch(function() {});
+    }
+  });
+}

@@ -3,6 +3,8 @@
   "private": true,
   "scripts": {
     "check": "node --check app.js && node --check service-worker.js && node --check api/data.js && node --test",
-    "test": "node --test"
+    "test": "node --test",
+    "predeploy": "node scripts/stamp-sw.js",
+    "deploy": "npm run predeploy && vercel --prod --yes"
   }
 }
