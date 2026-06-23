@@ -85,6 +85,8 @@ const SCORER_ALIASES_RAW = {
   'kamrvn bargs': 'Cameron Burgess',
   'mohamed almnai': 'Mohammed Al-Mannai',
   'ashmaail saibari': 'Ismael Saibari',
+  'nvnv mndz': 'Nuno Mendes',
+  'abdalvhid namtvf': 'Abduvohid Nematov',
 };
 
 function compactName(name) {
@@ -319,6 +321,14 @@ function computeStats(games) {
     conf[key].con += conceded;
   }
 
+  function addScorer(token, scoringTeam, opponentTeam) {
+    const resolved = resolveScorerToken(token, scoringTeam, opponentTeam);
+    if (!resolved || !resolved.name) return;
+    if (resolved.team && resolved.team !== scoringTeam) return;
+    scorerTotals[resolved.name] = (scorerTotals[resolved.name] || 0) + 1;
+    scorerTeams[resolved.name] = resolved.team || scoringTeam;
+  }
+
   finishedGames.forEach(game => {
     const home = norm(game.home_team_name_en || '');
     const away = norm(game.away_team_name_en || '');
@@ -329,16 +339,10 @@ function computeStats(games) {
     addConf(away, awayScore, homeScore);
 
     parseScorerTokens(game.home_scorers).forEach(token => {
-      const resolved = resolveScorerToken(token, home, away);
-      if (!resolved || !resolved.name) return;
-      scorerTotals[resolved.name] = (scorerTotals[resolved.name] || 0) + 1;
-      scorerTeams[resolved.name] = resolved.team || home;
+      addScorer(token, home, away);
     });
     parseScorerTokens(game.away_scorers).forEach(token => {
-      const resolved = resolveScorerToken(token, home, away);
-      if (!resolved || !resolved.name) return;
-      scorerTotals[resolved.name] = (scorerTotals[resolved.name] || 0) + 1;
-      scorerTeams[resolved.name] = resolved.team || away;
+      addScorer(token, away, home);
     });
   });
 
@@ -566,7 +570,7 @@ function buildData(games, now, groupsResult) {
         // Extract minute from original token
         const minMatch = token.match(/(\d+['′](?:\+\d+['′])?)/);
         const minute = minMatch ? minMatch[1] : '';
-        const ogMatch = /\(OG\)|own goal/i.test(token);
+        const ogMatch = /\(OG\)|own goal/i.test(token) || (resolved.team && resolved.team !== home);
         const surname = resolved.name.split(' ').slice(-1)[0];
         return surname + (minute ? ' ' + minute : '') + (ogMatch ? ' (OG)' : '');
       })
@@ -577,7 +581,7 @@ function buildData(games, now, groupsResult) {
         if (!resolved || !resolved.name) return null;
         const minMatch = token.match(/(\d+['′](?:\+\d+['′])?)/);
         const minute = minMatch ? minMatch[1] : '';
-        const ogMatch = /\(OG\)|own goal/i.test(token);
+        const ogMatch = /\(OG\)|own goal/i.test(token) || (resolved.team && resolved.team !== away);
         const surname = resolved.name.split(' ').slice(-1)[0];
         return surname + (minute ? ' ' + minute : '') + (ogMatch ? ' (OG)' : '');
       })

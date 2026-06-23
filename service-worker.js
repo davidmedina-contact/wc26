@@ -1,5 +1,5 @@
 var CACHE = 'wc26-v20';
-var BUILD_TS = '2026-06-23T04:42:19.282Z'; // auto-updated by npm run predeploy
+var BUILD_TS = '2026-06-23T22:08:48.876Z'; // auto-updated by npm run stamp-sw
 
 // Only precache assets that rarely change
 var PRECACHE = [

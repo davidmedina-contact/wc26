@@ -110,6 +110,29 @@ test('standings rows are sorted by FIFA group ranking criteria, not provider ord
   ]);
 });
 
+test('scorer aliases preserve every goal event on match cards', () => {
+  const result = buildData([
+    game({
+      group: 'K',
+      home_team_name_en: 'Portugal',
+      away_team_name_en: 'Uzbekistan',
+      home_score: '5',
+      away_score: '0',
+      home_scorers: "{\"Cristiano Ronaldo 6'\",\"Nvnv Mndz 17'\",\"Cristiano Ronaldo 39'\",\"Abdalvhid Namtvf 60'\",\"Rafael Leão 87'\"}",
+      away_scorers: 'null',
+    }),
+  ]);
+
+  assert.deepEqual(result.data.actualScores.Portugal_Uzbekistan.hs, [
+    "Ronaldo 6'",
+    "Mendes 17'",
+    "Ronaldo 39'",
+    "Nematov 60' (OG)",
+    "Leão 87'",
+  ]);
+  assert.equal(result.data.statsData.topScorers.some(row => row.n === 'Abduvohid Nematov'), false);
+});
+
 test('post-match completeness guard detects missing finals', () => {
   const beforeTournament = Date.parse('2026-06-11T18:00:00Z');
   assert.deepEqual(expectedFinishedKeys(beforeTournament), []);
