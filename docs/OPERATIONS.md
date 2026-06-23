@@ -18,8 +18,10 @@ The client only renders that payload. It does not call third-party APIs or infer
 
 - Successful `/api/data` responses use `s-maxage=900, stale-while-revalidate=60`.
 - Vercel's CDN absorbs repeat traffic and normally refreshes data within 15 minutes of expiry.
-- The service worker uses network-first reads and stores the last successful response at the stable `/api/data` URL.
+- The installed PWA has its own Cache API and `localStorage`; it does not automatically inherit a fresher payload just because Vercel's CDN has one.
+- Normal `/api/data` service-worker reads are stale-while-revalidate for fast startup, but app startup sends `cache: "reload"` with `Cache-Control: no-cache` so iOS Home Screen launches perform a deterministic network refresh.
 - A non-2xx API response or network failure falls back to that cached response.
+- Dynamic data is only allowed to move forward by completed-match count, so an older bundled snapshot cannot overwrite newer FT scores, standings, or stats already seen by the PWA.
 - A first-time offline visitor falls back to `data.json`, which may be older and should be treated as a bundled snapshot.
 - The service worker, HTML, app script, and snapshot use network-first reads to avoid stale app-shell deployments.
 
@@ -61,7 +63,8 @@ FIFA remains the manual cross-check for fixtures and published statistics:
 4. Verify `/service-worker.js` reports the expected cache version.
 5. Verify `/api/data` returns HTTP 200, nonzero stats, and all matches older than four hours have `status: "FT"`.
 6. Test Groups, Matches, Bracket, Stats, search, and theme controls in a fresh browser tab.
-7. Confirm response security and cache headers on the production domain.
+7. In an installed PWA or simulated service-worker session, confirm reopening the app refreshes `/api/data` with a no-cache request and does not downgrade from a newer local payload to the bundled snapshot.
+8. Confirm response security and cache headers on the production domain.
 
 ## Incident Checks
 

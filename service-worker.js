@@ -1,5 +1,5 @@
-var CACHE = 'wc26-v19';
-var BUILD_TS = '2026-06-22T23:10:12.834Z'; // auto-updated by npm run predeploy
+var CACHE = 'wc26-v20';
+var BUILD_TS = '2026-06-23T04:30:40.371Z'; // auto-updated by npm run predeploy
 
 // Only precache assets that rarely change
 var PRECACHE = [
@@ -70,6 +70,20 @@ self.addEventListener('fetch', function(e) {
     e.respondWith(
       caches.open(CACHE).then(function(cache) {
         return cache.match(e.request).then(function(cached) {
+          var wantsFresh = e.request.cache === 'reload' ||
+            e.request.headers.get('cache-control') === 'no-cache' ||
+            e.request.headers.get('pragma') === 'no-cache';
+
+          if (wantsFresh) {
+            return fetch(e.request).then(function(response) {
+              if (response.ok) {
+                cache.put(e.request, response.clone());
+                return response;
+              }
+              return cached || response;
+            }).catch(function() { return cached; });
+          }
+
           var fetchPromise = fetch(e.request).then(function(response) {
             if (!response.ok) {
               // On error, keep serving cache
@@ -89,7 +103,7 @@ self.addEventListener('fetch', function(e) {
               var hasChanged = cachedBody !== null && freshBody !== null && cachedBody !== freshBody;
               return cache.put(e.request, freshForCache).then(function() {
                 if (hasChanged) {
-                  return self.clients.matchAll().then(function(clients) {
+                  return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clients) {
                     clients.forEach(function(client) {
                       client.postMessage({ type: 'DATA_UPDATED', url: e.request.url });
                     });

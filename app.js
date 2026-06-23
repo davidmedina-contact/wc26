@@ -1343,6 +1343,43 @@ try { var saved = localStorage.getItem('wc2026bracket'); if (saved) bracketState
 // === ASYNC INITIALIZATION ===
 var DATA_CACHE_KEY = 'wc26-data-cache';
 
+function dynamicMatchCount(data) {
+  if (!data) return 0;
+  if (data.statsData && data.statsData.overview && typeof data.statsData.overview.matchesPlayed === 'number') {
+    return data.statsData.overview.matchesPlayed;
+  }
+  return data.actualScores ? Object.keys(data.actualScores).length : 0;
+}
+
+function applyDynamicData(data) {
+  if (!data || !isValidBootstrapData(data)) return false;
+  var incomingCount = dynamicMatchCount(data);
+  var currentCount = Math.max(
+    actualScores ? Object.keys(actualScores).length : 0,
+    statsData && statsData.overview && typeof statsData.overview.matchesPlayed === 'number' ? statsData.overview.matchesPlayed : 0
+  );
+
+  // Never let the bundled/static fallback or an older SW cache roll the PWA
+  // backward after it has seen newer live data.
+  if (incomingCount < currentCount) return false;
+
+  actualScores = data.actualScores || actualScores;
+  standingsData = data.standingsData || standingsData;
+  statsData = data.statsData || statsData;
+  return true;
+}
+
+function cacheDynamicData() {
+  try {
+    localStorage.setItem(DATA_CACHE_KEY, JSON.stringify({
+      actualScores: actualScores,
+      standingsData: standingsData,
+      statsData: statsData,
+      savedAt: new Date().toISOString()
+    }));
+  } catch(e) {}
+}
+
 function assignDataGlobals(data) {
   wcData = { groups: data.groups, teams: data.teams };
   jerseyNumbers = data.jerseyNumbers;
@@ -1426,7 +1463,14 @@ function refreshActiveTab() {
 async function fetchFreshData() {
   var data = null;
   try {
-    var resp = await fetch('/api/data', { headers: { 'Accept': 'application/json' } });
+    var resp = await fetch('/api/data', {
+      cache: 'reload',
+      headers: {
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
     if (resp.ok) {
       var livePayload = await resp.json();
       data = livePayload && livePayload.data ? livePayload.data : livePayload;
@@ -1478,19 +1522,10 @@ async function init() {
     try {
       var freshData = await fetchFreshData();
       if (freshData && isValidBootstrapData(freshData)) {
-        // Only update dynamic fields from fresh data
-        actualScores = freshData.actualScores || actualScores;
-        standingsData = freshData.standingsData || standingsData;
-        statsData = freshData.statsData || statsData;
-        refreshActiveTab();
-        // Cache the dynamic fields for next cold load
-        try {
-          localStorage.setItem(DATA_CACHE_KEY, JSON.stringify({
-            actualScores: actualScores,
-            standingsData: standingsData,
-            statsData: statsData
-          }));
-        } catch(e) {}
+        if (applyDynamicData(freshData)) {
+          refreshActiveTab();
+          cacheDynamicData();
+        }
       }
     } catch(e) {}
     hideUpdatingIndicator();
@@ -1567,29 +1602,13 @@ init();
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'DATA_UPDATED') {
-      fetch('/api/data', { headers: { 'Accept': 'application/json' } }).then(function(resp) {
-        if (!resp.ok) return fetch('data.json');
-        return resp;
-      }).then(function(resp) {
-        if (!resp || !resp.ok) return null;
-        return resp.json();
-      }).then(function(payload) {
-        if (!payload) return;
-        var data = payload && payload.data ? payload.data : payload;
-        if (!isValidBootstrapData(data)) return;
-        // Only update dynamic fields
-        actualScores = data.actualScores || actualScores;
-        standingsData = data.standingsData || standingsData;
-        statsData = data.statsData || statsData;
-        refreshActiveTab();
-        showUpdatedAgo();
-        try {
-          localStorage.setItem(DATA_CACHE_KEY, JSON.stringify({
-            actualScores: actualScores,
-            standingsData: standingsData,
-            statsData: statsData
-          }));
-        } catch(e) {}
+      fetchFreshData().then(function(data) {
+        if (!data || !isValidBootstrapData(data)) return;
+        if (applyDynamicData(data)) {
+          refreshActiveTab();
+          showUpdatedAgo();
+          cacheDynamicData();
+        }
       }).catch(function() {});
     }
   });

@@ -102,6 +102,9 @@ test('bundled snapshot covers every final through June 21', () => {
 test('client uses one stable same-origin data endpoint', () => {
   const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   assert.match(app, /fetch\('\/api\/data'/);
+  assert.match(app, /cache: 'reload'/);
+  assert.match(app, /Cache-Control': 'no-cache'/);
+  assert.match(app, /incomingCount < currentCount/);
   assert.doesNotMatch(app, /worldcup26\.ir|api\/scores|api\/standings|dataCacheKey/);
 });
 
@@ -109,8 +112,10 @@ test('service worker keeps a last-known-good API response', () => {
   const worker = fs.readFileSync(path.join(root, 'service-worker.js'), 'utf8');
   assert.match(worker, /if \(!response\.ok\)/);
   assert.match(worker, /caches\.match\(e\.request\)/);
-  assert.match(worker, /wc26-v19/);
+  assert.match(worker, /wc26-v20/);
   assert.match(worker, /BUILD_TS/);
+  assert.match(worker, /wantsFresh/);
+  assert.match(worker, /includeUncontrolled: true/);
 });
 
 test('Vercel config stays within legacy and current Hobby limits', () => {
