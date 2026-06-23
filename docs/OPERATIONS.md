@@ -59,7 +59,7 @@ FIFA remains the manual cross-check for fixtures and published statistics:
 
 1. Run `npm run check`.
 2. Run `vercel build` to validate the deployment configuration.
-3. Deploy with `vercel --prod`.
+3. Deploy with `npm run deploy`.
 4. Verify `/service-worker.js` reports the expected cache version.
 5. Verify `/api/data` returns HTTP 200, nonzero stats, and all matches older than four hours have `status: "FT"`.
 6. Test Groups, Matches, Bracket, Stats, search, and theme controls in a fresh browser tab.
@@ -67,8 +67,8 @@ FIFA remains the manual cross-check for fixtures and published statistics:
 8. Confirm response security and cache headers on the production domain.
 
 Use `npm run deploy` for production releases, including serverless-only changes
-that alter visible scores, standings, stats, or refresh behavior. The predeploy
-stamp changes `service-worker.js` bytes so installed PWAs can detect a new
+that alter visible scores, standings, stats, or refresh behavior. The
+`stamp-sw` step changes `service-worker.js` bytes so installed PWAs can detect a new
 version and show the update confirmation on next launch/focus. Raw
 `vercel --prod` is only appropriate for backend changes that should remain
 invisible to the installed app shell.

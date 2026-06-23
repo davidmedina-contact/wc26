@@ -37,11 +37,21 @@ See [Operations](docs/OPERATIONS.md) for failure behavior, Vercel Hobby constrai
 
 ## Deployment
 
-Deployed on Vercel Hobby. Push to `main` to trigger a new deployment.
+Deployed on Vercel Hobby. Use the project deploy script for production
+releases:
 
 ```bash
-vercel --prod
+npm run deploy
 ```
+
+That script stamps `service-worker.js` and then runs `vercel --prod --yes`.
+The stamp is required for installed PWAs to detect a new app version and show
+the update confirmation on next launch/focus. Do not use bare `vercel --prod`
+or rely only on a GitHub push for visible app changes, including serverless
+changes that affect scores, standings, stats, or refresh behavior.
+
+After deploying, commit and push the stamped `service-worker.js` so GitHub and
+the Vercel deployment stay at parity.
 
 Do not add sub-daily Vercel cron expressions on Hobby. Vercel rejects the entire deployment when a cron runs more than once per day.
 

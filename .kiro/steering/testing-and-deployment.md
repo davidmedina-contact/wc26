@@ -87,11 +87,34 @@ Rules from the June 2026 iOS stale-data incident:
 npm run deploy
 ```
 
-This runs `predeploy` (stamps `BUILD_TS`) then `vercel --prod --yes`. The stamped SW file guarantees the browser detects a new version on the next `reg.update()` call.
+This runs `stamp-sw` (stamps `BUILD_TS`) then `vercel --prod --yes`. The stamped SW file guarantees the browser detects a new version on the next `reg.update()` call.
 
 - The SW cache name (e.g. `wc26-v19`) only needs manual bumping when you change caching *strategy* (precache list, SWR logic, network-first patterns). For normal code/UI deploys, the `BUILD_TS` stamp is sufficient.
 - Update the test assertion when you bump the cache name.
 - Never remove `self.skipWaiting()` — it's critical for single-tab environments (iOS PWA).
+
+### Lessons learned: serverless-only does not mean PWA-invisible
+
+If a serverless change alters visible app data or behavior, it is a PWA release.
+Examples: FT scores, group standings order, stats, stale-data guards, cache
+semantics, or any response shape the UI renders. Deploying those changes with
+bare `vercel --prod` updates the function but leaves `service-worker.js`
+byte-identical, so installed PWAs have no new version to detect and no update
+confirmation to show.
+
+Rules from the June 2026 standings-order incident:
+
+- Before any production deploy, re-read this deployment section rather than
+  deciding from memory whether a change is "backend-only."
+- Use `npm run deploy` for every user-visible release. It stamps
+  `service-worker.js` and deploys the matching source.
+- Do not rely on "push to main" or raw `vercel --prod` for user-visible changes;
+  those paths can skip the service-worker byte change that installed PWAs need.
+- After `npm run deploy`, commit and push the stamped `service-worker.js` so Git
+  and the live Vercel source stay at parity.
+- Keep README, operations docs, and steering docs aligned on the same deploy
+  command. If one says `vercel --prod`, it is stale unless it explicitly means a
+  non-visible backend-only hotfix.
 
 ## Static vs Dynamic Data Architecture
 
