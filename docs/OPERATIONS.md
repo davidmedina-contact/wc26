@@ -66,6 +66,13 @@ FIFA remains the manual cross-check for fixtures and published statistics:
 7. In an installed PWA or simulated service-worker session, confirm reopening the app refreshes `/api/data` with a no-cache request and does not downgrade from a newer local payload to the bundled snapshot.
 8. Confirm response security and cache headers on the production domain.
 
+Use `npm run deploy` for production releases, including serverless-only changes
+that alter visible scores, standings, stats, or refresh behavior. The predeploy
+stamp changes `service-worker.js` bytes so installed PWAs can detect a new
+version and show the update confirmation on next launch/focus. Raw
+`vercel --prod` is only appropriate for backend changes that should remain
+invisible to the installed app shell.
+
 ## Incident Checks
 
 If finals disappear or predictions return for old matches:
