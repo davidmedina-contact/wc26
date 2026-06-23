@@ -440,11 +440,61 @@ function computeStandings(games) {
     }
   });
 
-  Object.values(standings).forEach(group => {
-    group.forEach(row => { row.gd = row.gf - row.ga; });
-    group.sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.t.localeCompare(b.t));
+  Object.entries(standings).forEach(([letter, group]) => {
+    sortGroupStandings(group, games, letter);
   });
   return standings;
+}
+
+function groupOrderIndex(letter) {
+  return Object.fromEntries((SNAPSHOT.groups[letter]?.teams || []).map((team, index) => [team, index]));
+}
+
+function headToHeadStats(team, tiedTeams, games, letter) {
+  const stats = { pts: 0, gd: 0, gf: 0, matches: 0 };
+  validFinishedGames(games)
+    .filter(game => game.type === 'group' && game.group === letter)
+    .forEach(game => {
+      const home = norm(game.home_team_name_en);
+      const away = norm(game.away_team_name_en);
+      if (!tiedTeams.has(home) || !tiedTeams.has(away) || (home !== team && away !== team)) return;
+
+      const homeScore = parseScore(game.home_score);
+      const awayScore = parseScore(game.away_score);
+      const isHome = home === team;
+      const goalsFor = isHome ? homeScore : awayScore;
+      const goalsAgainst = isHome ? awayScore : homeScore;
+      stats.matches += 1;
+      stats.gf += goalsFor;
+      stats.gd += goalsFor - goalsAgainst;
+      if (goalsFor > goalsAgainst) stats.pts += 3;
+      else if (goalsFor === goalsAgainst) stats.pts += 1;
+    });
+  return stats;
+}
+
+function sortGroupStandings(group, games, letter) {
+  const order = groupOrderIndex(letter);
+  group.forEach(row => { row.gd = row.gf - row.ga; });
+
+  return group.sort((a, b) => {
+    if (b.pts !== a.pts) return b.pts - a.pts;
+
+    const tiedTeams = new Set(group.filter(row => row.pts === a.pts).map(row => row.t));
+    const aHead = headToHeadStats(a.t, tiedTeams, games, letter);
+    const bHead = headToHeadStats(b.t, tiedTeams, games, letter);
+
+    // FIFA group ranking: points, then head-to-head points/GD/goals among tied
+    // teams, then overall GD/goals. Fair-play and FIFA-ranking data are not in
+    // this feed, so the static draw order and name are deterministic fallbacks.
+    return bHead.pts - aHead.pts ||
+      bHead.gd - aHead.gd ||
+      bHead.gf - aHead.gf ||
+      b.gd - a.gd ||
+      b.gf - a.gf ||
+      (order[a.t] ?? 999) - (order[b.t] ?? 999) ||
+      a.t.localeCompare(b.t);
+  });
 }
 
 function readOfficialStandings(groupsResult, games) {
@@ -483,7 +533,9 @@ function readOfficialStandings(groupsResult, games) {
         row.p === row.w + row.d + row.l && row.gd === row.gf - row.ga && row.pts === (row.w * 3) + row.d;
       return valid ? row : null;
     });
-    if (rows.every(Boolean) && new Set(rows.map(row => row.t)).size === 4) standings[group.name] = rows;
+    if (rows.every(Boolean) && new Set(rows.map(row => row.t)).size === 4) {
+      standings[group.name] = sortGroupStandings(rows, games, group.name);
+    }
   }
 
   if (Object.keys(standings).length !== Object.keys(SNAPSHOT.groups).length) return null;
@@ -602,5 +654,6 @@ module.exports._test = {
   expectedFinishedKeys,
   parseScore,
   readOfficialStandings,
+  sortGroupStandings,
   validFinishedGames,
 };

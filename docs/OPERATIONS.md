@@ -2,15 +2,15 @@
 
 ## Architecture
 
-`/api/data` is the only live-data boundary. It performs four jobs before returning a payload:
+`/api/data` is the only live-data boundary. It performs five jobs before returning a payload:
 
 1. Race the upstream match feed against a read-only proxy fallback.
-2. Read the provider's ordered group table as an optional tie-break authority.
+2. Read the provider's group table as optional standings numbers.
 3. Accept only known teams, valid integer scores, and games explicitly marked finished.
 4. Derive FT scores and stats from the same accepted records.
 5. Reject incomplete data once a scheduled match is four hours past kickoff.
 
-The ordered table is accepted only when every row is internally consistent and its total matches played agrees with the accepted game records. If it is unavailable or lagging, the function computes a points/goal-difference table from the games. This fallback keeps the app usable, while the ordered feed preserves FIFA's 2026 head-to-head tie-break rules when teams are level.
+The provider table is accepted only when every row is internally consistent and its total matches played agrees with the accepted game records. The function still re-sorts accepted rows before returning them because the upstream order has been observed to put teams with more points below teams with fewer points. Sorting follows the calculable FIFA group ranking criteria: points, head-to-head points, head-to-head goal difference, head-to-head goals scored, overall goal difference, and overall goals scored. Fair-play and FIFA-ranking tie-break data are not in the feed, so the static group draw order and team name are deterministic final fallbacks. If the provider table is unavailable or lagging, the function computes the same sorted table from the games.
 
 The client only renders that payload. It does not call third-party APIs or infer whether a game is complete.
 

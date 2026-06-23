@@ -61,6 +61,25 @@ When testing locally vs production:
 - `localStorage` persists independently of SW/cache state. It's the most reliable fast-path for returning iOS users (instant render from cached dynamic data even if the SW is being replaced).
 - The "Updated just now" toast has a 6s window specifically because iOS standalone has a 1-2s launch animation that eats into visible time.
 
+### Lessons learned: Chrome fresh, iOS PWA stale
+
+When Chrome shows updated scores but the iOS Home Screen PWA does not, do not assume the serverless function failed. There are three separate freshness layers:
+
+1. **Vercel Function/CDN** — `/api/data` may already be fresh and cached at the edge.
+2. **Service Worker Cache API** — the installed PWA can still have an older cached `/api/data` response.
+3. **PWA `localStorage`** — the app may render old dynamic data before the network refresh completes.
+
+The serverless function cannot push fresh data into an installed PWA. It can only return fresh data when the client asks. Vercel's `s-maxage` and `stale-while-revalidate` refresh the CDN cache, not every user's local Cache API or `localStorage`.
+
+Rules from the June 2026 iOS stale-data incident:
+
+- App startup must explicitly request `/api/data` with `cache: "reload"`, `Cache-Control: no-cache`, and `Pragma: no-cache`.
+- The service worker must treat that no-cache request as network-first and update its cached `/api/data`.
+- Background SWR messages are a nice-to-have, not the primary freshness path on iOS.
+- Dynamic data must never move backward. If the PWA has seen 43 completed matches, a 40-match bundled snapshot or older cache must not overwrite it.
+- A successful Chrome/Safari browser test does not prove the installed iOS PWA is fresh. Test an installed PWA path or simulate service-worker cache + `localStorage` behavior.
+- Verify both sides of freshness: production `/api/data` payload (`finishedMatches`, stats, score count) and the UI after a cold/reopened PWA launch.
+
 ### Deployment workflow (mandatory)
 
 ```bash

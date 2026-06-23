@@ -9,6 +9,7 @@ const {
   computeStandings,
   expectedFinishedKeys,
   parseScore,
+  sortGroupStandings,
   validFinishedGames,
 } = handler._test;
 
@@ -71,9 +72,41 @@ test('standings are derived from the same final games as scores', () => {
   ]);
   assert.deepEqual(standings.A.map(row => [row.t, row.p, row.pts, row.gd]), [
     ['Mexico', 1, 3, 2],
-    ['Czech Republic', 1, 1, 0],
     ['South Korea', 1, 1, 0],
+    ['Czech Republic', 1, 1, 0],
     ['South Africa', 1, 0, -2],
+  ]);
+});
+
+test('standings rows are sorted by FIFA group ranking criteria, not provider order', () => {
+  const games = [
+    game({
+      group: 'L',
+      home_team_name_en: 'England',
+      away_team_name_en: 'Croatia',
+      home_score: '4',
+      away_score: '2',
+    }),
+    game({
+      group: 'L',
+      home_team_name_en: 'Ghana',
+      away_team_name_en: 'Panama',
+      home_score: '1',
+      away_score: '0',
+    }),
+  ];
+  const providerRows = [
+    { t: 'England', p: 1, w: 1, d: 0, l: 0, gf: 4, ga: 2, gd: 2, pts: 3 },
+    { t: 'Croatia', p: 1, w: 0, d: 0, l: 1, gf: 2, ga: 4, gd: -2, pts: 0 },
+    { t: 'Ghana', p: 1, w: 1, d: 0, l: 0, gf: 1, ga: 0, gd: 1, pts: 3 },
+    { t: 'Panama', p: 1, w: 0, d: 0, l: 1, gf: 0, ga: 1, gd: -1, pts: 0 },
+  ];
+
+  assert.deepEqual(sortGroupStandings(providerRows, games, 'L').map(row => row.t), [
+    'England',
+    'Ghana',
+    'Panama',
+    'Croatia',
   ]);
 });
 
