@@ -16,10 +16,19 @@ The client only renders that payload. It does not call third-party APIs or infer
 
 ## Freshness And Failure Behavior
 
-- Successful `/api/data` responses use `s-maxage=900, stale-while-revalidate=60`.
-- Vercel's CDN absorbs repeat traffic and normally refreshes data within 15 minutes of expiry.
+- Successful `/api/data` responses use adaptive CDN caching:
+  `settlement` windows use `s-maxage=120`, normal match windows use
+  `s-maxage=900`, and quiet windows use `s-maxage=1800`.
+- Vercel's CDN absorbs repeat traffic and refreshes data after the current
+  response's `s-maxage` expires.
 - The installed PWA has its own Cache API and `localStorage`; it does not automatically inherit a fresher payload just because Vercel's CDN has one.
 - Normal `/api/data` service-worker reads are stale-while-revalidate for fast startup, but app startup sends `cache: "reload"` with `Cache-Control: no-cache` so iOS Home Screen launches perform a deterministic network refresh.
+- `/api/data` includes `meta.dataVersion` and an `ETag` based on the football
+  payload, not `updatedAt`. The app and service worker compare this stable
+  version before re-rendering or showing an update toast.
+- The app pulls fresh data on startup, focus, and `visibilitychange`, then
+  schedules foreground-only refreshes from `meta.nextRefreshSeconds`. Closed or
+  backgrounded PWAs update on the next foreground launch/focus.
 - A non-2xx API response or network failure falls back to that cached response.
 - Dynamic data is only allowed to move forward by completed-match count, so an older bundled snapshot cannot overwrite newer FT scores, standings, or stats already seen by the PWA.
 - A first-time offline visitor falls back to `data.json`, which may be older and should be treated as a bundled snapshot.

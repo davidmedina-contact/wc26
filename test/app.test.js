@@ -6,6 +6,7 @@ const test = require('node:test');
 const handler = require('../api/data');
 const {
   buildData,
+  cachePolicyFor,
   computeStandings,
   expectedFinishedKeys,
   parseScore,
@@ -36,6 +37,7 @@ function responseRecorder() {
     headers: {},
     statusCode: 200,
     setHeader(name, value) { this.headers[name] = value; },
+    end() { this.ended = true; },
     json(value) { this.body = value; },
   };
 }
@@ -285,6 +287,9 @@ test('bundled snapshot covers every final through June 21', () => {
 test('client uses one stable same-origin data endpoint', () => {
   const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   assert.match(app, /fetch\('\/api\/data'/);
+  assert.match(app, /If-None-Match/);
+  assert.match(app, /visibilitychange/);
+  assert.match(app, /currentDataVersion/);
   assert.match(app, /cache: 'reload'/);
   assert.match(app, /Cache-Control': 'no-cache'/);
   assert.match(app, /incomingCount < currentCount/);
@@ -298,6 +303,7 @@ test('service worker keeps a last-known-good API response', () => {
   assert.match(worker, /wc26-v20/);
   assert.match(worker, /BUILD_TS/);
   assert.match(worker, /wantsFresh/);
+  assert.match(worker, /dataVersionFromBody/);
   assert.match(worker, /includeUncontrolled: true/);
 });
 
@@ -308,11 +314,61 @@ test('Vercel config stays within legacy and current Hobby limits', () => {
   assert.ok(config.functions['api/data.js'].maxDuration <= 60);
 });
 
+test('serverless cache policy adapts around post-match settlement windows', () => {
+  const quiet = cachePolicyFor(Date.parse('2026-06-10T12:00:00Z'));
+  assert.equal(quiet.cacheMode, 'quiet');
+  assert.match(quiet.cacheControl, /s-maxage=1800/);
+
+  const settlement = cachePolicyFor(Date.parse('2026-06-23T22:30:00Z'));
+  assert.equal(settlement.cacheMode, 'settlement');
+  assert.match(settlement.cacheControl, /s-maxage=120/);
+});
+
 test('serverless endpoint rejects unsupported methods', async () => {
   const res = responseRecorder();
   await handler({ method: 'POST' }, res);
   assert.equal(res.statusCode, 405);
   assert.equal(res.headers.Allow, 'GET');
+});
+
+test('serverless endpoint emits stable data versions and honors ETag revalidation', async () => {
+  const originalFetch = global.fetch;
+  const originalNow = Date.now;
+  const gamesPayload = { games: [
+    game({
+      home_team_id: 'mx',
+      away_team_id: 'za',
+      home_scorers: "{\"Raúl Jiménez 10'\",\"Teboho Mokoena 80'(OG)\"}",
+      away_scorers: 'null',
+    }),
+  ] };
+  const groupsPayload = {
+    groups: Object.keys(require('../data.json').groups).map(letter => ({
+      name: letter,
+      teams: require('../data.json').groups[letter].teams.map(team => ({ team_id: team, mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0 })),
+    })),
+  };
+  global.fetch = async url => ({
+    ok: true,
+    text: async () => JSON.stringify(String(url).includes('/groups') ? groupsPayload : gamesPayload),
+  });
+  Date.now = () => Date.parse('2026-06-10T12:00:00Z');
+  try {
+    const first = responseRecorder();
+    await handler({ method: 'GET', headers: {} }, first);
+    assert.equal(first.statusCode, 200);
+    assert.match(first.headers.ETag, /^"[a-f0-9]{16}"$/);
+    assert.equal(first.body.meta.dataVersion, first.headers.ETag.replace(/"/g, ''));
+
+    const second = responseRecorder();
+    await handler({ method: 'GET', headers: { 'if-none-match': first.headers.ETag } }, second);
+    assert.equal(second.statusCode, 304);
+    assert.equal(second.headers.ETag, first.headers.ETag);
+    assert.equal(second.ended, true);
+  } finally {
+    global.fetch = originalFetch;
+    Date.now = originalNow;
+  }
 });
 
 test('serverless endpoint rejects an incomplete live feed', async () => {

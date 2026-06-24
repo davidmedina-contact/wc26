@@ -31,7 +31,9 @@ Plain HTML, CSS, and JavaScript - no build step, no framework, and no runtime de
 
 The browser makes one same-origin request to `/api/data`. The Vercel Function fetches the match feed, validates completed games, and derives final scores, group standings, and tournament statistics from the same records. The browser does not contact the upstream provider or calculate live tournament data.
 
-Successful responses are cached at Vercel's CDN for 15 minutes. The service worker also retains the last successful `/api/data` response, so a temporary upstream error does not replace known finals with predictions. If there is no cached response, the bundled `data.json` snapshot remains the offline fallback.
+Successful responses are cached at Vercel's CDN with adaptive TTLs: shorter during post-match settlement windows and longer during quiet periods. The service worker also retains the last successful `/api/data` response, so a temporary upstream error does not replace known finals with predictions. If there is no cached response, the bundled `data.json` snapshot remains the offline fallback.
+
+`/api/data` emits a stable `meta.dataVersion` and matching `ETag`. The installed PWA pulls fresh data on startup, focus, and visibility changes, but only re-renders or shows an update toast when the data version changes.
 
 See [Operations](docs/OPERATIONS.md) for failure behavior, Vercel Hobby constraints, and the release checklist.
 

@@ -1,5 +1,5 @@
 var CACHE = 'wc26-v20';
-var BUILD_TS = '2026-06-23T23:26:53.470Z'; // auto-updated by npm run stamp-sw
+var BUILD_TS = '2026-06-24T01:51:23.106Z'; // auto-updated by npm run stamp-sw
 
 // Only precache assets that rarely change
 var PRECACHE = [
@@ -15,6 +15,15 @@ var NETWORK_FIRST = ['/', '/index.html', '/app.js', '/style.css', '/world-cup-20
 // Stale-while-revalidate + notify: serve cache instantly, fetch fresh in background,
 // notify client if fresh data differs so it can re-render
 var SWR_NOTIFY = ['/data.json', '/api/data'];
+
+function dataVersionFromBody(body) {
+  try {
+    var parsed = JSON.parse(body);
+    return parsed && parsed.meta && parsed.meta.dataVersion ? parsed.meta.dataVersion : null;
+  } catch (e) {
+    return null;
+  }
+}
 
 // Install: cache core shell assets only (small, fast, reliable)
 self.addEventListener('install', function(e) {
@@ -62,11 +71,9 @@ self.addEventListener('fetch', function(e) {
     // Stale-while-revalidate with freshness notification:
     // 1. Return cached response immediately (instant render)
     // 2. Fetch fresh in background
-    // 3. If the fresh body differs from the cached body, update cache and notify
-    //    all clients. We compare the actual response bodies rather than ETags so
-    //    change detection is robust even when the server sends no ETag/Last-Modified
-    //    (relying on header presence caused false "changed" signals and a refresh
-    //    loop that spammed clients with DATA_UPDATED on every revalidation).
+    // 3. If the stable dataVersion differs, update cache and notify all clients.
+    //    updatedAt changes on every response, so full-body comparison is too noisy
+    //    for installed PWAs.
     e.respondWith(
       caches.open(CACHE).then(function(cache) {
         return cache.match(e.request).then(function(cached) {
@@ -97,10 +104,13 @@ self.addEventListener('fetch', function(e) {
             ]).then(function(bodies) {
               var cachedBody = bodies[0];
               var freshBody = bodies[1];
-              // Only treat as changed when we have a fresh body that differs from
-              // a previously cached body. No cached body yet => first load, not a
-              // "change". Unreadable fresh body => don't notify (avoid false loop).
-              var hasChanged = cachedBody !== null && freshBody !== null && cachedBody !== freshBody;
+              var cachedVersion = dataVersionFromBody(cachedBody);
+              var freshVersion = dataVersionFromBody(freshBody);
+              // Prefer semantic version comparison for /api/data. Fall back to
+              // body comparison for other SWR resources such as data.json.
+              var hasChanged = cachedBody !== null && freshBody !== null && (
+                freshVersion ? cachedVersion !== freshVersion : cachedBody !== freshBody
+              );
               return cache.put(e.request, freshForCache).then(function() {
                 if (hasChanged) {
                   return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clients) {

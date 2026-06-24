@@ -1,6 +1,7 @@
 // Combined bootstrap payload for the client.
 // Returns the static snapshot plus live final scores, standings, and stats.
 
+const crypto = require('node:crypto');
 const SNAPSHOT = require('../data.json');
 const SCORER_OVERRIDES = require('../data/scorer-overrides.json');
 
@@ -16,6 +17,67 @@ function parseScore(value) {
   if (value === null || value === undefined || String(value).trim() === '') return null;
   const score = Number(value);
   return Number.isInteger(score) && score >= 0 && score <= 99 ? score : null;
+}
+
+function stableStringify(value) {
+  if (Array.isArray(value)) return '[' + value.map(stableStringify).join(',') + ']';
+  if (value && typeof value === 'object') {
+    return '{' + Object.keys(value).sort().map(key => JSON.stringify(key) + ':' + stableStringify(value[key])).join(',') + '}';
+  }
+  return JSON.stringify(value);
+}
+
+function dataVersionFor(data, meta) {
+  return crypto
+    .createHash('sha256')
+    .update(stableStringify({
+      actualScores: data.actualScores,
+      standingsData: data.standingsData,
+      statsData: data.statsData,
+      scorerCompleteness: meta.scorerCompleteness,
+      scorerIssueCount: meta.scorerIssueCount,
+      finishedMatches: meta.finishedMatches,
+      standingsSource: meta.standingsSource,
+    }))
+    .digest('hex')
+    .slice(0, 16);
+}
+
+function kickoffTime(match) {
+  return Date.parse(`${match.d}T${match.t}:00-04:00`);
+}
+
+function cachePolicyFor(now) {
+  const current = Number(now || Date.now());
+  const matches = (SNAPSHOT.matchesData || []).filter(match => match.d && match.t && isKnownTeam(match.h) && isKnownTeam(match.a));
+  const inSettlementWindow = matches.some(match => {
+    const kickoff = kickoffTime(match);
+    const start = kickoff + (2 * 60 * 60 * 1000);
+    const end = kickoff + (6 * 60 * 60 * 1000);
+    return current >= start && current <= end;
+  });
+  if (inSettlementWindow) {
+    return {
+      cacheControl: 'public, s-maxage=120, stale-while-revalidate=60',
+      cacheMode: 'settlement',
+      nextRefreshSeconds: 120,
+    };
+  }
+
+  const nearMatch = matches.some(match => Math.abs(kickoffTime(match) - current) <= (6 * 60 * 60 * 1000));
+  if (nearMatch) {
+    return {
+      cacheControl: 'public, s-maxage=900, stale-while-revalidate=300',
+      cacheMode: 'matchday',
+      nextRefreshSeconds: 300,
+    };
+  }
+
+  return {
+    cacheControl: 'public, s-maxage=1800, stale-while-revalidate=600',
+    cacheMode: 'quiet',
+    nextRefreshSeconds: 900,
+  };
 }
 
 function validFinishedGames(games) {
@@ -678,25 +740,41 @@ module.exports = async (req, res) => {
     return res.json({ error: 'Live match data is incomplete', missingFinals: result.missingFinals });
   }
 
+  const policy = cachePolicyFor(Date.now());
+  const meta = {
+    source: 'worldcup26.ir',
+    finishedMatches: result.finishedMatches,
+    scorerCompleteness: result.scorerIssues.length === 0 ? 'verified' : 'needs-review',
+    scorerIssueCount: result.scorerIssues.length,
+    standingsSource: result.standingsSource,
+    cacheMode: policy.cacheMode,
+    nextRefreshSeconds: policy.nextRefreshSeconds,
+  };
+  meta.dataVersion = dataVersionFor(result.data, meta);
+  const etag = `"${meta.dataVersion}"`;
+  if (req.headers?.['if-none-match'] === etag) {
+    res.statusCode = 304;
+    res.setHeader('Cache-Control', policy.cacheControl);
+    res.setHeader('ETag', etag);
+    return res.end ? res.end() : res.json(null);
+  }
+
   res.statusCode = 200;
-  res.setHeader('Cache-Control', 'public, s-maxage=900, stale-while-revalidate=60');
+  res.setHeader('Cache-Control', policy.cacheControl);
+  res.setHeader('ETag', etag);
   res.json({
     data: result.data,
     updatedAt: new Date().toISOString(),
-    meta: {
-      source: 'worldcup26.ir',
-      finishedMatches: result.finishedMatches,
-      scorerCompleteness: result.scorerIssues.length === 0 ? 'verified' : 'needs-review',
-      scorerIssueCount: result.scorerIssues.length,
-      standingsSource: result.standingsSource,
-    },
+    meta,
   });
 };
 
 module.exports._test = {
   buildData,
+  cachePolicyFor,
   computeStandings,
   computeStats,
+  dataVersionFor,
   expectedFinishedKeys,
   parseScore,
   readOfficialStandings,

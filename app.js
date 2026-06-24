@@ -1342,6 +1342,11 @@ try { var saved = localStorage.getItem('wc2026bracket'); if (saved) bracketState
 
 // === ASYNC INITIALIZATION ===
 var DATA_CACHE_KEY = 'wc26-data-cache';
+var currentDataVersion = null;
+var currentDataMeta = null;
+var lastFreshCheckAt = 0;
+var foregroundRefreshTimer = null;
+var refreshInFlight = null;
 
 function dynamicMatchCount(data) {
   if (!data) return 0;
@@ -1351,8 +1356,13 @@ function dynamicMatchCount(data) {
   return data.actualScores ? Object.keys(data.actualScores).length : 0;
 }
 
-function applyDynamicData(data) {
+function applyDynamicData(data, meta) {
   if (!data || !isValidBootstrapData(data)) return false;
+  var incomingVersion = meta && meta.dataVersion;
+  if (incomingVersion && currentDataVersion && incomingVersion === currentDataVersion) {
+    currentDataMeta = meta;
+    return false;
+  }
   var incomingCount = dynamicMatchCount(data);
   var currentCount = Math.max(
     actualScores ? Object.keys(actualScores).length : 0,
@@ -1366,6 +1376,8 @@ function applyDynamicData(data) {
   actualScores = data.actualScores || actualScores;
   standingsData = data.standingsData || standingsData;
   statsData = data.statsData || statsData;
+  if (incomingVersion) currentDataVersion = incomingVersion;
+  if (meta) currentDataMeta = meta;
   return true;
 }
 
@@ -1375,6 +1387,8 @@ function cacheDynamicData() {
       actualScores: actualScores,
       standingsData: standingsData,
       statsData: statsData,
+      dataVersion: currentDataVersion,
+      dataMeta: currentDataMeta,
       savedAt: new Date().toISOString()
     }));
   } catch(e) {}
@@ -1391,6 +1405,8 @@ function assignDataGlobals(data) {
   actualScores = data.actualScores || {};
   standingsData = data.standingsData || {};
   statsData = data.statsData || null;
+  currentDataVersion = data.dataVersion || currentDataVersion;
+  currentDataMeta = data.dataMeta || currentDataMeta;
   bracketVenues = data.bracketVenues;
   groupColors = data.groupColors;
   modelPredictions = data.modelPredictions;
@@ -1413,8 +1429,13 @@ function showUpdatingIndicator() {
   if (el) { el.textContent = 'Updating\u2026'; el.classList.add('visible'); }
 }
 
-function hideUpdatingIndicator() {
-  showUpdatedAgo();
+function hideUpdatingIndicator(changed) {
+  if (changed) {
+    showUpdatedAgo();
+  } else {
+    var el = document.getElementById('updatedAgo');
+    if (el) el.classList.remove('visible');
+  }
 }
 
 function renderActiveTab() {
@@ -1460,19 +1481,27 @@ function refreshActiveTab() {
   renderMatchStrip();
 }
 
-async function fetchFreshData() {
-  var data = null;
+async function fetchFreshData(options) {
+  options = options || {};
+  var data = null, meta = null, notModified = false;
   try {
+    var headers = {
+      'Accept': 'application/json',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
+    };
+    if (currentDataVersion) headers['If-None-Match'] = '"' + currentDataVersion + '"';
     var resp = await fetch('/api/data', {
       cache: 'reload',
-      headers: {
-        'Accept': 'application/json',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      }
+      headers: headers
     });
+    if (resp.status === 304) {
+      lastFreshCheckAt = Date.now();
+      return { data: null, meta: currentDataMeta, notModified: true };
+    }
     if (resp.ok) {
       var livePayload = await resp.json();
+      meta = livePayload && livePayload.meta ? livePayload.meta : null;
       data = livePayload && livePayload.data ? livePayload.data : livePayload;
       if (!isValidBootstrapData(data)) data = null;
     }
@@ -1483,7 +1512,52 @@ async function fetchFreshData() {
       data = await fallbackResp.json();
     }
   }
-  return data;
+  lastFreshCheckAt = Date.now();
+  return { data: data, meta: meta, notModified: notModified };
+}
+
+function foregroundRefreshIntervalMs() {
+  var seconds = currentDataMeta && Number(currentDataMeta.nextRefreshSeconds);
+  if (!Number.isFinite(seconds) || seconds <= 0) seconds = 900;
+  return Math.max(120000, Math.min(seconds * 1000, 1800000));
+}
+
+function shouldCheckFreshData(force) {
+  if (force) return true;
+  return Date.now() - lastFreshCheckAt >= foregroundRefreshIntervalMs();
+}
+
+async function refreshFreshData(reason, options) {
+  options = options || {};
+  if (!shouldCheckFreshData(options.force)) return false;
+  if (refreshInFlight) return refreshInFlight;
+  if (options.showIndicator) showUpdatingIndicator();
+  refreshInFlight = fetchFreshData(options).then(function(payload) {
+    if (!payload || payload.notModified || !payload.data || !isValidBootstrapData(payload.data)) return false;
+    if (applyDynamicData(payload.data, payload.meta)) {
+      refreshActiveTab();
+      cacheDynamicData();
+      if (options.toast !== false) showUpdatedAgo();
+      return true;
+    }
+    return false;
+  }).catch(function() {
+    return false;
+  }).then(function(changed) {
+    if (options.showIndicator) hideUpdatingIndicator(changed);
+    refreshInFlight = null;
+    scheduleForegroundRefresh();
+    return changed;
+  });
+  return refreshInFlight;
+}
+
+function scheduleForegroundRefresh() {
+  if (foregroundRefreshTimer) clearTimeout(foregroundRefreshTimer);
+  if (document.hidden) return;
+  foregroundRefreshTimer = setTimeout(function() {
+    refreshFreshData('timer', { showIndicator: false, toast: true });
+  }, foregroundRefreshIntervalMs());
 }
 
 async function init() {
@@ -1512,6 +1586,8 @@ async function init() {
       if (cachedDynamic.actualScores) actualScores = cachedDynamic.actualScores;
       if (cachedDynamic.standingsData) standingsData = cachedDynamic.standingsData;
       if (cachedDynamic.statsData) statsData = cachedDynamic.statsData;
+      if (cachedDynamic.dataVersion) currentDataVersion = cachedDynamic.dataVersion;
+      if (cachedDynamic.dataMeta) currentDataMeta = cachedDynamic.dataMeta;
     }
 
     showReadyUI();
@@ -1519,16 +1595,20 @@ async function init() {
     showUpdatingIndicator();
 
     // Step 3: Fetch fresh dynamic data in background
+    var changedOnInit = false;
     try {
-      var freshData = await fetchFreshData();
+      var freshPayload = await fetchFreshData({ force: true });
+      var freshData = freshPayload && freshPayload.data;
       if (freshData && isValidBootstrapData(freshData)) {
-        if (applyDynamicData(freshData)) {
+        if (applyDynamicData(freshData, freshPayload.meta)) {
           refreshActiveTab();
           cacheDynamicData();
+          changedOnInit = true;
         }
       }
     } catch(e) {}
-    hideUpdatingIndicator();
+    hideUpdatingIndicator(changedOnInit);
+    scheduleForegroundRefresh();
   } else {
     // Fallback: no inline static data (shouldn't happen in production)
     // Try localStorage full cache, then network
@@ -1544,9 +1624,12 @@ async function init() {
       renderActiveTab();
     } else {
       try {
-        var data = await fetchFreshData();
+        var payload = await fetchFreshData({ force: true });
+        var data = payload && payload.data;
         if (!data) throw new Error('No data available');
         assignDataGlobals(data);
+        if (payload.meta) currentDataMeta = payload.meta;
+        if (payload.meta && payload.meta.dataVersion) currentDataVersion = payload.meta.dataVersion;
         try { localStorage.setItem(DATA_CACHE_KEY, JSON.stringify(data)); } catch(e) {}
       } catch(e) {
         console.error('Failed to load data:', e);
@@ -1555,6 +1638,7 @@ async function init() {
       }
       showReadyUI();
       renderActiveTab();
+      scheduleForegroundRefresh();
     }
   }
 }
@@ -1598,18 +1682,19 @@ async function init() {
 
 init();
 
+window.addEventListener('focus', function() {
+  refreshFreshData('focus', { showIndicator: false, toast: true });
+});
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden) refreshFreshData('visible', { showIndicator: false, toast: true });
+  else if (foregroundRefreshTimer) clearTimeout(foregroundRefreshTimer);
+});
+
 // === STALE-WHILE-REVALIDATE: Listen for fresh data from service worker ===
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'DATA_UPDATED') {
-      fetchFreshData().then(function(data) {
-        if (!data || !isValidBootstrapData(data)) return;
-        if (applyDynamicData(data)) {
-          refreshActiveTab();
-          showUpdatedAgo();
-          cacheDynamicData();
-        }
-      }).catch(function() {});
+      refreshFreshData('service-worker', { force: true, showIndicator: false, toast: true }).catch(function() {});
     }
   });
 }

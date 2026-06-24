@@ -80,6 +80,25 @@ Rules from the June 2026 iOS stale-data incident:
 - A successful Chrome/Safari browser test does not prove the installed iOS PWA is fresh. Test an installed PWA path or simulate service-worker cache + `localStorage` behavior.
 - Verify both sides of freshness: production `/api/data` payload (`finishedMatches`, stats, score count) and the UI after a cold/reopened PWA launch.
 
+### Lessons learned: foreground pull beats background push
+
+iOS and Android PWAs are reliable when they pull fresh data while foregrounded.
+They are not reliable as silent background subscribers. Do not design this app
+around closed-PWA background polling, Periodic Background Sync, or quiet Web Push.
+
+Rules for dynamic tournament data:
+
+- `/api/data` must emit a stable `meta.dataVersion` and matching `ETag` based on
+  football data, not `updatedAt`.
+- The service worker compares `meta.dataVersion` before posting `DATA_UPDATED`;
+  full-body comparison creates false updates because `updatedAt` changes.
+- The app should pull on startup, `focus`, and `visibilitychange`, with a
+  cooldown from `meta.nextRefreshSeconds`.
+- Only foreground/open PWAs can be refreshed immediately. Closed PWAs refresh on
+  the next launch or focus.
+- Vercel Hobby cron is not a fit for match-by-match refresh. Use adaptive CDN
+  `s-maxage` plus foreground pulls.
+
 ### Deployment workflow (mandatory)
 
 ```bash
