@@ -618,6 +618,146 @@ function sortGroupStandings(group, games, letter) {
   });
 }
 
+function groupMatchKey(match) {
+  return `${norm(match.h)}_${norm(match.a)}`;
+}
+
+function groupMatches(letter) {
+  return (SNAPSHOT.matchesData || []).filter(match => match.g === letter && !match.stage && isKnownTeam(match.h) && isKnownTeam(match.a));
+}
+
+function groupPointScenarios(letter, rows, scores) {
+  const points = {};
+  rows.forEach(row => { points[row.t] = row.pts; });
+  const remaining = groupMatches(letter).filter(match => !scores[groupMatchKey(match)]);
+  const scenarios = [];
+
+  function visit(index, current) {
+    if (index >= remaining.length) {
+      scenarios.push(current);
+      return;
+    }
+    const match = remaining[index];
+    const home = norm(match.h);
+    const away = norm(match.a);
+    [
+      [3, 0],
+      [1, 1],
+      [0, 3],
+    ].forEach(outcome => {
+      const next = Object.assign({}, current);
+      next[home] = (next[home] || 0) + outcome[0];
+      next[away] = (next[away] || 0) + outcome[1];
+      visit(index + 1, next);
+    });
+  }
+
+  visit(0, points);
+  return scenarios;
+}
+
+function thirdPointRange(letter, rows, scores) {
+  const scenarios = groupPointScenarios(letter, rows, scores);
+  let min = Infinity;
+  let max = -Infinity;
+
+  scenarios.forEach(current => {
+    const sorted = Object.values(current).sort((a, b) => b - a);
+    const third = sorted[2] ?? 0;
+    min = Math.min(min, third);
+    max = Math.max(max, third);
+  });
+
+  return { min: min === Infinity ? 0 : min, max: max === -Infinity ? 0 : max };
+}
+
+function thirdPlaceRanking(rows) {
+  return rows.slice().sort((a, b) =>
+    b.pts - a.pts ||
+    b.gd - a.gd ||
+    b.gf - a.gf ||
+    a.t.localeCompare(b.t)
+  );
+}
+
+function statusMeta(code) {
+  const labels = {
+    'won-group': 'Won group',
+    'qualified': 'Qualified',
+    'qualified-third': 'Qualified',
+    'eliminated': 'Eliminated',
+  };
+  return code ? { code, label: labels[code] || code } : null;
+}
+
+function annotateQualificationStatuses(standings, scores) {
+  const letters = Object.keys(SNAPSHOT.groups || {});
+  const thirdRanges = {};
+  const pointScenarios = {};
+  letters.forEach(letter => {
+    thirdRanges[letter] = thirdPointRange(letter, standings[letter] || [], scores);
+    pointScenarios[letter] = groupPointScenarios(letter, standings[letter] || [], scores);
+  });
+
+  const allGroupsComplete = letters.every(letter => (standings[letter] || []).every(row => row.p === 3));
+  const finalThirdRanking = allGroupsComplete
+    ? thirdPlaceRanking(letters.map(letter => Object.assign({ group: letter }, standings[letter][2])).filter(Boolean))
+    : [];
+  const finalThirdQualified = new Set(finalThirdRanking.slice(0, 8).map(row => `${row.group}:${row.t}`));
+
+  letters.forEach(letter => {
+    const rows = standings[letter] || [];
+    const groupComplete = rows.length === 4 && rows.every(row => row.p === 3);
+    rows.forEach((row, index) => {
+      const others = rows.filter(candidate => candidate.t !== row.t).map(candidate => candidate.t);
+      const scenarios = pointScenarios[letter] || [];
+      const guaranteedByScenario = scenarios.length > 0;
+      const winsGroupByPoints = guaranteedByScenario && scenarios.every(scenario =>
+        others.every(team => (scenario[row.t] || 0) > (scenario[team] || 0))
+      );
+      const topTwoByPoints = guaranteedByScenario && scenarios.every(scenario =>
+        others.filter(team => (scenario[team] || 0) >= (scenario[row.t] || 0)).length <= 1
+      );
+      const eliminatedByPoints = guaranteedByScenario && scenarios.every(scenario =>
+        others.filter(team => (scenario[team] || 0) > (scenario[row.t] || 0)).length >= 3
+      );
+
+      let code = null;
+      if (groupComplete) {
+        if (index === 0) code = 'won-group';
+        else if (index === 1) code = 'qualified';
+        else if (index === 2) {
+          if (allGroupsComplete) {
+            code = finalThirdQualified.has(`${letter}:${row.t}`) ? 'qualified-third' : 'eliminated';
+          } else {
+            const betterOrEqualPossible = letters
+              .filter(otherLetter => otherLetter !== letter)
+              .filter(otherLetter => thirdRanges[otherLetter].max >= row.pts)
+              .length;
+            const strictlyBetterGuaranteed = letters
+              .filter(otherLetter => otherLetter !== letter)
+              .filter(otherLetter => thirdRanges[otherLetter].min > row.pts)
+              .length;
+            if (betterOrEqualPossible <= 7) code = 'qualified-third';
+            else if (strictlyBetterGuaranteed >= 8) code = 'eliminated';
+          }
+        } else {
+          code = 'eliminated';
+        }
+      } else if (winsGroupByPoints) {
+        code = 'won-group';
+      } else if (topTwoByPoints) {
+        code = 'qualified';
+      } else if (eliminatedByPoints) {
+        code = 'eliminated';
+      }
+
+      row.status = statusMeta(code);
+    });
+  });
+  return standings;
+}
+
 function readOfficialStandings(groupsResult, games) {
   const apiGroups = groupsResult?.groups;
   if (!Array.isArray(apiGroups)) return null;
@@ -699,6 +839,7 @@ function buildData(games, now, groupsResult) {
   data.actualScores = Object.assign({}, data.actualScores, scores);
   const officialStandings = readOfficialStandings(groupsResult, games);
   data.standingsData = officialStandings || computeStandings(games);
+  annotateQualificationStatuses(data.standingsData, scores);
   data.statsData = computeStats(games);
 
   const scorerIssues = scorerCompletenessIssues(finishedGames, scores);
@@ -772,6 +913,7 @@ module.exports = async (req, res) => {
 module.exports._test = {
   buildData,
   cachePolicyFor,
+  annotateQualificationStatuses,
   computeStandings,
   computeStats,
   dataVersionFor,

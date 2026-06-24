@@ -156,6 +156,30 @@ Rules from the June 2026 scorer-card incident:
   finished matches and confirm `/api/data` reports `meta.scorerCompleteness:
   "verified"` and `meta.scorerIssueCount: 0`.
 
+### Lessons learned: clinch labels must be mathematical locks
+
+FIFA World Cup 2026 group advancement is top two from each group plus the eight
+best third-place teams. Group ordering uses points, head-to-head points,
+head-to-head goal difference, head-to-head goals, overall goal difference,
+overall goals, fair play, then FIFA rankings. The free feed does not include
+fair-play deductions or ranking tie-break state, so the app must avoid
+speculative status labels.
+
+Rules for standings qualification badges:
+
+- Compute `Won group`, `Qualified`, and `Eliminated` in `/api/data`; the client
+  should only render the status object it receives.
+- Only show a badge when remaining group outcomes cannot change that status by
+  points math. Open races get no badge.
+- Enumerate remaining win/draw/loss outcomes for the group instead of comparing
+  each team's maximum points independently; chasers often still play each other.
+- Completed groups may use the serverless-sorted table for winner, runner-up,
+  and fourth-place eliminated labels, but third-place advancement should remain
+  conservative until the global third-place picture is settled or mathematically
+  locked.
+- Add tests for both positive and negative cases: a clinched team, a won group,
+  a completed group, and a team that looks strong but is not yet guaranteed.
+
 ## Static vs Dynamic Data Architecture
 
 The app uses a split architecture:

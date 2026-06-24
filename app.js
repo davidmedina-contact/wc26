@@ -514,13 +514,17 @@ function renderGroups() {
       var teams = standingsData[letter] || [];
       teams.forEach(function(t, i) {
         var flag = (teamsIndex[t.t] && teamsIndex[t.t].flag) ? teamsIndex[t.t].flag + ' ' : '';
-        var posClass = '';
+        var posClass = '', statusHtml = '', statusClass = '';
         if (i < 2) posClass = ' standings-pos-qualify';
         else if (i === 2) posClass = ' standings-pos-third';
+        if (t.status && t.status.code) {
+          statusClass = ' standings-status-' + t.status.code;
+          statusHtml = '<span class="standings-status ' + statusClass.trim() + '">' + esc(t.status.label) + '</span>';
+        }
         var formHtml = renderFormDots(t.t);
-        html += '<tr class="standings-row' + posClass + '" data-team="' + t.t + '">' +
+        html += '<tr class="standings-row' + posClass + statusClass + '" data-team="' + t.t + '">' +
           '<td>' + (i+1) + '</td>' +
-          '<td>' + flag + t.t + formHtml + '</td>' +
+          '<td>' + flag + t.t + formHtml + statusHtml + '</td>' +
           '<td>' + t.p + '</td><td>' + t.w + '</td><td>' + t.d + '</td><td>' + t.l + '</td>' +
           '<td>' + t.gf + '</td><td>' + t.ga + '</td><td>' + t.gd + '</td>' +
           '<td class="pts">' + t.pts + '</td>' +
@@ -563,15 +567,19 @@ function hydrateGroupShell(el) {
     tbody.innerHTML = '';
     standings.forEach(function(t, i) {
       var flag = (teamsIndex[t.t] && teamsIndex[t.t].flag) ? teamsIndex[t.t].flag + ' ' : '';
-      var posClass = '';
+      var posClass = '', statusHtml = '', statusClass = '';
       if (i < 2) posClass = ' standings-pos-qualify';
       else if (i === 2) posClass = ' standings-pos-third';
+      if (t.status && t.status.code) {
+        statusClass = ' standings-status-' + t.status.code;
+        statusHtml = '<span class="standings-status ' + statusClass.trim() + '">' + esc(t.status.label) + '</span>';
+      }
       var tr = document.createElement('tr');
-      tr.className = 'standings-row' + posClass;
+      tr.className = 'standings-row' + posClass + statusClass;
       tr.setAttribute('data-team', t.t);
       var formHtml = renderFormDots(t.t);
       tr.innerHTML = '<td>' + (i+1) + '</td>' +
-        '<td>' + flag + t.t + formHtml + '</td>' +
+        '<td>' + flag + t.t + formHtml + statusHtml + '</td>' +
         '<td>' + t.p + '</td><td>' + t.w + '</td><td>' + t.d + '</td><td>' + t.l + '</td>' +
         '<td>' + t.gf + '</td><td>' + t.ga + '</td><td>' + t.gd + '</td>' +
         '<td class="pts">' + t.pts + '</td>' +

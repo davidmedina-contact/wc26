@@ -12,6 +12,13 @@
 
 The provider table is accepted only when every row is internally consistent and its total matches played agrees with the accepted game records. The function still re-sorts accepted rows before returning them because the upstream order has been observed to put teams with more points below teams with fewer points. Sorting follows the calculable FIFA group ranking criteria: points, head-to-head points, head-to-head goal difference, head-to-head goals scored, overall goal difference, and overall goals scored. Fair-play and FIFA-ranking tie-break data are not in the feed, so the static group draw order and team name are deterministic final fallbacks. If the provider table is unavailable or lagging, the function computes the same sorted table from the games.
 
+The function also annotates standings rows with qualification statuses when the outcome is mathematically locked. FIFA's 48-team format advances each group winner and runner-up, plus the eight best third-place teams. The function enumerates the remaining win/draw/loss point outcomes inside each four-team group so it accounts for chasers taking points from each other. Because this feed does not include fair-play deductions or live FIFA ranking tie-break data, status labels are intentionally conservative:
+
+- `Won group` appears only when a team is first in a complete group or no other group team can match its points total.
+- `Qualified` appears only when a team is guaranteed to finish in the automatic top two, or when a third-place team is guaranteed to be among the eight best third-place teams by the available points math.
+- `Eliminated` appears when a team is fourth in a complete group, cannot reach enough points to avoid bottom place, or a completed third-place finish is mathematically outside the eight best third-place slots.
+- Open races intentionally show no badge. Do not add predictive, probability-based, or provider-provided clinch labels unless the data source includes the missing tie-break fields and tests prove the label cannot be wrong.
+
 The client only renders that payload. It does not call third-party APIs or infer whether a game is complete.
 
 ## Freshness And Failure Behavior
@@ -79,9 +86,10 @@ FIFA remains the manual cross-check for fixtures and published statistics:
 4. Verify `/service-worker.js` reports the expected cache version.
 5. Verify `/api/data` returns HTTP 200, nonzero stats, and all matches older than four hours have `status: "FT"`.
 6. Verify `/api/data` reports `meta.scorerCompleteness: "verified"` and `meta.scorerIssueCount: 0`.
-7. Test Groups, Matches, Bracket, Stats, search, and theme controls in a fresh browser tab.
-8. In an installed PWA or simulated service-worker session, confirm reopening the app refreshes `/api/data` with a no-cache request and does not downgrade from a newer local payload to the bundled snapshot.
-9. Confirm response security and cache headers on the production domain.
+7. Verify completed or mathematically settled groups expose the expected standings `status` labels, while open groups do not show speculative badges.
+8. Test Groups, Matches, Bracket, Stats, search, and theme controls in a fresh browser tab.
+9. In an installed PWA or simulated service-worker session, confirm reopening the app refreshes `/api/data` with a no-cache request and does not downgrade from a newer local payload to the bundled snapshot.
+10. Confirm response security and cache headers on the production domain.
 
 Use `npm run deploy` for production releases, including serverless-only changes
 that alter visible scores, standings, stats, or refresh behavior. The

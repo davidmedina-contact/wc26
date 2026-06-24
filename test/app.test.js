@@ -113,6 +113,60 @@ test('standings rows are sorted by FIFA group ranking criteria, not provider ord
   ]);
 });
 
+test('standings include conservative clinch and elimination statuses', () => {
+  const clinchedTopTwo = buildData([
+    game({ home_team_name_en: 'Mexico', away_team_name_en: 'South Africa', home_score: '2', away_score: '0' }),
+    game({ home_team_name_en: 'South Korea', away_team_name_en: 'Czech Republic', home_score: '1', away_score: '1' }),
+    game({ home_team_name_en: 'Mexico', away_team_name_en: 'South Korea', home_score: '1', away_score: '0' }),
+    game({ home_team_name_en: 'Czech Republic', away_team_name_en: 'South Africa', home_score: '1', away_score: '0' }),
+  ]);
+  assert.deepEqual(clinchedTopTwo.data.standingsData.A.find(row => row.t === 'Mexico').status, {
+    code: 'qualified',
+    label: 'Qualified',
+  });
+
+  const openRace = buildData([
+    game({ home_team_name_en: 'Mexico', away_team_name_en: 'South Africa', home_score: '2', away_score: '0' }),
+    game({ home_team_name_en: 'South Korea', away_team_name_en: 'Czech Republic', home_score: '1', away_score: '1' }),
+  ]);
+  assert.equal(openRace.data.standingsData.A.find(row => row.t === 'Mexico').status, null);
+
+  const chasersPlayEachOther = buildData([
+    game({ group: 'J', home_team_name_en: 'Argentina', away_team_name_en: 'Algeria', home_score: '3', away_score: '0' }),
+    game({ group: 'J', home_team_name_en: 'Austria', away_team_name_en: 'Jordan', home_score: '1', away_score: '0' }),
+    game({ group: 'J', home_team_name_en: 'Argentina', away_team_name_en: 'Austria', home_score: '2', away_score: '0' }),
+    game({ group: 'J', home_team_name_en: 'Jordan', away_team_name_en: 'Algeria', home_score: '1', away_score: '2' }),
+  ]);
+  assert.deepEqual(chasersPlayEachOther.data.standingsData.J.find(row => row.t === 'Argentina').status, {
+    code: 'qualified',
+    label: 'Qualified',
+  });
+
+  const wonGroup = buildData([
+    game({ home_team_name_en: 'Mexico', away_team_name_en: 'South Africa', home_score: '2', away_score: '0' }),
+    game({ home_team_name_en: 'South Korea', away_team_name_en: 'Czech Republic', home_score: '1', away_score: '1' }),
+    game({ home_team_name_en: 'Mexico', away_team_name_en: 'South Korea', home_score: '1', away_score: '0' }),
+    game({ home_team_name_en: 'Czech Republic', away_team_name_en: 'South Africa', home_score: '1', away_score: '1' }),
+    game({ home_team_name_en: 'Czech Republic', away_team_name_en: 'Mexico', home_score: '0', away_score: '1' }),
+  ]);
+  assert.deepEqual(wonGroup.data.standingsData.A.find(row => row.t === 'Mexico').status, {
+    code: 'won-group',
+    label: 'Won group',
+  });
+
+  const completeGroup = buildData([
+    game({ home_team_name_en: 'Mexico', away_team_name_en: 'South Africa', home_score: '2', away_score: '0' }),
+    game({ home_team_name_en: 'South Korea', away_team_name_en: 'Czech Republic', home_score: '1', away_score: '1' }),
+    game({ home_team_name_en: 'Mexico', away_team_name_en: 'South Korea', home_score: '1', away_score: '0' }),
+    game({ home_team_name_en: 'Czech Republic', away_team_name_en: 'South Africa', home_score: '1', away_score: '1' }),
+    game({ home_team_name_en: 'Czech Republic', away_team_name_en: 'Mexico', home_score: '0', away_score: '1' }),
+    game({ home_team_name_en: 'South Africa', away_team_name_en: 'South Korea', home_score: '0', away_score: '2' }),
+  ]);
+  assert.equal(completeGroup.data.standingsData.A[0].status.code, 'won-group');
+  assert.equal(completeGroup.data.standingsData.A[1].status.code, 'qualified');
+  assert.equal(completeGroup.data.standingsData.A[3].status.code, 'eliminated');
+});
+
 test('scorer aliases preserve every goal event on match cards', () => {
   const result = buildData([
     game({
