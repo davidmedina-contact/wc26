@@ -742,6 +742,33 @@ function renderBracket() {
     return null;
   }
 
+  function teamGroupStatus(letter, team) {
+    var rows = (standingsData && standingsData[letter]) || [];
+    var row = rows.find(function(candidate) { return candidate.t === team; });
+    return row && row.status ? row.status.code : '';
+  }
+
+  function isTeamEliminatedFromGroup(letter, team) {
+    return teamGroupStatus(letter, team) === 'eliminated';
+  }
+
+  function isTeamEliminated(team) {
+    return Object.keys(wcData.groups || {}).some(function(letter) {
+      return isTeamEliminatedFromGroup(letter, team);
+    });
+  }
+
+  function validStoredGroupPick(letter, pos) {
+    var key = 'g_' + letter + '_' + pos;
+    var team = bracketState[key];
+    return team && !isTeamEliminatedFromGroup(letter, team) ? team : null;
+  }
+
+  function pickedWinner(matchId) {
+    var team = bracketState['ko_' + matchId];
+    return team && !isTeamEliminated(team) ? team : null;
+  }
+
   // Resolve a slot like "1A", "2B", or "3rd" to a team name
   function resolveSlot(slot) {
     if (slot.charAt(0) === '3') return slot;
@@ -749,8 +776,7 @@ function renderBracket() {
     var grp = slot.substring(1); // 'A', 'B', etc.
     var liveSeed = liveGroupSeed(grp, pos);
     if (liveSeed) return liveSeed;
-    var key = 'g_' + grp + '_' + pos;
-    return bracketState[key] || slot;
+    return validStoredGroupPick(grp, pos) || slot;
   }
 
   function getFlag(teamName) {
@@ -761,7 +787,7 @@ function renderBracket() {
   var totalKoPicks = 0, madeKoPicks = 0;
   function koMatchCard(matchId, homeTeam, awayTeam, label, venue) {
     totalKoPicks++;
-    var winner = bracketState['ko_' + matchId];
+    var winner = pickedWinner(matchId);
     if (winner) madeKoPicks++;
     var needsPick = !winner && wcData.teams[homeTeam] && wcData.teams[awayTeam];
     var matchCls = needsPick ? ' needs-pick' : '';
@@ -793,10 +819,11 @@ function renderBracket() {
     var k3 = 'g_' + letter + '_3';
     group.teams.forEach(function(team) {
       var liveRank = live1 === team ? '1st' : live2 === team ? '2nd' : live3 === team ? '3rd' : '';
-      var is1 = !liveRank && bracketState[k1] === team, is2 = !liveRank && bracketState[k2] === team, is3 = !liveRank && bracketState[k3] === team;
-      var cls = liveRank === '1st' ? ' winner locked' : liveRank === '2nd' ? ' runner locked' : liveRank === '3rd' ? ' third locked' : is1 ? ' winner' : is2 ? ' runner' : is3 ? ' third' : '';
-      var rank = liveRank ? liveRank + ' live' : is1 ? '1st pick' : is2 ? '2nd pick' : is3 ? '3rd pick' : '';
-      html += '<div class="bracket-team' + cls + '" data-idx="' + idx + '"' + (liveRank ? ' data-locked="true"' : '') + '>' +
+      var eliminated = isTeamEliminatedFromGroup(letter, team);
+      var is1 = !liveRank && !eliminated && bracketState[k1] === team, is2 = !liveRank && !eliminated && bracketState[k2] === team, is3 = !liveRank && !eliminated && bracketState[k3] === team;
+      var cls = liveRank === '1st' ? ' winner locked' : liveRank === '2nd' ? ' runner locked' : liveRank === '3rd' ? ' third locked' : eliminated ? ' eliminated locked' : is1 ? ' winner' : is2 ? ' runner' : is3 ? ' third' : '';
+      var rank = liveRank ? liveRank + ' live' : eliminated ? 'out' : is1 ? '1st pick' : is2 ? '2nd pick' : is3 ? '3rd pick' : '';
+      html += '<div class="bracket-team' + cls + '" data-idx="' + idx + '"' + ((liveRank || eliminated) ? ' data-locked="true"' : '') + '>' +
         '<span class="bt-name">' + getFlag(team) + team + '</span>' +
         '<span class="bt-rank">' + rank + '</span></div>';
       window._bracketMap = window._bracketMap || [];
@@ -823,8 +850,8 @@ function renderBracket() {
   html += '<div class="bracket-grid">';
   r16Pairs.forEach(function(pair, i) {
     var matchId = 'R16_' + i;
-    var home = bracketState['ko_' + pair[0]] || 'W ' + pair[0];
-    var away = bracketState['ko_' + pair[1]] || 'W ' + pair[1];
+    var home = pickedWinner(pair[0]) || 'W ' + pair[0];
+    var away = pickedWinner(pair[1]) || 'W ' + pair[1];
     html += koMatchCard(matchId, home, away, 'R16 · W' + pair[0] + ' vs W' + pair[1], bracketVenues[matchId]);
   });
   html += '</div>';
@@ -835,8 +862,8 @@ function renderBracket() {
   qfPairs.forEach(function(pair, i) {
     var matchId = 'QF_' + i;
     var r16a = 'R16_' + pair[0], r16b = 'R16_' + pair[1];
-    var home = bracketState['ko_' + r16a] || 'W R16.' + (pair[0]+1);
-    var away = bracketState['ko_' + r16b] || 'W R16.' + (pair[1]+1);
+    var home = pickedWinner(r16a) || 'W R16.' + (pair[0]+1);
+    var away = pickedWinner(r16b) || 'W R16.' + (pair[1]+1);
     html += koMatchCard(matchId, home, away, 'QF' + (i+1), bracketVenues[matchId]);
   });
   html += '</div>';
@@ -847,8 +874,8 @@ function renderBracket() {
   sfPairs.forEach(function(pair, i) {
     var matchId = 'SF_' + i;
     var qfa = 'QF_' + pair[0], qfb = 'QF_' + pair[1];
-    var home = bracketState['ko_' + qfa] || 'W QF' + (pair[0]+1);
-    var away = bracketState['ko_' + qfb] || 'W QF' + (pair[1]+1);
+    var home = pickedWinner(qfa) || 'W QF' + (pair[0]+1);
+    var away = pickedWinner(qfb) || 'W QF' + (pair[1]+1);
     html += koMatchCard(matchId, home, away, 'SF' + (i+1), bracketVenues[matchId]);
   });
   html += '</div>';
@@ -856,10 +883,10 @@ function renderBracket() {
   // === FINAL ===
   html += '<div class="bracket-round-title">' + icon('trophy',{size:14}) + ' Final</div>';
   html += '<div class="bracket-grid">';
-  var finalHome = bracketState['ko_SF_0'] || 'W SF1';
-  var finalAway = bracketState['ko_SF_1'] || 'W SF2';
+  var finalHome = pickedWinner('SF_0') || 'W SF1';
+  var finalAway = pickedWinner('SF_1') || 'W SF2';
   html += koMatchCard('FINAL', finalHome, finalAway, 'Final · MetLife Stadium', null);
-  var champion = bracketState['ko_FINAL'];
+  var champion = pickedWinner('FINAL');
   if (champion && wcData.teams[champion]) {
     html += '<div style="text-align:center;padding:20px;font-size:1.5rem">' + icon('trophy',{size:28,cls:'champion-trophy'}) + ' ' + wcData.teams[champion].flag + ' <strong>' + champion + '</strong> wins the World Cup!</div>';
   }
@@ -899,7 +926,7 @@ function renderBracket() {
           var teamName = nameEl.textContent.trim();
           // Remove flag emoji (first 2+ chars that are emoji)
           teamName = teamName.replace(/^[\u{1F1E0}-\u{1F1FF}\u{1F3F4}\u{E0061}-\u{E007A}\u{E007F}\s]+/u, '').trim();
-          if (teamName && teamName.indexOf('W ') !== 0 && teamName.indexOf('W R') !== 0 && teamName.indexOf('W Q') !== 0 && teamName.indexOf('W S') !== 0 && teamName !== '3rd Place') {
+          if (teamName && !isTeamEliminated(teamName) && teamName.indexOf('W ') !== 0 && teamName.indexOf('W R') !== 0 && teamName.indexOf('W Q') !== 0 && teamName.indexOf('W S') !== 0 && teamName !== '3rd Place') {
             pickKnockout(matchId, teamName);
           }
         }
@@ -914,6 +941,9 @@ function renderBracket() {
 }
 
 function pickGroup(letter, team) {
+  var rows = (standingsData && standingsData[letter]) || [];
+  var row = rows.find(function(candidate) { return candidate.t === team; });
+  if (row && row.status && row.status.code === 'eliminated') return;
   var k1 = 'g_' + letter + '_1', k2 = 'g_' + letter + '_2', k3 = 'g_' + letter + '_3';
   // Toggle: if already selected at a position, remove it
   if (bracketState[k1] === team) { delete bracketState[k1]; }
@@ -929,6 +959,12 @@ function pickGroup(letter, team) {
 }
 
 function pickKnockout(matchId, team) {
+  var eliminated = Object.keys((wcData && wcData.groups) || {}).some(function(letter) {
+    var rows = (standingsData && standingsData[letter]) || [];
+    var row = rows.find(function(candidate) { return candidate.t === team; });
+    return row && row.status && row.status.code === 'eliminated';
+  });
+  if (eliminated) return;
   var key = 'ko_' + matchId;
   if (bracketState[key] === team) {
     delete bracketState[key];

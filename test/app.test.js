@@ -391,6 +391,11 @@ test('bracket uses live locked seeds before user picks and keeps third-place slo
   assert.match(app, /function liveGroupSeed/);
   assert.match(app, /status\.code === 'won-group'/);
   assert.match(app, /if \(liveSeed\) return liveSeed;/);
+  assert.match(app, /isTeamEliminatedFromGroup/);
+  assert.match(app, /eliminated \? 'out'/);
+  assert.match(app, /data-locked="true"/);
+  assert.match(app, /if \(row && row\.status && row\.status\.code === 'eliminated'\) return;/);
+  assert.match(app, /if \(eliminated\) return;/);
   assert.match(app, /third-place opponents stay as FIFA candidate groups/);
   assert.match(app, /3 C\/E\/F\/H\/I/);
   assert.doesNotMatch(app, /getQualified3rdTeams/);
