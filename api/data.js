@@ -656,6 +656,62 @@ function groupPointScenarios(letter, rows, scores) {
   return scenarios;
 }
 
+function scoreGameFromMatch(match, homeScore, awayScore) {
+  return {
+    finished: 'TRUE',
+    type: 'group',
+    group: match.g,
+    home_team_name_en: norm(match.h),
+    away_team_name_en: norm(match.a),
+    home_score: String(homeScore),
+    away_score: String(awayScore),
+  };
+}
+
+function gamesFromScores(scores) {
+  return (SNAPSHOT.matchesData || [])
+    .filter(match => !match.stage && isKnownTeam(match.h) && isKnownTeam(match.a))
+    .map(match => {
+      const score = scores[groupMatchKey(match)];
+      return score ? scoreGameFromMatch(match, score.h, score.a) : null;
+    })
+    .filter(Boolean);
+}
+
+function groupOutcomeGames(letter, scores) {
+  const remaining = groupMatches(letter).filter(match => !scores[groupMatchKey(match)]);
+  const scenarios = [];
+
+  function visit(index, games) {
+    if (index >= remaining.length) {
+      scenarios.push(games);
+      return;
+    }
+    const match = remaining[index];
+    [
+      [1, 0],
+      [0, 0],
+      [0, 1],
+    ].forEach(score => {
+      visit(index + 1, games.concat(scoreGameFromMatch(match, score[0], score[1])));
+    });
+  }
+
+  visit(0, []);
+  return scenarios;
+}
+
+function teamBeatOpponent(team, opponent, games) {
+  return games.some(game => {
+    const home = norm(game.home_team_name_en);
+    const away = norm(game.away_team_name_en);
+    if (!((home === team && away === opponent) || (home === opponent && away === team))) return false;
+    const homeScore = parseScore(game.home_score);
+    const awayScore = parseScore(game.away_score);
+    return (home === team && homeScore > awayScore) || (away === team && awayScore > homeScore);
+  });
+}
+
 function thirdPointRange(letter, rows, scores) {
   const scenarios = groupPointScenarios(letter, rows, scores);
   let min = Infinity;
@@ -699,6 +755,8 @@ function annotateQualificationStatuses(standings, scores) {
     pointScenarios[letter] = groupPointScenarios(letter, standings[letter] || [], scores);
   });
 
+  const actualGames = gamesFromScores(scores);
+
   const allGroupsComplete = letters.every(letter => (standings[letter] || []).every(row => row.p === 3));
   const finalThirdRanking = allGroupsComplete
     ? thirdPlaceRanking(letters.map(letter => Object.assign({ group: letter }, standings[letter][2])).filter(Boolean))
@@ -711,15 +769,32 @@ function annotateQualificationStatuses(standings, scores) {
     rows.forEach((row, index) => {
       const others = rows.filter(candidate => candidate.t !== row.t).map(candidate => candidate.t);
       const scenarios = pointScenarios[letter] || [];
+      const outcomeScenarios = groupOutcomeGames(letter, scores);
       const guaranteedByScenario = scenarios.length > 0;
-      const winsGroupByPoints = guaranteedByScenario && scenarios.every(scenario =>
-        others.every(team => (scenario[row.t] || 0) > (scenario[team] || 0))
+      const scenarioForTeam = scenarios.map((scenario, scenarioIndex) => {
+        const games = actualGames.concat(outcomeScenarios[scenarioIndex] || []);
+        const rowPts = scenario[row.t] || 0;
+        let greater = 0;
+        let equalNotBeaten = 0;
+        let equalBeatTeam = 0;
+        others.forEach(team => {
+          const otherPts = scenario[team] || 0;
+          if (otherPts > rowPts) greater++;
+          else if (otherPts === rowPts) {
+            if (!teamBeatOpponent(row.t, team, games)) equalNotBeaten++;
+            if (teamBeatOpponent(team, row.t, games)) equalBeatTeam++;
+          }
+        });
+        return { greater, equalNotBeaten, equalBeatTeam };
+      });
+      const winsGroupByPoints = guaranteedByScenario && scenarioForTeam.every(scenario =>
+        scenario.greater === 0 && scenario.equalNotBeaten === 0
       );
-      const topTwoByPoints = guaranteedByScenario && scenarios.every(scenario =>
-        others.filter(team => (scenario[team] || 0) >= (scenario[row.t] || 0)).length <= 1
+      const topTwoByPoints = guaranteedByScenario && scenarioForTeam.every(scenario =>
+        scenario.greater + scenario.equalNotBeaten <= 1
       );
-      const eliminatedByPoints = guaranteedByScenario && scenarios.every(scenario =>
-        others.filter(team => (scenario[team] || 0) > (scenario[row.t] || 0)).length >= 3
+      const eliminatedByGroupRank = guaranteedByScenario && scenarioForTeam.every(scenario =>
+        scenario.greater + scenario.equalBeatTeam >= 3
       );
 
       let code = null;
@@ -748,7 +823,7 @@ function annotateQualificationStatuses(standings, scores) {
         code = 'won-group';
       } else if (topTwoByPoints) {
         code = 'qualified';
-      } else if (eliminatedByPoints) {
+      } else if (eliminatedByGroupRank) {
         code = 'eliminated';
       }
 

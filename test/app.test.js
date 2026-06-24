@@ -138,8 +138,8 @@ test('standings include conservative clinch and elimination statuses', () => {
     game({ group: 'J', home_team_name_en: 'Jordan', away_team_name_en: 'Algeria', home_score: '1', away_score: '2' }),
   ]);
   assert.deepEqual(chasersPlayEachOther.data.standingsData.J.find(row => row.t === 'Argentina').status, {
-    code: 'qualified',
-    label: 'Qualified',
+    code: 'won-group',
+    label: 'Group winner',
   });
 
   const wonGroup = buildData([
@@ -152,6 +152,32 @@ test('standings include conservative clinch and elimination statuses', () => {
   assert.deepEqual(wonGroup.data.standingsData.A.find(row => row.t === 'Mexico').status, {
     code: 'won-group',
     label: 'Group winner',
+  });
+
+  const currentMexicoGroup = buildData([
+    game({ home_team_name_en: 'Mexico', away_team_name_en: 'South Africa', home_score: '2', away_score: '0' }),
+    game({ home_team_name_en: 'South Korea', away_team_name_en: 'Czech Republic', home_score: '2', away_score: '1' }),
+    game({ home_team_name_en: 'Mexico', away_team_name_en: 'South Korea', home_score: '1', away_score: '0' }),
+    game({ home_team_name_en: 'Czech Republic', away_team_name_en: 'South Africa', home_score: '1', away_score: '1' }),
+  ]);
+  assert.deepEqual(currentMexicoGroup.data.standingsData.A.find(row => row.t === 'Mexico').status, {
+    code: 'won-group',
+    label: 'Group winner',
+  });
+
+  const currentUsGroup = buildData([
+    game({ group: 'D', home_team_name_en: 'United States', away_team_name_en: 'Paraguay', home_score: '4', away_score: '1' }),
+    game({ group: 'D', home_team_name_en: 'Australia', away_team_name_en: 'Türkiye', home_score: '2', away_score: '0' }),
+    game({ group: 'D', home_team_name_en: 'United States', away_team_name_en: 'Australia', home_score: '2', away_score: '0' }),
+    game({ group: 'D', home_team_name_en: 'Türkiye', away_team_name_en: 'Paraguay', home_score: '0', away_score: '1' }),
+  ]);
+  assert.deepEqual(currentUsGroup.data.standingsData.D.find(row => row.t === 'United States').status, {
+    code: 'won-group',
+    label: 'Group winner',
+  });
+  assert.deepEqual(currentUsGroup.data.standingsData.D.find(row => row.t === 'Türkiye').status, {
+    code: 'eliminated',
+    label: 'Eliminated',
   });
 
   const completeGroup = buildData([
@@ -358,6 +384,17 @@ test('client renders compact standings status markers with an inline legend', ()
   assert.match(app, /return 'E';/);
   assert.match(app, /function renderStandingsLegend/);
   assert.match(app, /aria-label="Qualification legend"/);
+});
+
+test('bracket uses live locked seeds before user picks and keeps third-place slots unresolved', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  assert.match(app, /function liveGroupSeed/);
+  assert.match(app, /status\.code === 'won-group'/);
+  assert.match(app, /if \(liveSeed\) return liveSeed;/);
+  assert.match(app, /third-place opponents stay as FIFA candidate groups/);
+  assert.match(app, /3 C\/E\/F\/H\/I/);
+  assert.doesNotMatch(app, /getQualified3rdTeams/);
+  assert.doesNotMatch(app, /elo: \(eloRatings/);
 });
 
 test('service worker keeps a last-known-good API response', () => {

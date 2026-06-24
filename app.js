@@ -699,20 +699,20 @@ function renderBracket() {
   // Slots: "1A" = winner group A, "2A" = runner-up group A, "3" = best 3rd place
   var r32Matches = [
     ["M73", "2A", "2B"],
-    ["M74", "1E", "3rd"],
+    ["M74", "1E", "3 A/B/C/D/F"],
     ["M75", "1F", "2C"],
     ["M76", "1C", "2F"],
-    ["M77", "1I", "3rd"],
+    ["M77", "1I", "3 C/D/F/G/H"],
     ["M78", "2E", "2I"],
-    ["M79", "1A", "3rd"],
-    ["M80", "1L", "3rd"],
-    ["M81", "1D", "3rd"],
-    ["M82", "1G", "3rd"],
+    ["M79", "1A", "3 C/E/F/H/I"],
+    ["M80", "1L", "3 E/H/I/J/K"],
+    ["M81", "1D", "3 B/E/F/I/J"],
+    ["M82", "1G", "3 A/E/H/I/J"],
     ["M83", "2K", "2L"],
     ["M84", "1H", "2J"],
-    ["M85", "1B", "3rd"],
+    ["M85", "1B", "3 E/F/G/I/J"],
     ["M86", "1J", "2H"],
-    ["M87", "1K", "3rd"],
+    ["M87", "1K", "3 D/E/I/J/L"],
     ["M88", "2D", "2G"]
   ];
 
@@ -721,40 +721,34 @@ function renderBracket() {
   var qfPairs = [[0,1],[2,3],[4,5],[6,7]]; // indices into r16
   var sfPairs = [[0,1],[2,3]]; // indices into qf
 
-  // Get all qualified 3rd-place teams (best 8 by Elo)
-  function getQualified3rdTeams() {
-    var thirds = [];
-    'ABCDEFGHIJKL'.split('').forEach(function(g) {
-      var team = bracketState['g_' + g + '_3'];
-      if (team) thirds.push({team: team, group: g, elo: (eloRatings && eloRatings[team]) || 1600});
-    });
-    // Sort by Elo descending, take best 8
-    thirds.sort(function(a, b) { return b.elo - a.elo; });
-    return thirds.slice(0, 8);
+  function groupComplete(letter) {
+    var rows = (standingsData && standingsData[letter]) || [];
+    return rows.length === 4 && rows.every(function(row) { return row.p === 3; });
   }
 
-  // Route 3rd-place teams to R32 slots by strength
-  // Simplified: strongest 3rd goes to slot index 0, weakest to slot index 7
-  var qualified3rd = getQualified3rdTeams();
-  var thirdSlots = []; // 8 slots in order: M74, M77, M79, M80, M81, M82, M85, M87
-  var thirdSlotIds = ['M74','M77','M79','M80','M81','M82','M85','M87'];
-  // Fill from weakest qualified 3rd → strongest group winner opponent
-  // (reversed: weakest 3rd gets the strongest opponent slot)
-  // Actually simpler: just assign in order
-  for (var ti = 0; ti < 8; ti++) {
-    thirdSlots[ti] = qualified3rd[ti] ? qualified3rd[ti].team : '3rd TBD';
+  function liveGroupSeed(letter, pos) {
+    var rows = (standingsData && standingsData[letter]) || [];
+    if (!rows.length) return null;
+    if (pos === '1') {
+      var winner = rows.find(function(row) { return row.status && row.status.code === 'won-group'; });
+      if (winner) return winner.t;
+      return groupComplete(letter) ? rows[0].t : null;
+    }
+    if (pos === '2') return groupComplete(letter) ? rows[1].t : null;
+    if (pos === '3') {
+      var third = rows[2];
+      return third && third.status && third.status.code === 'qualified-third' ? third.t : null;
+    }
+    return null;
   }
 
   // Resolve a slot like "1A", "2B", or "3rd" to a team name
-  var thirdIdx = 0;
   function resolveSlot(slot) {
-    if (slot === "3rd") {
-      var team = thirdSlots[thirdIdx] || '3rd TBD';
-      thirdIdx++;
-      return team;
-    }
+    if (slot.charAt(0) === '3') return slot;
     var pos = slot[0]; // '1' or '2'
     var grp = slot.substring(1); // 'A', 'B', etc.
+    var liveSeed = liveGroupSeed(grp, pos);
+    if (liveSeed) return liveSeed;
     var key = 'g_' + grp + '_' + pos;
     return bracketState[key] || slot;
   }
@@ -785,7 +779,7 @@ function renderBracket() {
   }
 
   // Build HTML
-  var html = '<div class="bracket-info"><h3>Elimination Bracket</h3><p>Pick 1st, 2nd, and 3rd place per group (click teams in order). Best 8 third-place teams auto-qualify for R32.</p><button id="resetBtn">' + icon('reset',{size:14}) + ' Reset</button></div>';
+  var html = '<div class="bracket-info"><h3>Elimination Bracket</h3><p>Locked group winners and completed seeds flow in from live standings. User picks fill unresolved slots; third-place opponents stay as FIFA candidate groups until the Annex C combination is known.</p><button id="resetBtn">' + icon('reset',{size:14}) + ' Reset Picks</button></div>';
 
   // === GROUP PICKS ===
   html += '<div class="bracket-round-title">Group Stage Picks</div>';
@@ -794,13 +788,15 @@ function renderBracket() {
   Object.keys(wcData.groups).forEach(function(letter) {
     var group = wcData.groups[letter];
     var k1 = 'g_' + letter + '_1', k2 = 'g_' + letter + '_2';
+    var live1 = liveGroupSeed(letter, '1'), live2 = liveGroupSeed(letter, '2'), live3 = liveGroupSeed(letter, '3');
     html += '<div class="bracket-match"><div class="bracket-match-lbl" style="color:' + groupColors[letter] + '">Group ' + letter + '</div>';
     var k3 = 'g_' + letter + '_3';
     group.teams.forEach(function(team) {
-      var is1 = bracketState[k1] === team, is2 = bracketState[k2] === team, is3 = bracketState[k3] === team;
-      var cls = is1 ? ' winner' : is2 ? ' runner' : is3 ? ' third' : '';
-      var rank = is1 ? '1st' : is2 ? '2nd' : is3 ? '3rd' : '';
-      html += '<div class="bracket-team' + cls + '" data-idx="' + idx + '">' +
+      var liveRank = live1 === team ? '1st' : live2 === team ? '2nd' : live3 === team ? '3rd' : '';
+      var is1 = !liveRank && bracketState[k1] === team, is2 = !liveRank && bracketState[k2] === team, is3 = !liveRank && bracketState[k3] === team;
+      var cls = liveRank === '1st' ? ' winner locked' : liveRank === '2nd' ? ' runner locked' : liveRank === '3rd' ? ' third locked' : is1 ? ' winner' : is2 ? ' runner' : is3 ? ' third' : '';
+      var rank = liveRank ? liveRank + ' live' : is1 ? '1st pick' : is2 ? '2nd pick' : is3 ? '3rd pick' : '';
+      html += '<div class="bracket-team' + cls + '" data-idx="' + idx + '"' + (liveRank ? ' data-locked="true"' : '') + '>' +
         '<span class="bt-name">' + getFlag(team) + team + '</span>' +
         '<span class="bt-rank">' + rank + '</span></div>';
       window._bracketMap = window._bracketMap || [];
@@ -886,6 +882,7 @@ function renderBracket() {
       // Group pick
       var teamDiv = e.target.closest('.bracket-team[data-idx]');
       if (teamDiv) {
+        if (teamDiv.getAttribute('data-locked') === 'true') return;
         var i = parseInt(teamDiv.getAttribute('data-idx'));
         if (!isNaN(i) && window._bracketMap && window._bracketMap[i]) {
           pickGroup(window._bracketMap[i].g, window._bracketMap[i].t);

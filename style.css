@@ -220,6 +220,9 @@
 .bracket-team.runner { background: var(--bracket-runner-bg); }
 .bracket-team.runner .bt-name { color: var(--bracket-runner-text); }
 .bracket-team.runner .bt-rank { color: var(--bracket-runner-text); }
+.bracket-team.locked { cursor: default; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent); }
+.bracket-team.locked:hover { background: inherit; }
+.bracket-team.locked .bt-rank { color: var(--accent); font-weight: 700; }
 .bracket-team.unpicked { border-left: 2px dashed color-mix(in srgb, var(--accent) 30%, transparent); }
 .bt-name { font-size: 0.88rem; color: var(--text); }
 .bt-rank { font-family: var(--mono); font-size: 0.78rem; color: var(--text-muted); font-weight: 600; }

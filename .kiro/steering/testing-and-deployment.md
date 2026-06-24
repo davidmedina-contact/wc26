@@ -173,6 +173,10 @@ Rules for standings qualification badges:
   points math. Open races get no badge.
 - Enumerate remaining win/draw/loss outcomes for the group instead of comparing
   each team's maximum points independently; chasers often still play each other.
+- Apply already-settled head-to-head edges inside those outcome scenarios. A
+  team can lock first place through head-to-head wins even when another team can
+  still match its points. Do not lock labels that depend on unknowable future
+  goal-difference swings.
 - Completed groups may use the serverless-sorted table for winner, runner-up,
   and fourth-place eliminated labels, but third-place advancement should remain
   conservative until the global third-place picture is settled or mathematically
@@ -181,6 +185,16 @@ Rules for standings qualification badges:
   sports standings patterns. Full-word row badges are too noisy on mobile.
 - Add tests for both positive and negative cases: a clinched team, a won group,
   a completed group, and a team that looks strong but is not yet guaranteed.
+
+Rules for bracket/live-results balance:
+
+- Live locked seeds override local user picks. User picks are fallbacks for
+  unresolved groups and later knockout guesses, not a replacement for real
+  standings.
+- Do not assign third-place teams to Round-of-32 slots by Elo or prediction
+  strength. FIFA uses an Annex C combination matrix based on exactly which
+  third-place groups qualify; show candidate-group placeholders until that
+  combination is known.
 
 ## Static vs Dynamic Data Architecture
 
