@@ -167,7 +167,7 @@ speculative status labels.
 
 Rules for standings qualification badges:
 
-- Compute `Won group`, `Qualified`, and `Eliminated` in `/api/data`; the client
+- Compute `Group winner`, `Qualified`, and `Eliminated` in `/api/data`; the client
   should only render the status object it receives.
 - Only show a badge when remaining group outcomes cannot change that status by
   points math. Open races get no badge.
@@ -177,6 +177,8 @@ Rules for standings qualification badges:
   and fourth-place eliminated labels, but third-place advancement should remain
   conservative until the global third-place picture is settled or mathematically
   locked.
+- Render compact `W`, `Q`, and `E` markers with a legend, following common
+  sports standings patterns. Full-word row badges are too noisy on mobile.
 - Add tests for both positive and negative cases: a clinched team, a won group,
   a completed group, and a team that looks strong but is not yet guaranteed.
 

@@ -151,7 +151,7 @@ test('standings include conservative clinch and elimination statuses', () => {
   ]);
   assert.deepEqual(wonGroup.data.standingsData.A.find(row => row.t === 'Mexico').status, {
     code: 'won-group',
-    label: 'Won group',
+    label: 'Group winner',
   });
 
   const completeGroup = buildData([
@@ -348,6 +348,16 @@ test('client uses one stable same-origin data endpoint', () => {
   assert.match(app, /Cache-Control': 'no-cache'/);
   assert.match(app, /incomingCount < currentCount/);
   assert.doesNotMatch(app, /worldcup26\.ir|api\/scores|api\/standings|dataCacheKey/);
+});
+
+test('client renders compact standings status markers with an inline legend', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  assert.match(app, /function standingsStatusShort/);
+  assert.match(app, /return 'W';/);
+  assert.match(app, /return 'Q';/);
+  assert.match(app, /return 'E';/);
+  assert.match(app, /function renderStandingsLegend/);
+  assert.match(app, /aria-label="Qualification legend"/);
 });
 
 test('service worker keeps a last-known-good API response', () => {

@@ -682,7 +682,7 @@ function thirdPlaceRanking(rows) {
 
 function statusMeta(code) {
   const labels = {
-    'won-group': 'Won group',
+    'won-group': 'Group winner',
     'qualified': 'Qualified',
     'qualified-third': 'Qualified',
     'eliminated': 'Eliminated',

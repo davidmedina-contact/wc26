@@ -14,10 +14,12 @@ The provider table is accepted only when every row is internally consistent and 
 
 The function also annotates standings rows with qualification statuses when the outcome is mathematically locked. FIFA's 48-team format advances each group winner and runner-up, plus the eight best third-place teams. The function enumerates the remaining win/draw/loss point outcomes inside each four-team group so it accounts for chasers taking points from each other. Because this feed does not include fair-play deductions or live FIFA ranking tie-break data, status labels are intentionally conservative:
 
-- `Won group` appears only when a team is first in a complete group or no other group team can match its points total.
+- `Group winner` appears only when a team is first in a complete group or no other group team can match its points total.
 - `Qualified` appears only when a team is guaranteed to finish in the automatic top two, or when a third-place team is guaranteed to be among the eight best third-place teams by the available points math.
 - `Eliminated` appears when a team is fourth in a complete group, cannot reach enough points to avoid bottom place, or a completed third-place finish is mathematically outside the eight best third-place slots.
 - Open races intentionally show no badge. Do not add predictive, probability-based, or provider-provided clinch labels unless the data source includes the missing tie-break fields and tests prove the label cannot be wrong.
+
+The Groups tab borrows the common sports-standings convention of compact status letters plus a legend. Rows show `W` for group winner, `Q` for qualified, and `E` for eliminated, with the full label exposed through the group legend and accessibility labels. Avoid full-word badges in the row; they crowd the mobile table.
 
 The client only renders that payload. It does not call third-party APIs or infer whether a game is complete.
 

@@ -472,6 +472,38 @@ function renderFormDots(teamName) {
   return html;
 }
 
+function standingsStatusShort(code) {
+  if (code === 'won-group') return 'W';
+  if (code === 'qualified' || code === 'qualified-third') return 'Q';
+  if (code === 'eliminated') return 'E';
+  return '';
+}
+
+function renderStandingsStatus(status) {
+  if (!status || !status.code) return '';
+  var shortLabel = standingsStatusShort(status.code);
+  if (!shortLabel) return '';
+  var label = esc(status.label);
+  var statusClass = 'standings-status-' + status.code;
+  return '<span class="standings-status ' + statusClass + '" title="' + label + '" aria-label="' + label + '">' + shortLabel + '</span>';
+}
+
+function renderStandingsLegend(teams) {
+  var seen = {};
+  var order = ['won-group', 'qualified', 'qualified-third', 'eliminated'];
+  var html = '';
+  (teams || []).forEach(function(t) {
+    if (t.status && t.status.code) seen[t.status.code] = t.status;
+  });
+  order.forEach(function(code) {
+    if (!seen[code]) return;
+    var shortLabel = standingsStatusShort(code);
+    var label = esc(seen[code].label);
+    html += '<span class="standings-legend-item"><span class="standings-status standings-status-' + code + '">' + shortLabel + '</span>' + label + '</span>';
+  });
+  return html ? '<div class="standings-legend" aria-label="Qualification legend">' + html + '</div>' : '';
+}
+
 function renderGroups() {
   var el = document.getElementById('tab-groups');
   if (!wcData || !wcData.groups) {
@@ -519,7 +551,7 @@ function renderGroups() {
         else if (i === 2) posClass = ' standings-pos-third';
         if (t.status && t.status.code) {
           statusClass = ' standings-status-' + t.status.code;
-          statusHtml = '<span class="standings-status ' + statusClass.trim() + '">' + esc(t.status.label) + '</span>';
+          statusHtml = renderStandingsStatus(t.status);
         }
         var formHtml = renderFormDots(t.t);
         html += '<tr class="standings-row' + posClass + statusClass + '" data-team="' + t.t + '">' +
@@ -530,7 +562,7 @@ function renderGroups() {
           '<td class="pts">' + t.pts + '</td>' +
           '<td class="standings-chevron">›</td></tr>';
       });
-      html += '</tbody></table></div></div>';
+      html += '</tbody></table></div>' + renderStandingsLegend(teams) + '</div>';
     });
     el.innerHTML = html;
   }
@@ -572,7 +604,7 @@ function hydrateGroupShell(el) {
       else if (i === 2) posClass = ' standings-pos-third';
       if (t.status && t.status.code) {
         statusClass = ' standings-status-' + t.status.code;
-        statusHtml = '<span class="standings-status ' + statusClass.trim() + '">' + esc(t.status.label) + '</span>';
+        statusHtml = renderStandingsStatus(t.status);
       }
       var tr = document.createElement('tr');
       tr.className = 'standings-row' + posClass + statusClass;
@@ -586,6 +618,10 @@ function hydrateGroupShell(el) {
         '<td class="standings-chevron">›</td>';
       tbody.appendChild(tr);
     });
+    var existingLegend = section.querySelector('.standings-legend');
+    if (existingLegend) existingLegend.remove();
+    var legendHtml = renderStandingsLegend(standings);
+    if (legendHtml) section.insertAdjacentHTML('beforeend', legendHtml);
   });
   // Remove loading pulse
   el.classList.remove('shell-loading');

@@ -658,10 +658,13 @@
 .standings-row:hover td { background: var(--surface-hover, var(--surface2)); }
 .standings-pos-qualify { border-left: 3px solid var(--color-green, #22c55e); }
 .standings-pos-third { border-left: 3px solid var(--color-amber, #f59e0b); }
-.standings-status { display: inline-flex; align-items: center; margin-left: 6px; padding: 2px 5px; border-radius: 4px; font-size: 0.58rem; font-weight: 800; line-height: 1; text-transform: uppercase; font-family: var(--font); vertical-align: middle; }
+.standings-status { display: inline-flex; align-items: center; justify-content: center; margin-left: 6px; width: 17px; height: 17px; border-radius: 50%; font-size: 0.58rem; font-weight: 900; line-height: 1; text-transform: uppercase; font-family: var(--mono); vertical-align: middle; }
 .standings-status-qualified, .standings-status-qualified-third, .standings-status-won-group { color: var(--color-green, #22c55e); background: rgba(34, 197, 94, 0.12); }
 .standings-status-eliminated { color: var(--color-red, #ef4444); background: rgba(239, 68, 68, 0.12); }
 .standings-row.standings-status-eliminated { opacity: 0.72; }
+.standings-legend { display: flex; flex-wrap: wrap; gap: 8px 12px; margin: 8px 2px 0; color: var(--text-muted); font-size: 0.66rem; font-weight: 600; }
+.standings-legend-item { display: inline-flex; align-items: center; gap: 4px; }
+.standings-legend .standings-status { margin-left: 0; width: 15px; height: 15px; font-size: 0.52rem; }
 .standings-chevron { color: var(--text-muted); margin-left: auto; font-size: 0.9rem; opacity: 0.6; }
 
 /* Stats scorers */
