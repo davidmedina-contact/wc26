@@ -4,7 +4,7 @@
 var wcData, jerseyNumbers, matchesData, scorePredictions, teamStrength,
     eloRatings, injuryIntel, actualScores, standingsData, bracketVenues,
     groupColors, modelPredictions;
-var statsData;
+var statsData, thirdPlaceData;
 
 function isValidBootstrapData(data) {
   return Boolean(data && data.groups && data.teams && Array.isArray(data.matchesData));
@@ -504,6 +504,33 @@ function renderStandingsLegend(teams) {
   return html ? '<div class="standings-legend" aria-label="Qualification legend">' + html + '</div>' : '';
 }
 
+function renderThirdPlaceTable() {
+  if (!Array.isArray(thirdPlaceData) || !thirdPlaceData.length) return '';
+  var teamsIndex = getTeamsIndex();
+  var html = '<section class="third-place-section" aria-label="Third-place qualification table">' +
+    '<div class="third-place-header"><div><div class="third-place-title">Third-place race</div><div class="third-place-subtitle">Top 8 advance · fair-play/FIFA ranking may decide tied rows</div></div></div>' +
+    '<div class="standings-table-wrap"><table class="standings-table third-place-table"><thead><tr><th>#</th><th>Team</th><th>Grp</th><th>P</th><th>GD</th><th>GF</th><th>Pts</th><th>Status</th></tr></thead><tbody>';
+  thirdPlaceData.forEach(function(row) {
+    var flag = (teamsIndex[row.t] && teamsIndex[row.t].flag) ? teamsIndex[row.t].flag + ' ' : '';
+    var status = row.status || {};
+    var code = status.code || '';
+    var label = status.label || '';
+    var pending = row.tieBreakPending ? '<span class="third-place-pending" title="Fair-play/FIFA ranking tie-break may be needed">TB</span>' : '';
+    html += '<tr class="third-place-row third-place-status-' + code + '" data-team="' + row.t + '">' +
+      '<td>' + row.rank + '</td>' +
+      '<td>' + flag + row.t + pending + '</td>' +
+      '<td>' + row.group + '</td>' +
+      '<td>' + row.p + '</td>' +
+      '<td>' + row.gd + '</td>' +
+      '<td>' + row.gf + '</td>' +
+      '<td class="pts">' + row.pts + '</td>' +
+      '<td><span class="third-place-status-label">' + esc(label) + '</span></td>' +
+      '</tr>';
+  });
+  html += '</tbody></table></div></section>';
+  return html;
+}
+
 function renderGroups() {
   var el = document.getElementById('tab-groups');
   if (!wcData || !wcData.groups) {
@@ -528,6 +555,7 @@ function renderGroups() {
     html += '<div class="group-jumpbar" id="groupJumpbar">';
     letters.forEach(function(letter) { html += '<a class="jumpbar-pill" href="#grp-' + letter + '">' + letter + '</a>'; });
     html += '</div>';
+    html += renderThirdPlaceTable();
 
     letters.forEach(function(letter) {
       var group = wcData.groups[letter];
@@ -574,7 +602,7 @@ function renderGroups() {
   if (!el._hasTeamListener) {
     el._hasTeamListener = true;
     el.addEventListener('click', function(e) {
-      var row = e.target.closest('.standings-row');
+      var row = e.target.closest('.standings-row, .third-place-row');
       if (row && row.dataset.team) {
         openTeamModal(row.dataset.team);
       }
@@ -638,6 +666,14 @@ function hydrateGroupShell(el) {
       var section = el.querySelector('.group-' + letter);
       if (section && !section.id) section.id = 'grp-' + letter;
     });
+  }
+  var existingThirdTable = el.querySelector('.third-place-section');
+  if (existingThirdTable) existingThirdTable.remove();
+  var thirdTableHtml = renderThirdPlaceTable();
+  if (thirdTableHtml) {
+    var jumpbar = el.querySelector('.group-jumpbar');
+    if (jumpbar) jumpbar.insertAdjacentHTML('afterend', thirdTableHtml);
+    else el.insertAdjacentHTML('afterbegin', thirdTableHtml);
   }
 
   // Add matchday progress to group headers
@@ -1452,6 +1488,7 @@ function applyDynamicData(data, meta) {
 
   actualScores = data.actualScores || actualScores;
   standingsData = data.standingsData || standingsData;
+  thirdPlaceData = data.thirdPlaceData || thirdPlaceData;
   statsData = data.statsData || statsData;
   if (incomingVersion) currentDataVersion = incomingVersion;
   if (meta) currentDataMeta = meta;
@@ -1463,6 +1500,7 @@ function cacheDynamicData() {
     localStorage.setItem(DATA_CACHE_KEY, JSON.stringify({
       actualScores: actualScores,
       standingsData: standingsData,
+      thirdPlaceData: thirdPlaceData,
       statsData: statsData,
       dataVersion: currentDataVersion,
       dataMeta: currentDataMeta,
@@ -1481,6 +1519,7 @@ function assignDataGlobals(data) {
   injuryIntel = data.injuryIntel;
   actualScores = data.actualScores || {};
   standingsData = data.standingsData || {};
+  thirdPlaceData = data.thirdPlaceData || [];
   statsData = data.statsData || null;
   currentDataVersion = data.dataVersion || currentDataVersion;
   currentDataMeta = data.dataMeta || currentDataMeta;
@@ -1662,6 +1701,7 @@ async function init() {
     if (cachedDynamic) {
       if (cachedDynamic.actualScores) actualScores = cachedDynamic.actualScores;
       if (cachedDynamic.standingsData) standingsData = cachedDynamic.standingsData;
+      if (cachedDynamic.thirdPlaceData) thirdPlaceData = cachedDynamic.thirdPlaceData;
       if (cachedDynamic.statsData) statsData = cachedDynamic.statsData;
       if (cachedDynamic.dataVersion) currentDataVersion = cachedDynamic.dataVersion;
       if (cachedDynamic.dataMeta) currentDataMeta = cachedDynamic.dataMeta;

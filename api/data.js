@@ -736,6 +736,50 @@ function thirdPlaceRanking(rows) {
   );
 }
 
+function thirdPlaceDataForStandings(standings) {
+  const thirds = Object.keys(SNAPSHOT.groups || {})
+    .map(letter => {
+      const row = standings[letter]?.[2];
+      return row ? Object.assign({ group: letter }, row) : null;
+    })
+    .filter(Boolean);
+  const ranked = thirdPlaceRanking(thirds);
+
+  return ranked.map((row, index) => {
+    const tiedOnKnownCriteria = ranked.some((other, otherIndex) =>
+      otherIndex !== index &&
+      other.pts === row.pts &&
+      other.gd === row.gd &&
+      other.gf === row.gf
+    );
+    const code = row.status?.code === 'qualified-third' ? 'qualified-third'
+      : row.status?.code === 'eliminated' ? 'eliminated'
+      : index < 8 ? 'in-position'
+      : 'below-cut';
+    const labels = {
+      'qualified-third': 'Qualified',
+      'eliminated': 'Eliminated',
+      'in-position': 'Top 8 now',
+      'below-cut': 'Below cut',
+    };
+    return {
+      rank: index + 1,
+      group: row.group,
+      t: row.t,
+      p: row.p,
+      w: row.w,
+      d: row.d,
+      l: row.l,
+      gf: row.gf,
+      ga: row.ga,
+      gd: row.gd,
+      pts: row.pts,
+      status: { code, label: labels[code] },
+      tieBreakPending: tiedOnKnownCriteria,
+    };
+  });
+}
+
 function statusMeta(code) {
   const labels = {
     'won-group': 'Group winner',
@@ -915,6 +959,7 @@ function buildData(games, now, groupsResult) {
   const officialStandings = readOfficialStandings(groupsResult, games);
   data.standingsData = officialStandings || computeStandings(games);
   annotateQualificationStatuses(data.standingsData, scores);
+  data.thirdPlaceData = thirdPlaceDataForStandings(data.standingsData);
   data.statsData = computeStats(games);
 
   const scorerIssues = scorerCompletenessIssues(finishedGames, scores);
@@ -993,6 +1038,7 @@ module.exports._test = {
   computeStats,
   dataVersionFor,
   expectedFinishedKeys,
+  thirdPlaceDataForStandings,
   parseScore,
   readOfficialStandings,
   scorerCompletenessIssues,

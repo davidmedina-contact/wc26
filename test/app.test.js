@@ -193,6 +193,21 @@ test('standings include conservative clinch and elimination statuses', () => {
   assert.equal(completeGroup.data.standingsData.A[3].status.code, 'eliminated');
 });
 
+test('third-place table is ranked server-side from standings data', () => {
+  const result = buildData([
+    game({ home_team_name_en: 'Mexico', away_team_name_en: 'South Africa', home_score: '2', away_score: '0' }),
+    game({ home_team_name_en: 'South Korea', away_team_name_en: 'Czech Republic', home_score: '2', away_score: '1' }),
+    game({ group: 'D', home_team_name_en: 'United States', away_team_name_en: 'Paraguay', home_score: '4', away_score: '1' }),
+    game({ group: 'D', home_team_name_en: 'Australia', away_team_name_en: 'Türkiye', home_score: '2', away_score: '0' }),
+  ]);
+
+  assert.equal(result.data.thirdPlaceData.length, 12);
+  assert.deepEqual(result.data.thirdPlaceData.map(row => row.rank), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+  assert.ok(result.data.thirdPlaceData.every(row => row.group && row.t && row.status && typeof row.tieBreakPending === 'boolean'));
+  assert.equal(result.data.thirdPlaceData.filter(row => row.status.code === 'in-position').length, 8);
+  assert.equal(result.data.thirdPlaceData[8].status.code, 'below-cut');
+});
+
 test('scorer aliases preserve every goal event on match cards', () => {
   const result = buildData([
     game({
@@ -384,6 +399,10 @@ test('client renders compact standings status markers with an inline legend', ()
   assert.match(app, /return 'E';/);
   assert.match(app, /function renderStandingsLegend/);
   assert.match(app, /aria-label="Qualification legend"/);
+  assert.match(app, /function renderThirdPlaceTable/);
+  assert.match(app, /Third-place race/);
+  assert.match(app, /thirdPlaceData = data\.thirdPlaceData/);
+  assert.match(app, /thirdPlaceData: thirdPlaceData/);
 });
 
 test('bracket uses live locked seeds before user picks and keeps third-place slots unresolved', () => {

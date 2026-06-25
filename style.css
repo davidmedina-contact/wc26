@@ -671,6 +671,22 @@
 .standings-legend-item { display: inline-flex; align-items: center; gap: 4px; }
 .standings-legend .standings-status { margin-left: 0; width: 15px; height: 15px; font-size: 0.52rem; }
 .standings-chevron { color: var(--text-muted); margin-left: auto; font-size: 0.9rem; opacity: 0.6; }
+.third-place-section { margin: 12px 0 28px; }
+.third-place-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.third-place-title { font-size: 0.95rem; font-weight: 800; color: var(--text); }
+.third-place-subtitle { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+.third-place-table td:nth-child(2) { min-width: 150px; }
+.third-place-row { cursor: pointer; transition: background 0.15s, opacity 0.15s; }
+.third-place-row:hover td { background: var(--surface-hover, var(--surface2)); }
+.third-place-status-in-position { border-left: 3px solid var(--color-green, #22c55e); }
+.third-place-status-qualified-third { border-left: 3px solid var(--color-green, #22c55e); }
+.third-place-status-below-cut { border-left: 3px solid var(--color-amber, #f59e0b); }
+.third-place-status-eliminated { border-left: 3px solid var(--color-red, #ef4444); opacity: 0.72; }
+.third-place-status-label { font-size: 0.62rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; white-space: nowrap; }
+.third-place-status-in-position .third-place-status-label,
+.third-place-status-qualified-third .third-place-status-label { color: var(--color-green, #22c55e); }
+.third-place-status-eliminated .third-place-status-label { color: var(--color-red, #ef4444); }
+.third-place-pending { display: inline-flex; align-items: center; justify-content: center; margin-left: 5px; padding: 1px 4px; border-radius: 4px; background: rgba(245, 158, 11, 0.14); color: var(--color-amber, #f59e0b); font-size: 0.56rem; font-weight: 900; font-family: var(--mono); vertical-align: middle; }
 
 /* Stats scorers */
 .scorer-leader { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,180,0,0.06)); border: 1.5px solid rgba(255,215,0,0.4); border-radius: 12px; margin-bottom: 12px; }
