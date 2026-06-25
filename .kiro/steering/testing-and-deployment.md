@@ -158,6 +158,18 @@ Rules from the June 2026 scorer-card incident:
   match cards and top-scorer stats stay consistent.
 - Use explicit scorer aliases only when the provider token loses semantic
   information, such as an own goal without an `(OG)` marker.
+- Scorer verification belongs in `/api/data`, not in the PWA. The function may
+  use bounded server-side checks against free sources when scorer labels are
+  incomplete or recently finished. API-Football must be explicitly enabled with
+  `API_FOOTBALL_SCORERS=1` plus an API key; ESPN and TheSportsDB are fallback
+  sources without app-client exposure.
+- Accept external scorer events only when they match the final score total by
+  side. If no source passes that invariant, keep the parser fallback and expose
+  the attempt details in `meta.scorerResolution`.
+- Keep verifier calls capped with `SCORER_VERIFIER_MAX_MATCHES` and cache the
+  resulting `/api/data` response at Vercel's CDN. Vercel Functions do not
+  provide durable local storage, so do not rely on process memory or local files
+  as the source of truth.
 - Before deploying scorer changes, run the full live-feed audit against all
   finished matches and confirm `/api/data` reports `meta.scorerCompleteness:
   "verified"` and `meta.scorerIssueCount: 0`.

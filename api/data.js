@@ -36,6 +36,7 @@ function dataVersionFor(data, meta) {
       statsData: data.statsData,
       scorerCompleteness: meta.scorerCompleteness,
       scorerIssueCount: meta.scorerIssueCount,
+      scorerResolution: meta.scorerResolution,
       finishedMatches: meta.finishedMatches,
       standingsSource: meta.standingsSource,
     }))
@@ -238,6 +239,18 @@ async function fetchJson(url, timeoutMs, attempts) {
   return null;
 }
 
+async function fetchJsonDirect(url, options) {
+  options = options || {};
+  const timeout = options.timeoutMs || 6000;
+  const headers = options.headers || {};
+  const response = await fetch(url, {
+    headers,
+    signal: AbortSignal.timeout(timeout),
+  });
+  if (!response.ok) throw new Error('HTTP ' + response.status);
+  return response.json();
+}
+
 const TEAM_CONFED = {
   'Mexico': 'CONCACAF',
   'United States': 'CONCACAF',
@@ -308,7 +321,9 @@ function matchKey(game) {
   return `${norm(game.home_team_name_en)}_${norm(game.away_team_name_en)}`;
 }
 
-function scorerTokensFor(game, side) {
+function scorerTokensFor(game, side, verifiedScorers) {
+  const verified = verifiedScorers && verifiedScorers[matchKey(game)];
+  if (verified && Array.isArray(verified[side])) return verified[side];
   const override = SCORER_OVERRIDES[matchKey(game)];
   if (override && Array.isArray(override[side])) return override[side];
   return parseScorerTokens(side === 'home' ? game.home_scorers : game.away_scorers);
@@ -443,6 +458,224 @@ function formatScorerToken(token, scoringTeam, opponentTeam) {
   return surname + (minute ? ' ' + minute : '') + (ogMatch ? ' (OG)' : '');
 }
 
+function gameDateIso(game) {
+  const raw = String(game.local_date || '').trim();
+  const match = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (!match) return null;
+  const month = match[1].padStart(2, '0');
+  const day = match[2].padStart(2, '0');
+  return `${match[3]}-${month}-${day}`;
+}
+
+function gameDateCompact(game) {
+  const iso = gameDateIso(game);
+  return iso ? iso.replace(/-/g, '') : null;
+}
+
+function teamNameMatches(sourceName, expectedName) {
+  const source = compactName(norm(sourceName));
+  const expected = compactName(norm(expectedName));
+  if (!source || !expected) return false;
+  if (source === expected) return true;
+  if (source.includes(expected) || expected.includes(source)) return true;
+  const sourceWords = new Set(source.split(/\s+/).filter(Boolean));
+  const expectedWords = expected.split(/\s+/).filter(Boolean);
+  return expectedWords.length > 0 && expectedWords.every(word => sourceWords.has(word));
+}
+
+function eventMinute(event) {
+  const minute = Number(event.minute);
+  if (!Number.isInteger(minute) || minute < 0) return '';
+  const extra = Number(event.extra);
+  return Number.isInteger(extra) && extra > 0 ? `${minute}+${extra}'` : `${minute}'`;
+}
+
+function scorerEventToToken(event) {
+  const name = String(event.player || '').trim();
+  if (!name) return null;
+  const minute = eventMinute(event);
+  return name + (minute ? ' ' + minute : '') + (event.ownGoal ? ' (OG)' : '');
+}
+
+function sourceEventsToTokens(events, home, away, homeScore, awayScore) {
+  const out = { home: [], away: [] };
+  (Array.isArray(events) ? events : []).forEach(event => {
+    const token = scorerEventToToken(event);
+    if (!token) return;
+    if (teamNameMatches(event.team, home)) out.home.push(token);
+    else if (teamNameMatches(event.team, away)) out.away.push(token);
+  });
+  if (out.home.length !== homeScore || out.away.length !== awayScore) return null;
+  return out;
+}
+
+async function fetchEspnScorerEvents(game) {
+  const date = gameDateCompact(game);
+  if (!date) return null;
+  const home = norm(game.home_team_name_en);
+  const away = norm(game.away_team_name_en);
+  const scoreboard = await fetchJsonDirect(
+    `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${date}`,
+    { timeoutMs: 5000 }
+  );
+  const event = (scoreboard.events || []).find(item => {
+    const competitors = item.competitions?.[0]?.competitors || [];
+    const names = competitors.map(c => c.team?.displayName || c.team?.name || '');
+    return names.some(name => teamNameMatches(name, home)) && names.some(name => teamNameMatches(name, away));
+  });
+  if (!event?.id) return null;
+  const summary = await fetchJsonDirect(
+    `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=${event.id}`,
+    { timeoutMs: 5000 }
+  );
+  const details = summary.header?.competitions?.[0]?.details || event.competitions?.[0]?.details || [];
+  return details
+    .filter(detail => detail?.scoringPlay && !detail.shootout)
+    .map(detail => ({
+      source: 'espn',
+      team: detail.team?.displayName || detail.team?.name,
+      player: detail.participants?.[0]?.athlete?.displayName || detail.athletesInvolved?.[0]?.displayName,
+      minute: Math.floor((Number(detail.clock?.value) || 0) / 60) || Number(String(detail.clock?.displayValue || '').match(/\d+/)?.[0]),
+      extra: Number(detail.addedClock?.value) ? Math.floor(Number(detail.addedClock.value) / 60) : 0,
+      ownGoal: Boolean(detail.ownGoal),
+    }))
+    .filter(event => event.player && event.team);
+}
+
+async function fetchApiFootballScorerEvents(game) {
+  if (process.env.API_FOOTBALL_SCORERS !== '1') return null;
+  const key = process.env.API_FOOTBALL_KEY || process.env.APIFOOTBALL_KEY;
+  if (!key) return null;
+  const date = gameDateIso(game);
+  if (!date) return null;
+  const home = norm(game.home_team_name_en);
+  const away = norm(game.away_team_name_en);
+  const headers = { 'x-apisports-key': key };
+  const fixtures = await fetchJsonDirect(
+    `https://v3.football.api-sports.io/fixtures?date=${date}`,
+    { timeoutMs: 6000, headers }
+  );
+  const fixture = (fixtures.response || []).find(item =>
+    teamNameMatches(item.teams?.home?.name, home) && teamNameMatches(item.teams?.away?.name, away)
+  );
+  const id = fixture?.fixture?.id;
+  if (!id) return null;
+  const events = await fetchJsonDirect(
+    `https://v3.football.api-sports.io/fixtures/events?fixture=${id}`,
+    { timeoutMs: 6000, headers }
+  );
+  return (events.response || [])
+    .filter(event => compactName(event.type) === 'goal')
+    .map(event => ({
+      source: 'api-football',
+      team: event.team?.name,
+      player: event.player?.name,
+      minute: Number(event.time?.elapsed),
+      extra: Number(event.time?.extra) || 0,
+      ownGoal: /own/i.test(String(event.detail || '')),
+    }))
+    .filter(event => event.player && event.team);
+}
+
+async function fetchTheSportsDbScorerEvents(game) {
+  const date = gameDateIso(game);
+  if (!date) return null;
+  const home = norm(game.home_team_name_en);
+  const away = norm(game.away_team_name_en);
+  const query = encodeURIComponent(`${home}_vs_${away}`);
+  const search = await fetchJsonDirect(
+    `https://www.thesportsdb.com/api/v1/json/123/searchevents.php?e=${query}&d=${date}`,
+    { timeoutMs: 5000 }
+  );
+  const event = (search.event || []).find(item =>
+    teamNameMatches(item.strHomeTeam, home) && teamNameMatches(item.strAwayTeam, away)
+  );
+  if (!event?.idEvent) return null;
+  const timeline = await fetchJsonDirect(
+    `https://www.thesportsdb.com/api/v1/json/123/lookuptimeline.php?id=${event.idEvent}`,
+    { timeoutMs: 5000 }
+  );
+  return (timeline.timeline || [])
+    .filter(item => /goal/i.test(String(item.strTimeline || item.strEvent || '')))
+    .map(item => ({
+      source: 'thesportsdb',
+      team: item.strTeam,
+      player: item.strPlayer,
+      minute: Number(item.intTime || String(item.strTime || '').match(/\d+/)?.[0]),
+      extra: 0,
+      ownGoal: /own/i.test(String(item.strTimeline || item.strEvent || item.strComment || '')),
+    }))
+    .filter(event => event.player && event.team);
+}
+
+function scorerVerificationCandidates(games, scores, now) {
+  const cutoff = Number(now || Date.now());
+  const issueMatches = new Set(scorerCompletenessIssues(games, scores).map(issue => issue.match));
+  const recentMs = Number(process.env.SCORER_VERIFIER_RECENT_HOURS || 36) * 60 * 60 * 1000;
+  return validFinishedGames(games).filter(game => {
+    const key = matchKey(game);
+    if (issueMatches.has(key)) return true;
+    const date = gameDateIso(game);
+    if (!date) return false;
+    const local = Date.parse(`${date}T${String(game.local_date || '').slice(11, 16) || '12:00'}:00-04:00`);
+    return Number.isFinite(local) && cutoff >= local && cutoff - local <= recentMs;
+  });
+}
+
+async function buildScorerVerification(games, now) {
+  const initial = buildScores(games, null);
+  const candidates = scorerVerificationCandidates(games, initial, now);
+  const maxMatches = Math.max(0, Number(process.env.SCORER_VERIFIER_MAX_MATCHES || 4));
+  const selected = candidates.slice(0, maxMatches);
+  const tokensByMatch = {};
+  const matches = [];
+  let sourceCalls = 0;
+
+  for (const game of selected) {
+    const home = norm(game.home_team_name_en);
+    const away = norm(game.away_team_name_en);
+    const homeScore = parseScore(game.home_score);
+    const awayScore = parseScore(game.away_score);
+    const sources = [
+      ['api-football', fetchApiFootballScorerEvents],
+      ['espn', fetchEspnScorerEvents],
+      ['thesportsdb', fetchTheSportsDbScorerEvents],
+    ];
+    const attempts = [];
+    for (const [source, fetcher] of sources) {
+      try {
+        const events = await fetcher(game);
+        if (events) sourceCalls += 1;
+        const tokens = sourceEventsToTokens(events, home, away, homeScore, awayScore);
+        attempts.push({ source, status: tokens ? 'complete' : (events && events.length ? 'incomplete' : 'unavailable'), events: events?.length || 0 });
+        if (tokens) {
+          tokensByMatch[matchKey(game)] = tokens;
+          break;
+        }
+      } catch (error) {
+        attempts.push({ source, status: 'error', message: String(error.message || error).slice(0, 80) });
+      }
+    }
+    const accepted = attempts.find(attempt => attempt.status === 'complete');
+    matches.push({ match: matchKey(game), status: accepted ? 'verified' : 'fallback', source: accepted?.source || null, attempts });
+  }
+
+  return {
+    tokensByMatch,
+    report: {
+      checkedMatches: selected.length,
+      eligibleMatches: candidates.length,
+      sourceCalls,
+      sources: {
+        apiFootball: process.env.API_FOOTBALL_SCORERS === '1' && Boolean(process.env.API_FOOTBALL_KEY || process.env.APIFOOTBALL_KEY) ? 'enabled' : 'disabled',
+        espn: 'enabled',
+        theSportsDb: 'enabled',
+      },
+      matches,
+    },
+  };
+}
+
 function scorerCompletenessIssues(games, scores) {
   return validFinishedGames(games).reduce((issues, game) => {
     const key = matchKey(game);
@@ -455,7 +688,7 @@ function scorerCompletenessIssues(games, scores) {
   }, []);
 }
 
-function computeStats(games) {
+function computeStats(games, verifiedScorers) {
   const finishedGames = validFinishedGames(games);
   const finishedGroupGames = finishedGames.filter(g => g.type === 'group');
 
@@ -488,10 +721,10 @@ function computeStats(games) {
     addConf(home, homeScore, awayScore);
     addConf(away, awayScore, homeScore);
 
-    scorerTokensFor(game, 'home').forEach(token => {
+    scorerTokensFor(game, 'home', verifiedScorers).forEach(token => {
       addScorer(token, home, away);
     });
-    scorerTokensFor(game, 'away').forEach(token => {
+    scorerTokensFor(game, 'away', verifiedScorers).forEach(token => {
       addScorer(token, away, home);
     });
   });
@@ -965,17 +1198,17 @@ function expectedFinishedKeys(now) {
     .map(match => `${match.h}_${match.a}`);
 }
 
-function buildData(games, now, groupsResult) {
+function buildScores(games, verifiedScorers) {
   const finishedGames = validFinishedGames(games);
   const scores = {};
   finishedGames.forEach(game => {
     const home = norm(game.home_team_name_en);
     const away = norm(game.away_team_name_en);
     // Parse scorer tokens into clean display strings (e.g. "Quiñones 9'")
-    const homeScorers = scorerTokensFor(game, 'home')
+    const homeScorers = scorerTokensFor(game, 'home', verifiedScorers)
       .map(token => formatScorerToken(token, home, away))
       .filter(Boolean);
-    const awayScorers = scorerTokensFor(game, 'away')
+    const awayScorers = scorerTokensFor(game, 'away', verifiedScorers)
       .map(token => formatScorerToken(token, away, home))
       .filter(Boolean);
     scores[`${home}_${away}`] = {
@@ -986,14 +1219,20 @@ function buildData(games, now, groupsResult) {
       as: awayScorers.length > 0 ? awayScorers : undefined,
     };
   });
+  return scores;
+}
 
+function buildData(games, now, groupsResult, scorerVerification) {
+  const finishedGames = validFinishedGames(games);
+  const verifiedScorers = scorerVerification?.tokensByMatch || null;
+  const scores = buildScores(games, verifiedScorers);
   const data = JSON.parse(JSON.stringify(SNAPSHOT));
   data.actualScores = Object.assign({}, data.actualScores, scores);
   const officialStandings = readOfficialStandings(groupsResult, games);
   data.standingsData = officialStandings || computeStandings(games);
   annotateQualificationStatuses(data.standingsData, scores);
   data.thirdPlaceData = thirdPlaceDataForStandings(data.standingsData);
-  data.statsData = computeStats(games);
+  data.statsData = computeStats(games, verifiedScorers);
 
   const scorerIssues = scorerCompletenessIssues(finishedGames, scores);
   const missingFinals = expectedFinishedKeys(now).filter(key => !scores[key]);
@@ -1002,6 +1241,7 @@ function buildData(games, now, groupsResult) {
     finishedMatches: finishedGames.length,
     missingFinals,
     scorerIssues,
+    scorerResolution: scorerVerification?.report || null,
     standingsSource: officialStandings ? 'official-feed' : 'computed-fallback',
   };
 }
@@ -1026,8 +1266,10 @@ module.exports = async (req, res) => {
 
   // The ordered table is optional. Scores and stats never wait on it before the
   // critical games feed has succeeded.
+  const now = Date.now();
   const groupsResult = await fetchJson('https://worldcup26.ir/get/groups', 5000, 1);
-  const result = buildData(games, Date.now(), groupsResult);
+  const scorerVerification = await buildScorerVerification(games, now);
+  const result = buildData(games, now, groupsResult, scorerVerification);
   if (result.missingFinals.length > 0) {
     res.statusCode = 502;
     res.setHeader('Cache-Control', 'no-store');
@@ -1040,6 +1282,7 @@ module.exports = async (req, res) => {
     finishedMatches: result.finishedMatches,
     scorerCompleteness: result.scorerIssues.length === 0 ? 'verified' : 'needs-review',
     scorerIssueCount: result.scorerIssues.length,
+    scorerResolution: result.scorerResolution,
     standingsSource: result.standingsSource,
     cacheMode: policy.cacheMode,
     nextRefreshSeconds: policy.nextRefreshSeconds,
@@ -1065,6 +1308,7 @@ module.exports = async (req, res) => {
 
 module.exports._test = {
   buildData,
+  buildScorerVerification,
   cachePolicyFor,
   annotateQualificationStatuses,
   computeStandings,
@@ -1075,6 +1319,7 @@ module.exports._test = {
   parseScore,
   readOfficialStandings,
   scorerCompletenessIssues,
+  sourceEventsToTokens,
   sortGroupStandings,
   validFinishedGames,
 };

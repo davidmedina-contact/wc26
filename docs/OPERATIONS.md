@@ -74,6 +74,23 @@ tokens, and unusual stoppage-time formats. Known verified corrections live in
 function validates that each finished match has scorer labels equal to the final
 score total and reports `meta.scorerCompleteness`.
 
+When scorer labels are incomplete, or when a match has recently finished, the
+serverless function can attempt bounded scorer verification from free sources.
+API-Football is supported only when `API_FOOTBALL_SCORERS=1` and an
+`API_FOOTBALL_KEY` or `APIFOOTBALL_KEY` is configured. ESPN's public World Cup
+endpoint and TheSportsDB's free v1 API are attempted without secrets. These
+sources run server-side only; the PWA never calls them directly. A source is
+accepted only when its scoring events match the final score total by side. The
+response includes `meta.scorerResolution` so operators can see which matches
+were checked, which source was accepted, and which matches fell back to the
+feed/parser path.
+
+Because free API quotas are fragile and Vercel Functions have no durable local
+disk cache, the verifier is intentionally bounded per invocation. Tune
+`SCORER_VERIFIER_MAX_MATCHES` and `SCORER_VERIFIER_RECENT_HOURS` conservatively,
+and rely on Vercel CDN caching to keep repeated PWA launches from re-querying
+external providers on every request.
+
 The parser should fix recurring feed patterns at the resolver layer, not with
 one-off display patches. For example, the feed often writes vowels as `v` or
 uses nearby transliterations (`Jvlian Kviinvnz`, `Svfian Rhimi`, `Taplv Maskv`),

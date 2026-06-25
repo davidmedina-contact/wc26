@@ -6,11 +6,13 @@ const test = require('node:test');
 const handler = require('../api/data');
 const {
   buildData,
+  buildScorerVerification,
   cachePolicyFor,
   computeStandings,
   expectedFinishedKeys,
   parseScore,
   scorerCompletenessIssues,
+  sourceEventsToTokens,
   sortGroupStandings,
   validFinishedGames,
 } = handler._test;
@@ -420,6 +422,76 @@ test('reviewed finished matches have complete scorer labels', () => {
   assert.equal(result.data.statsData.topScorers.some(row => row.n === 'Damián Bobadilla'), false);
   assert.equal(result.data.statsData.topScorers.some(row => row.n === 'Sultan Al-Brake'), false);
   assert.equal(result.data.statsData.topScorers.some(row => row.n === 'Yassine Bounou'), false);
+});
+
+test('serverless scorer verifier can replace incomplete feed scorer strings', async () => {
+  const originalFetch = global.fetch;
+  const match = game({
+    local_date: '06/13/2026 21:00',
+    home_score: '2',
+    away_score: '0',
+    home_scorers: 'null',
+    away_scorers: 'null',
+  });
+  const scoreboard = {
+    events: [{
+      id: 'espn-1',
+      competitions: [{
+        competitors: [
+          { team: { displayName: 'Mexico' } },
+          { team: { displayName: 'South Africa' } },
+        ],
+      }],
+    }],
+  };
+  const summary = {
+    header: {
+      competitions: [{
+        details: [
+          {
+            scoringPlay: true,
+            team: { displayName: 'Mexico' },
+            clock: { value: 600 },
+            participants: [{ athlete: { displayName: 'Raúl Jiménez' } }],
+            ownGoal: false,
+          },
+          {
+            scoringPlay: true,
+            team: { displayName: 'Mexico' },
+            clock: { value: 4800 },
+            participants: [{ athlete: { displayName: 'Teboho Mokoena' } }],
+            ownGoal: true,
+          },
+        ],
+      }],
+    },
+  };
+  global.fetch = async url => ({
+    ok: true,
+    json: async () => String(url).includes('/summary') ? summary : scoreboard,
+  });
+
+  try {
+    const verification = await buildScorerVerification([match], Date.parse('2026-06-14T04:00:00Z'));
+    const result = buildData([match], Date.parse('2026-06-14T04:00:00Z'), null, verification);
+
+    assert.equal(verification.report.checkedMatches, 1);
+    assert.equal(verification.report.matches[0].source, 'espn');
+    assert.deepEqual(result.scorerIssues, []);
+    assert.deepEqual(result.data.actualScores['Mexico_South Africa'].hs, ["Jiménez 10'", "Mokoena 80' (OG)"]);
+    assert.equal(result.data.statsData.topScorers.some(row => row.n === 'Teboho Mokoena'), false);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test('source scorer events must match final score by side before acceptance', () => {
+  const tokens = sourceEventsToTokens([
+    { team: 'Mexico', player: 'Raúl Jiménez', minute: 10 },
+    { team: 'South Africa', player: 'Teboho Mokoena', minute: 80 },
+  ], 'Mexico', 'South Africa', 2, 0);
+
+  assert.equal(tokens, null);
 });
 
 test('post-match completeness guard detects missing finals', () => {
