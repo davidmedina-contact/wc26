@@ -332,6 +332,51 @@ test('reviewed finished matches have complete scorer labels', () => {
       home_scorers: "{\"Al Rashdan 36'\"}",
       away_scorers: "{\"Nzir Bnbvali 69'\",\"Amine Gouiri 82'\"}",
     }),
+    game({
+      group: 'B',
+      home_team_name_en: 'Switzerland',
+      away_team_name_en: 'Canada',
+      home_score: '2',
+      away_score: '1',
+      home_scorers: "{\"Rubén Vargas 46'\",\"Jvhan Mnzambi 57'\"}",
+      away_scorers: "{\"Prvmis Divid 76'\"}",
+    }),
+    game({
+      group: 'B',
+      home_team_name_en: 'Bosnia and Herzegovina',
+      away_team_name_en: 'Qatar',
+      home_score: '3',
+      away_score: '1',
+      home_scorers: "{\"Karim Alaibgvvich 29'\",\"Abvnad 34'\",\"Armin Mhmich 80'\"}",
+      away_scorers: "{\"Hassan Al-Haydos 42'\"}",
+    }),
+    game({
+      group: 'C',
+      home_team_name_en: 'Morocco',
+      away_team_name_en: 'Haiti',
+      home_score: '4',
+      away_score: '2',
+      home_scorers: "{\"Achraf Hakimi 39'\",\"Asmaail Saibari 45+1'\",\"Svfian Rhimi 78'\",\"Gessime Yassine 89'\"}",
+      away_scorers: "{\"Yassine Bounou 10'\",\"Wilson Isidor 43'\"}",
+    }),
+    game({
+      group: 'A',
+      home_team_name_en: 'Czech Republic',
+      away_team_name_en: 'Mexico',
+      home_score: '0',
+      away_score: '3',
+      home_scorers: 'null',
+      away_scorers: "{\"Mateo Chávez 55'\",\"Jvlian Kviinvnz 61'\",\"Álvaro Fidalgo 90+4'\"}",
+    }),
+    game({
+      group: 'A',
+      home_team_name_en: 'South Africa',
+      away_team_name_en: 'South Korea',
+      home_score: '1',
+      away_score: '0',
+      home_scorers: "{\"Taplv Maskv 63'\"}",
+      away_scorers: 'null',
+    }),
   ];
 
   const result = buildData(reviewedGames);
@@ -354,7 +399,27 @@ test('reviewed finished matches have complete scorer labels', () => {
     "Haaland 48'",
     "Haaland 58'",
   ]);
+  assert.deepEqual(result.data.actualScores.Switzerland_Canada.as, ["David 76'"]);
+  assert.deepEqual(result.data.actualScores['Bosnia and Herzegovina_Qatar'].hs, [
+    "Alajbegović 29'",
+    "Al-Brake 34' (OG)",
+    "Mahmić 80'",
+  ]);
+  assert.deepEqual(result.data.actualScores.Morocco_Haiti.hs, [
+    "Hakimi 39'",
+    "Saibari 45+1'",
+    "Rahimi 78'",
+    "Gessime 89'",
+  ]);
+  assert.deepEqual(result.data.actualScores['Czech Republic_Mexico'].as, [
+    "Chávez 55'",
+    "Quiñones 61'",
+    "Fidalgo 90+4'",
+  ]);
+  assert.deepEqual(result.data.actualScores['South Africa_South Korea'].hs, ["Maseko 63'"]);
   assert.equal(result.data.statsData.topScorers.some(row => row.n === 'Damián Bobadilla'), false);
+  assert.equal(result.data.statsData.topScorers.some(row => row.n === 'Sultan Al-Brake'), false);
+  assert.equal(result.data.statsData.topScorers.some(row => row.n === 'Yassine Bounou'), false);
 });
 
 test('post-match completeness guard detects missing finals', () => {

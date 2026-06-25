@@ -74,6 +74,13 @@ tokens, and unusual stoppage-time formats. Known verified corrections live in
 function validates that each finished match has scorer labels equal to the final
 score total and reports `meta.scorerCompleteness`.
 
+The parser should fix recurring feed patterns at the resolver layer, not with
+one-off display patches. For example, the feed often writes vowels as `v` or
+uses nearby transliterations (`Jvlian Kviinvnz`, `Svfian Rhimi`, `Taplv Maskv`),
+so scorer resolution uses a consonant/skeleton match against the known squad
+list. Use explicit aliases only when the feed loses semantic information, such
+as an own goal token without an `(OG)` marker.
+
 The schedule-aware completeness check prevents a partial feed from silently removing finals. It uses the tournament's June/July Eastern Time schedule and allows four hours from kickoff before requiring a final result.
 
 FIFA remains the manual cross-check for fixtures and published statistics:

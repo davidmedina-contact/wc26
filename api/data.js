@@ -159,6 +159,7 @@ const SCORER_ALIASES_RAW = {
   'hliv varla': 'Hélio Varela',
   'markvs hlmgrn pdrsn': 'Marcus Holmgren Pedersen',
   'nzir bnbvali': 'Nadhir Benbouali',
+  'abvnad': 'Sultan Al-Brake',
 };
 
 function compactName(name) {
@@ -172,6 +173,21 @@ function compactName(name) {
 
 function words(name) {
   return compactName(name).split(/\s+/).filter(Boolean);
+}
+
+function feedSkeleton(name) {
+  return words(name)
+    .map(word => word
+      .replace(/qu/g, 'k')
+      .replace(/q/g, 'k')
+      .replace(/z/g, 's')
+      .replace(/c(?=[ei])/g, 's')
+      .replace(/c/g, 'k')
+      .replace(/th/g, 't')
+      .replace(/[aeiouvy]/g, '')
+    )
+    .filter(Boolean)
+    .join(' ');
 }
 
 const SCORER_ALIASES = Object.fromEntries(
@@ -343,11 +359,28 @@ function playerScore(token, playerName) {
   const pLast = pWords[pWords.length - 1] || '';
   const tInitials = tWords.filter(w => w.length === 1).join('');
   const pInitials = pWords.map(w => w[0]).join('');
+  const tSkeleton = feedSkeleton(token);
+  const pSkeleton = feedSkeleton(playerName);
 
   let score = 0;
   if (tLast && (pFirst === tLast || pLast === tLast)) score += 35;
   if (tInitials && pInitials && tInitials === pInitials) score += 25;
   if (p.includes(t) || t.includes(p)) score += 20;
+  if (tSkeleton && pSkeleton) {
+    if (tSkeleton === pSkeleton) score += 55;
+    else {
+      const skeletonDist = levenshtein(tSkeleton, pSkeleton);
+      const skeletonLen = Math.max(tSkeleton.length, pSkeleton.length) || 1;
+      const skeletonRatio = skeletonDist / skeletonLen;
+      if (skeletonRatio <= 0.22) score += 45;
+      else if (skeletonRatio <= 0.34) score += 32;
+    }
+    const tSkeletonWords = tSkeleton.split(/\s+/);
+    const pSkeletonWords = pSkeleton.split(/\s+/);
+    const tSkeletonLast = tSkeletonWords[tSkeletonWords.length - 1] || '';
+    const pSkeletonLast = pSkeletonWords[pSkeletonWords.length - 1] || '';
+    if (tSkeletonLast && pSkeletonLast && tSkeletonLast === pSkeletonLast) score += 20;
+  }
   const dist = levenshtein(t, p);
   const maxLen = Math.max(t.length, p.length) || 1;
   score += Math.max(0, 40 - Math.round((dist / maxLen) * 40));

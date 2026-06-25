@@ -152,6 +152,12 @@ Rules from the June 2026 scorer-card incident:
   URLs, not as silent one-off code branches.
 - Parser aliases are acceptable only for complete provider tokens that resolve
   to known squad players; they are not a substitute for missing event data.
+- Fix recurring scorer-feed transliteration failures in the resolver, not as
+  match-card display patches. The feed often substitutes `v` for vowels and
+  mangles Latin names; keep these patterns centralized in scoring resolution so
+  match cards and top-scorer stats stay consistent.
+- Use explicit scorer aliases only when the provider token loses semantic
+  information, such as an own goal without an `(OG)` marker.
 - Before deploying scorer changes, run the full live-feed audit against all
   finished matches and confirm `/api/data` reports `meta.scorerCompleteness:
   "verified"` and `meta.scorerIssueCount: 0`.
