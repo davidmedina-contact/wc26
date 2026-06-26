@@ -52,6 +52,13 @@ local timezone, derived from the static ET schedule in `data.json`. Keep this in
 the client rendering layer; it is presentation data, not a serverless live-data
 computation.
 
+The Matches tab also renders knockout fixtures from the static schedule, but it
+must progressively replace placeholders with live data when available. Round of
+32 cards should resolve `1A`, `2A`, and Annex C third-place slots from
+`standingsData` and `thirdPlaceData`; later knockout cards should resolve only
+from actual FT knockout winners. Keep the static `TBD`, `Best 3rd`, and
+group-position labels as fallbacks until the live data can prove the team.
+
 Keep compact mobile copy intentional. Short subtitles such as the third-place
 race note should avoid awkward orphan phrases on narrow screens. Prefer shorter
 phrasing like "may decide ties" over long phrases that wrap as isolated words.

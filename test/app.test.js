@@ -680,6 +680,20 @@ test('bracket cards include knockout dates and local-time labels', () => {
   assert.match(app, /bracket-venue-name/);
 });
 
+test('matches tab resolves knockout teams from live standings data', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  assert.match(app, /var knockoutMatchSlots = \{/);
+  assert.match(app, /function liveKnockoutTeamsForMatch\(m\)/);
+  assert.match(app, /function liveGroupSeedForSlot\(slot\)/);
+  assert.match(app, /function liveThirdPlaceForMatch\(matchId\)/);
+  assert.match(app, /function liveKnockoutWinners\(\)/);
+  assert.match(app, /var displayTeams = liveKnockoutTeamsForMatch\(m\)/);
+  assert.match(app, /var homeName = displayTeams\.h/);
+  assert.match(app, /var awayName = displayTeams\.a/);
+  assert.match(app, /h: wcData\.teams\[home\] \? home : m\.h/);
+  assert.match(app, /a: wcData\.teams\[away\] \? away : m\.a/);
+});
+
 test('service worker keeps a last-known-good API response', () => {
   const worker = fs.readFileSync(path.join(root, 'service-worker.js'), 'utf8');
   assert.match(worker, /if \(!response\.ok\)/);

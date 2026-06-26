@@ -1430,6 +1430,116 @@ function formatDatePill(dateStr) {
   return { day: days[d.getDay()], date: months[d.getMonth()] + ' ' + d.getDate() };
 }
 
+var knockoutMatchSlots = {
+  '2026-06-28|15:00|Los Angeles (SoFi)': {id:'M73', h:'2A', a:'2B'},
+  '2026-06-29|13:00|Houston (NRG)': {id:'M76', h:'1C', a:'2F'},
+  '2026-06-29|16:30|Boston (Gillette)': {id:'M74', h:'1E', a:'3 A/B/C/D/F'},
+  '2026-06-29|21:00|Monterrey (BBVA)': {id:'M75', h:'1F', a:'2C'},
+  '2026-06-30|13:00|Dallas (AT&T)': {id:'M78', h:'2E', a:'2I'},
+  '2026-06-30|17:00|New Jersey (MetLife)': {id:'M77', h:'1I', a:'3 C/D/F/G/H'},
+  '2026-06-30|21:00|Mexico City (Azteca)': {id:'M79', h:'1A', a:'3 C/E/F/H/I'},
+  '2026-07-01|12:00|Atlanta (Mercedes-Benz)': {id:'M80', h:'1L', a:'3 E/H/I/J/K'},
+  '2026-07-01|16:00|Seattle (Lumen Field)': {id:'M82', h:'1G', a:'3 A/E/H/I/J'},
+  "2026-07-01|20:00|San Francisco (Levi's)": {id:'M81', h:'1D', a:'3 B/E/F/I/J'},
+  '2026-07-02|15:00|Los Angeles (SoFi)': {id:'M84', h:'1H', a:'2J'},
+  '2026-07-02|19:00|Toronto (BMO Field)': {id:'M83', h:'2K', a:'2L'},
+  '2026-07-02|23:00|Vancouver (BC Place)': {id:'M85', h:'1B', a:'3 E/F/G/I/J'},
+  '2026-07-03|14:00|Dallas (AT&T)': {id:'M88', h:'2D', a:'2G'},
+  '2026-07-03|18:00|Miami (Hard Rock)': {id:'M86', h:'1J', a:'2H'},
+  '2026-07-03|21:30|Kansas City (Arrowhead)': {id:'M87', h:'1K', a:'3 D/E/I/J/L'},
+  '2026-07-04|13:00|Houston (NRG)': {id:'R16_0', h:'W M73', a:'W M75'},
+  '2026-07-04|17:00|Philadelphia (Lincoln Financial)': {id:'R16_1', h:'W M74', a:'W M76'},
+  '2026-07-05|16:00|New Jersey (MetLife)': {id:'R16_2', h:'W M77', a:'W M78'},
+  '2026-07-05|20:00|Mexico City (Azteca)': {id:'R16_3', h:'W M79', a:'W M80'},
+  '2026-07-06|15:00|Dallas (AT&T)': {id:'R16_4', h:'W M81', a:'W M82'},
+  '2026-07-06|20:00|Seattle (Lumen Field)': {id:'R16_5', h:'W M83', a:'W M84'},
+  '2026-07-07|12:00|Atlanta (Mercedes-Benz)': {id:'R16_6', h:'W M85', a:'W M86'},
+  '2026-07-07|16:00|Vancouver (BC Place)': {id:'R16_7', h:'W M87', a:'W M88'},
+  '2026-07-09|16:00|Boston (Gillette)': {id:'QF_0', h:'W R16_0', a:'W R16_1'},
+  '2026-07-10|15:00|Los Angeles (SoFi)': {id:'QF_1', h:'W R16_2', a:'W R16_3'},
+  '2026-07-11|17:00|Miami (Hard Rock)': {id:'QF_2', h:'W R16_4', a:'W R16_5'},
+  '2026-07-11|21:00|Kansas City (Arrowhead)': {id:'QF_3', h:'W R16_6', a:'W R16_7'},
+  '2026-07-14|15:00|Dallas (AT&T)': {id:'SF_0', h:'W QF_0', a:'W QF_1'},
+  '2026-07-15|15:00|Atlanta (Mercedes-Benz)': {id:'SF_1', h:'W QF_2', a:'W QF_3'},
+  '2026-07-19|15:00|New Jersey (MetLife)': {id:'FINAL', h:'W SF_0', a:'W SF_1'},
+};
+
+function knockoutScheduleKey(m) {
+  return [m.d, m.t, m.v].join('|');
+}
+
+function completedGroup(letter) {
+  var rows = (standingsData && standingsData[letter]) || [];
+  return rows.length === 4 && rows.every(function(row) { return row.p === 3; });
+}
+
+function liveGroupSeedForSlot(slot) {
+  var pos = slot.charAt(0);
+  var letter = slot.substring(1);
+  var rows = (standingsData && standingsData[letter]) || [];
+  if (!rows.length) return null;
+  if (pos === '1') {
+    var winner = rows.find(function(row) { return row.status && row.status.code === 'won-group'; });
+    if (winner) return winner.t;
+    return completedGroup(letter) ? rows[0].t : null;
+  }
+  if (pos === '2') return completedGroup(letter) ? rows[1].t : null;
+  return null;
+}
+
+function liveThirdPlaceForMatch(matchId) {
+  var row = Array.isArray(thirdPlaceData) ? thirdPlaceData.find(function(candidate) {
+    return candidate.path && candidate.path.match === matchId;
+  }) : null;
+  return row && row.t ? row.t : null;
+}
+
+function actualWinnerForTeams(homeTeam, awayTeam) {
+  if (!wcData.teams[homeTeam] || !wcData.teams[awayTeam]) return null;
+  var score = actualScores && actualScores[homeTeam + '_' + awayTeam];
+  var reverse = false;
+  if (!score) {
+    score = actualScores && actualScores[awayTeam + '_' + homeTeam];
+    reverse = Boolean(score);
+  }
+  if (!score || score.status !== 'FT' || typeof score.h !== 'number' || typeof score.a !== 'number' || score.h === score.a) return null;
+  var homeScore = reverse ? score.a : score.h;
+  var awayScore = reverse ? score.h : score.a;
+  return homeScore > awayScore ? homeTeam : awayTeam;
+}
+
+function resolveLiveKnockoutSlot(slot, matchId, winners) {
+  if (slot.indexOf('W ') === 0) return winners[slot.substring(2)] || slot;
+  if (slot.charAt(0) === '3') return liveThirdPlaceForMatch(matchId) || slot;
+  if (/^[12][A-L]$/.test(slot)) return liveGroupSeedForSlot(slot) || slot;
+  return slot;
+}
+
+function liveKnockoutWinners() {
+  var winners = {};
+  Object.keys(knockoutMatchSlots).forEach(function(key) {
+    var match = knockoutMatchSlots[key];
+    var home = resolveLiveKnockoutSlot(match.h, match.id, winners);
+    var away = resolveLiveKnockoutSlot(match.a, match.id, winners);
+    var winner = actualWinnerForTeams(home, away);
+    if (winner) winners[match.id] = winner;
+  });
+  return winners;
+}
+
+function liveKnockoutTeamsForMatch(m) {
+  if (!m.stage) return {h: m.h, a: m.a};
+  var match = knockoutMatchSlots[knockoutScheduleKey(m)];
+  if (!match) return {h: m.h, a: m.a};
+  var winners = liveKnockoutWinners();
+  var home = resolveLiveKnockoutSlot(match.h, match.id, winners);
+  var away = resolveLiveKnockoutSlot(match.a, match.id, winners);
+  return {
+    h: wcData.teams[home] ? home : m.h,
+    a: wcData.teams[away] ? away : m.a,
+  };
+}
+
 
 function renderMatches() {
   var el = document.getElementById('tab-matches');
@@ -1483,13 +1593,16 @@ function renderMatches() {
   } else {
     html += '<div class="match-list">';
     dayMatches.forEach(function(m) {
+      var displayTeams = liveKnockoutTeamsForMatch(m);
+      var homeName = displayTeams.h;
+      var awayName = displayTeams.a;
       var pdt = etToLocal(m.t, m.d);
       var gc = groupColors[m.g] || '#a78bfa';
-      var hFlag = wcData.teams[m.h] ? wcData.teams[m.h].flag : '';
-      var aFlag = wcData.teams[m.a] ? wcData.teams[m.a].flag : '';
+      var hFlag = wcData.teams[homeName] ? wcData.teams[homeName].flag : '';
+      var aFlag = wcData.teams[awayName] ? wcData.teams[awayName].flag : '';
       var isKnockout = m.stage;
-      var hClick = wcData.teams[m.h] ? ' data-team="' + m.h + '" style="cursor:pointer"' : '';
-      var aClick = wcData.teams[m.a] ? ' data-team="' + m.a + '" style="cursor:pointer"' : '';
+      var hClick = wcData.teams[homeName] ? ' data-team="' + homeName + '" style="cursor:pointer"' : '';
+      var aClick = wcData.teams[awayName] ? ' data-team="' + awayName + '" style="cursor:pointer"' : '';
 
       html += '<div class="match-card">';
       // Header: meta info + venue inline (FotMob/Apple Sports pattern)
@@ -1508,8 +1621,8 @@ function renderMatches() {
       }
       // Body: teams centered
       html += '<div class="mc-body">';
-      html += '<div class="mc-team mc-team-home"' + hClick + '><span class="mc-name">' + m.h + '</span><span class="mc-flag">' + hFlag + '</span></div>';
-      var predKey = m.h + '_' + m.a;
+      html += '<div class="mc-team mc-team-home"' + hClick + '><span class="mc-name">' + homeName + '</span><span class="mc-flag">' + hFlag + '</span></div>';
+      var predKey = homeName + '_' + awayName;
       var scorePred = (typeof scorePredictions !== 'undefined' && scorePredictions[predKey]) ? scorePredictions[predKey] : null;
       var actual = (typeof actualScores !== 'undefined' && actualScores[predKey]) ? actualScores[predKey] : null;
       if (actual) {
@@ -1528,7 +1641,7 @@ function renderMatches() {
       } else {
         html += '<div class="mc-score"><div><div class="mc-time-center">—  :  —</div></div></div>';
       }
-      html += '<div class="mc-team mc-team-away"' + aClick + '><span class="mc-flag">' + aFlag + '</span><span class="mc-name">' + m.a + '</span></div>';
+      html += '<div class="mc-team mc-team-away"' + aClick + '><span class="mc-flag">' + aFlag + '</span><span class="mc-name">' + awayName + '</span></div>';
       html += '</div>';
       // Scorers row for finished matches
       if (actual && (actual.hs || actual.as)) {

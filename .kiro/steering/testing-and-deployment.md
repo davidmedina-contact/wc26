@@ -236,6 +236,11 @@ Rules for bracket/live-results balance:
   button, no pick-progress counter. Use confirmed/FT labels so the user can see
   which teams are data-backed. Keep the browser smoke script aligned with this
   behavior.
+- The Matches tab must use the same live knockout resolution principles as the
+  bracket. Static schedule labels (`1st Group C`, `Best 3rd`, `TBD`) are only
+  fallbacks. Replace them with confirmed teams from `standingsData`,
+  `thirdPlaceData`, and actual FT knockout winners as soon as those data are
+  available.
 
 Rules for Groups tab interactions:
 
