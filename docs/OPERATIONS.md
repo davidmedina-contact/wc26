@@ -31,6 +31,19 @@ sourced from FIFA's tournament regulations. Do not scrape this table at request
 time. If the source matrix changes, regenerate the JSON, rerun tests, and verify
 the current combination number and opponent slots.
 
+The Bracket tab has two display modes. `Live Bracket` should use confirmed
+group seeds, Annex C third-place paths, and FT knockout winners only; it must
+not fall back to local user picks. `My Picks` should use the user's saved manual
+predictions first for unresolved slots, while confirmed teams fill blank slots.
+Store the first saved pick for each slot in `wc2026bracketOriginal`; live data
+may change what is displayed, but it must not overwrite the user's original
+prediction.
+
+Bracket match cards display knockout dates and kickoff times in the user's
+local timezone, derived from the static ET schedule in `data.json`. Keep this in
+the client rendering layer; it is presentation data, not a serverless live-data
+computation.
+
 The client only renders that payload. It does not call third-party APIs or infer whether a game is complete.
 
 ## Freshness And Failure Behavior
@@ -126,15 +139,16 @@ FIFA remains the manual cross-check for fixtures and published statistics:
 ## Release Checklist
 
 1. Run `npm run check`.
-2. Run `vercel build` to validate the deployment configuration.
-3. Deploy with `npm run deploy`.
-4. Verify `/service-worker.js` reports the expected cache version.
-5. Verify `/api/data` returns HTTP 200, nonzero stats, and all matches older than four hours have `status: "FT"`.
-6. Verify `/api/data` reports `meta.scorerCompleteness: "verified"` and `meta.scorerIssueCount: 0`.
-7. Verify completed or mathematically settled groups expose the expected standings `status` labels, while open groups do not show speculative badges.
-8. Test Groups, Matches, Bracket, Stats, search, and theme controls in a fresh browser tab.
-9. In an installed PWA or simulated service-worker session, confirm reopening the app refreshes `/api/data` with a no-cache request and does not downgrade from a newer local payload to the bundled snapshot.
-10. Confirm response security and cache headers on the production domain.
+2. Run `BRACKET_SMOKE_API_URL=https://wc26.medina.contact/api/data npm run smoke:bracket -- http://127.0.0.1:4173/#bracket` when the Bracket tab changes.
+3. Run `vercel build` to validate the deployment configuration.
+4. Deploy with `npm run deploy`.
+5. Verify `/service-worker.js` reports the expected cache version.
+6. Verify `/api/data` returns HTTP 200, nonzero stats, and all matches older than four hours have `status: "FT"`.
+7. Verify `/api/data` reports `meta.scorerCompleteness: "verified"` and `meta.scorerIssueCount: 0`.
+8. Verify completed or mathematically settled groups expose the expected standings `status` labels, while open groups do not show speculative badges.
+9. Test Groups, Matches, Bracket, Stats, search, and theme controls in a fresh browser tab.
+10. In an installed PWA or simulated service-worker session, confirm reopening the app refreshes `/api/data` with a no-cache request and does not downgrade from a newer local payload to the bundled snapshot.
+11. Confirm response security and cache headers on the production domain.
 
 Use `npm run deploy` for production releases, including serverless-only changes
 that alter visible scores, standings, stats, or refresh behavior. The

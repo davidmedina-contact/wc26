@@ -224,6 +224,18 @@ Rules for bracket/live-results balance:
   matrix in `data/third-place-combinations.json`. Do not scrape Wikipedia or
   compute a probability heuristic at request time. Tests should pin the current
   combination number and opponent slots.
+- Keep prediction data separate from live bracket data. `Live Bracket` may use
+  confirmed group seeds, Annex C third-place paths, and FT knockout winners, but
+  it must not mutate the user's saved picks. `My Picks` should show manual
+  predictions first. Preserve first saved picks in `wc2026bracketOriginal`.
+- Do not use manual third-place group picks to populate Round-of-32 slots. The
+  same third-place group can appear in several candidate slots, so reusing a
+  stored `g_X_3` pick creates duplicate teams. Only the server-side Annex C path
+  may resolve those slots.
+- Live mode should be visibly read-only: no `tap to pick` hints, no reset
+  button, no pick-progress counter. Use confirmed/FT labels so the user can see
+  which teams are data-backed. Keep the browser smoke script aligned with this
+  behavior.
 
 ## Static vs Dynamic Data Architecture
 

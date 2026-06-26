@@ -551,6 +551,24 @@ test('source scorer events must match final score by side before acceptance', ()
   assert.equal(tokens, null);
 });
 
+test('scorer matching accepts reversed first-last name order from the live feed', () => {
+  const result = buildData([
+    game({
+      group: 'F',
+      home_team_name_en: 'Japan',
+      away_team_name_en: 'Sweden',
+      home_score: '1',
+      away_score: '1',
+      home_scorers: '{"Daizen Maeda 56\'"}',
+      away_scorers: '{"Anthony Elanga 62\'"}',
+    }),
+  ]);
+
+  assert.deepEqual(result.scorerIssues, []);
+  assert.deepEqual(result.data.actualScores.Japan_Sweden.hs, ["Maeda 56'"]);
+  assert.deepEqual(result.data.actualScores.Japan_Sweden.as, ["Elanga 62'"]);
+});
+
 test('post-match completeness guard detects missing finals', () => {
   const beforeTournament = Date.parse('2026-06-11T18:00:00Z');
   assert.deepEqual(expectedFinishedKeys(beforeTournament), []);
@@ -610,20 +628,53 @@ test('client renders compact standings status markers with an inline legend', ()
   assert.match(app, /thirdPlaceData: thirdPlaceData/);
 });
 
-test('bracket uses live locked seeds before user picks and keeps third-place slots unresolved', () => {
+test('bracket uses live locked seeds before user picks and keeps third-place slots server-driven', () => {
   const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   assert.match(app, /function liveGroupSeed/);
+  assert.match(app, /function autoThirdSeed/);
   assert.match(app, /status\.code === 'won-group'/);
-  assert.match(app, /if \(liveSeed\) return liveSeed;/);
+  assert.match(app, /bracketViewMode === 'picks'/);
   assert.match(app, /isTeamEliminatedFromGroup/);
   assert.match(app, /eliminated \? 'out'/);
+  assert.match(app, /autoLive3 === team/);
   assert.match(app, /data-locked="true"/);
   assert.match(app, /if \(row && row\.status && row\.status\.code === 'eliminated'\) return;/);
+  assert.match(app, /team === live1 \|\| team === live2 \|\| team === directLive3 \|\| team === autoLive3/);
   assert.match(app, /if \(eliminated\) return;/);
-  assert.match(app, /third-place opponents stay as FIFA candidate groups/);
+  assert.match(app, /Confirmed teams and FT winners lead the bracket/);
   assert.match(app, /3 C\/E\/F\/H\/I/);
+  assert.match(app, /return liveThird \|\| slot/);
+  assert.doesNotMatch(app, /validStoredThirdPlacePick/);
   assert.doesNotMatch(app, /getQualified3rdTeams/);
   assert.doesNotMatch(app, /elo: \(eloRatings/);
+});
+
+test('bracket preserves original picks and supports live versus prediction modes', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  assert.match(app, /wc2026bracketOriginal/);
+  assert.match(app, /function rememberOriginalPick/);
+  assert.match(app, /bracketViewMode = 'live'/);
+  assert.match(app, /data-bracket-mode="picks"/);
+  assert.match(app, /data-bracket-mode="live"/);
+  assert.match(app, /liveThirdPlaceSeedForMatch/);
+  assert.match(app, /teamBracketRank/);
+  assert.match(app, /Live bracket uses confirmed seeds and FT winners only/);
+  assert.match(app, /knockout picks made/);
+  assert.match(app, /if \(bracketViewMode === 'picks'\) totalKoPicks\+\+/);
+  assert.match(app, /actualWinner\(homeTeam, awayTeam\)/);
+  assert.match(app, /wcData\.teams\[teamName\]/);
+  assert.match(app, /orig /);
+});
+
+test('bracket cards include knockout dates and local-time labels', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  assert.match(app, /var bracketSchedule = \{/);
+  assert.match(app, /M73: \{d:'2026-06-28', t:'15:00'\}/);
+  assert.match(app, /FINAL: \{d:'2026-07-19', t:'15:00'\}/);
+  assert.match(app, /function bracketDateTime\(matchId\)/);
+  assert.match(app, /etToLocal\(schedule\.t, schedule\.d\) \+ ' ' \+ localTz/);
+  assert.match(app, /bracket-date-time/);
+  assert.match(app, /bracket-venue-name/);
 });
 
 test('service worker keeps a last-known-good API response', () => {

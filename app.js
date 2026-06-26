@@ -26,7 +26,33 @@ function isUsableDynamicCache(data) {
 }
 
 let bracketState = {};
+let bracketOriginalState = {};
+let bracketViewMode = 'live';
 var selectedMatchDate = '2026-06-11';
+
+function saveBracketState() {
+  try { localStorage.setItem('wc2026bracket', JSON.stringify(bracketState)); } catch(e) {}
+}
+
+function saveBracketOriginalState() {
+  try { localStorage.setItem('wc2026bracketOriginal', JSON.stringify(bracketOriginalState)); } catch(e) {}
+}
+
+function saveBracketViewMode() {
+  try { localStorage.setItem('wc2026bracketMode', bracketViewMode); } catch(e) {}
+}
+
+function rememberOriginalPick(key, team) {
+  if (!key || !team || bracketOriginalState[key]) return;
+  bracketOriginalState[key] = team;
+  saveBracketOriginalState();
+}
+
+function switchBracketMode(mode) {
+  bracketViewMode = mode === 'picks' ? 'picks' : 'live';
+  saveBracketViewMode();
+  renderBracket();
+}
 
 function getMatchPrediction(home, away) {
   var hStr = teamStrength[home] || 50;
@@ -796,6 +822,24 @@ function renderBracket() {
   var r16Pairs = [["M73","M75"],["M74","M76"],["M77","M78"],["M79","M80"],["M81","M82"],["M83","M84"],["M85","M86"],["M87","M88"]];
   var qfPairs = [[0,1],[2,3],[4,5],[6,7]]; // indices into r16
   var sfPairs = [[0,1],[2,3]]; // indices into qf
+  var bracketSchedule = {
+    M73: {d:'2026-06-28', t:'15:00'}, M74: {d:'2026-06-29', t:'16:30'}, M75: {d:'2026-06-29', t:'21:00'}, M76: {d:'2026-06-29', t:'13:00'},
+    M77: {d:'2026-06-30', t:'17:00'}, M78: {d:'2026-06-30', t:'13:00'}, M79: {d:'2026-06-30', t:'21:00'}, M80: {d:'2026-07-01', t:'12:00'},
+    M81: {d:'2026-07-01', t:'20:00'}, M82: {d:'2026-07-01', t:'16:00'}, M83: {d:'2026-07-02', t:'19:00'}, M84: {d:'2026-07-02', t:'15:00'},
+    M85: {d:'2026-07-02', t:'23:00'}, M86: {d:'2026-07-03', t:'18:00'}, M87: {d:'2026-07-03', t:'21:30'}, M88: {d:'2026-07-03', t:'14:00'},
+    R16_0: {d:'2026-07-04', t:'13:00'}, R16_1: {d:'2026-07-04', t:'17:00'}, R16_2: {d:'2026-07-05', t:'16:00'}, R16_3: {d:'2026-07-05', t:'20:00'},
+    R16_4: {d:'2026-07-06', t:'15:00'}, R16_5: {d:'2026-07-06', t:'20:00'}, R16_6: {d:'2026-07-07', t:'12:00'}, R16_7: {d:'2026-07-07', t:'16:00'},
+    QF_0: {d:'2026-07-09', t:'16:00'}, QF_1: {d:'2026-07-10', t:'15:00'}, QF_2: {d:'2026-07-11', t:'17:00'}, QF_3: {d:'2026-07-11', t:'21:00'},
+    SF_0: {d:'2026-07-14', t:'15:00'}, SF_1: {d:'2026-07-15', t:'15:00'},
+    FINAL: {d:'2026-07-19', t:'15:00'},
+  };
+
+  function bracketDateTime(matchId) {
+    var schedule = bracketSchedule[matchId];
+    if (!schedule) return '';
+    var dateInfo = formatDatePill(schedule.d);
+    return dateInfo.day + ', ' + dateInfo.date + ' · ' + etToLocal(schedule.t, schedule.d) + ' ' + localTz;
+  }
 
   function groupComplete(letter) {
     var rows = (standingsData && standingsData[letter]) || [];
@@ -816,6 +860,16 @@ function renderBracket() {
       return third && third.status && third.status.code === 'qualified-third' ? third.t : null;
     }
     return null;
+  }
+
+  function autoThirdSeed(letter) {
+    var rows = (standingsData && standingsData[letter]) || [];
+    if (!liveGroupSeed(letter, '1') || !liveGroupSeed(letter, '2')) return null;
+    var candidates = rows.filter(function(row) {
+      var code = row.status && row.status.code;
+      return row.t !== liveGroupSeed(letter, '1') && row.t !== liveGroupSeed(letter, '2') && code !== 'eliminated';
+    });
+    return candidates.length === 1 ? candidates[0].t : null;
   }
 
   function teamGroupStatus(letter, team) {
@@ -840,19 +894,45 @@ function renderBracket() {
     return team && !isTeamEliminatedFromGroup(letter, team) ? team : null;
   }
 
+  function liveThirdPlaceSeedForMatch(matchId) {
+    var row = Array.isArray(thirdPlaceData) ? thirdPlaceData.find(function(candidate) {
+      return candidate.path && candidate.path.match === matchId;
+    }) : null;
+    return row && row.t ? row.t : null;
+  }
+
   function pickedWinner(matchId) {
     var team = bracketState['ko_' + matchId];
     return team && !isTeamEliminated(team) ? team : null;
   }
 
-  // Resolve a slot like "1A", "2B", or "3rd" to a team name
-  function resolveSlot(slot) {
-    if (slot.charAt(0) === '3') return slot;
+  function actualWinner(homeTeam, awayTeam) {
+    if (!wcData.teams[homeTeam] || !wcData.teams[awayTeam]) return null;
+    var score = actualScores && actualScores[homeTeam + '_' + awayTeam];
+    var reverse = false;
+    if (!score) {
+      score = actualScores && actualScores[awayTeam + '_' + homeTeam];
+      reverse = Boolean(score);
+    }
+    if (!score || score.status !== 'FT' || typeof score.h !== 'number' || typeof score.a !== 'number' || score.h === score.a) return null;
+    var homeScore = reverse ? score.a : score.h;
+    var awayScore = reverse ? score.h : score.a;
+    return homeScore > awayScore ? homeTeam : awayTeam;
+  }
+
+  // Resolve a slot like "1A", "2B", or a third-place candidate slot.
+  function resolveSlot(slot, matchId) {
+    if (slot.charAt(0) === '3') {
+      var liveThird = liveThirdPlaceSeedForMatch(matchId);
+      return liveThird || slot;
+    }
     var pos = slot[0]; // '1' or '2'
     var grp = slot.substring(1); // 'A', 'B', etc.
     var liveSeed = liveGroupSeed(grp, pos);
-    if (liveSeed) return liveSeed;
-    return validStoredGroupPick(grp, pos) || slot;
+    var pickSeed = validStoredGroupPick(grp, pos);
+    return bracketViewMode === 'picks'
+      ? (pickSeed || liveSeed || slot)
+      : (liveSeed || slot);
   }
 
   function getFlag(teamName) {
@@ -861,44 +941,87 @@ function renderBracket() {
 
   // Helper: render a knockout match card with tap hints and pick state
   var totalKoPicks = 0, madeKoPicks = 0;
+  var resolvedWinners = {};
+  function teamBracketRank(team, liveWinner, userPick) {
+    if (!wcData.teams[team]) return '';
+    if (liveWinner === team) return 'FT winner';
+    if (bracketViewMode === 'live') return 'confirmed';
+    if (userPick === team) return 'your pick';
+    return '';
+  }
+
   function koMatchCard(matchId, homeTeam, awayTeam, label, venue) {
-    totalKoPicks++;
-    var winner = pickedWinner(matchId);
-    if (winner) madeKoPicks++;
-    var needsPick = !winner && wcData.teams[homeTeam] && wcData.teams[awayTeam];
+    if (bracketViewMode === 'picks') totalKoPicks++;
+    var userPick = pickedWinner(matchId);
+    var liveWinner = actualWinner(homeTeam, awayTeam);
+    var winner = bracketViewMode === 'live' ? liveWinner : (userPick || liveWinner);
+    if (winner) {
+      if (bracketViewMode === 'picks') madeKoPicks++;
+      resolvedWinners[matchId] = winner;
+    }
+    var needsPick = bracketViewMode === 'picks' && !winner && wcData.teams[homeTeam] && wcData.teams[awayTeam];
     var matchCls = needsPick ? ' needs-pick' : '';
-    var hint = needsPick ? '<span class="bracket-tap-hint">tap to pick</span>' : '';
+    var original = bracketOriginalState['ko_' + matchId];
+    var originalBadge = original && original !== winner ? '<span class="bracket-original">orig ' + esc(compactTeamLabel(original)) + '</span>' : '';
+    var confirmedBadge = bracketViewMode === 'live' && wcData.teams[homeTeam] && wcData.teams[awayTeam] ? '<span class="bracket-live-badge">confirmed</span>' : '';
+    var modeBadge = liveWinner ? '<span class="bracket-live-badge">FT</span>' : (confirmedBadge || originalBadge);
+    var hint = needsPick ? '<span class="bracket-tap-hint">tap to pick</span>' : modeBadge;
     var homeUnpicked = !winner && wcData.teams[homeTeam] ? ' unpicked' : '';
     var awayUnpicked = !winner && wcData.teams[awayTeam] ? ' unpicked' : '';
+    var homeRank = teamBracketRank(homeTeam, liveWinner, userPick);
+    var awayRank = teamBracketRank(awayTeam, liveWinner, userPick);
     var h = '<div class="bracket-match' + matchCls + '"><div class="bracket-match-lbl">' + label + hint + '</div>';
-    h += '<div class="bracket-team' + (winner === homeTeam ? ' winner' : homeUnpicked) + '" data-ko="' + matchId + '" data-pick="home">' +
-      '<span class="bt-name">' + getFlag(homeTeam) + homeTeam + '</span></div>';
-    h += '<div class="bracket-team' + (winner === awayTeam ? ' winner' : awayUnpicked) + '" data-ko="' + matchId + '" data-pick="away">' +
-      '<span class="bt-name">' + getFlag(awayTeam) + awayTeam + '</span></div>';
-    if (venue) h += '<div class="bracket-venue-lbl">' + venue + '</div>';
+    h += '<div class="bracket-team' + (winner === homeTeam ? ' winner' : homeUnpicked) + (bracketViewMode === 'live' && wcData.teams[homeTeam] ? ' locked' : liveWinner === homeTeam ? ' locked' : '') + '" data-ko="' + matchId + '" data-pick="home">' +
+      '<span class="bt-name">' + getFlag(homeTeam) + homeTeam + '</span>' +
+      (homeRank ? '<span class="bt-rank">' + homeRank + '</span>' : '') + '</div>';
+    h += '<div class="bracket-team' + (winner === awayTeam ? ' winner' : awayUnpicked) + (bracketViewMode === 'live' && wcData.teams[awayTeam] ? ' locked' : liveWinner === awayTeam ? ' locked' : '') + '" data-ko="' + matchId + '" data-pick="away">' +
+      '<span class="bt-name">' + getFlag(awayTeam) + awayTeam + '</span>' +
+      (awayRank ? '<span class="bt-rank">' + awayRank + '</span>' : '') + '</div>';
+    var dateTime = bracketDateTime(matchId);
+    if (venue || dateTime) {
+      h += '<div class="bracket-venue-lbl">' +
+        (dateTime ? '<span class="bracket-date-time">' + dateTime + '</span>' : '') +
+        (venue ? '<span class="bracket-venue-name">' + venue + '</span>' : '') +
+        '</div>';
+    }
     h += '</div>';
     return h;
   }
 
   // Build HTML
-  var html = '<div class="bracket-info"><h3>Elimination Bracket</h3><p>Locked group winners and completed seeds flow in from live standings. User picks fill unresolved slots; third-place opponents stay as FIFA candidate groups until the Annex C combination is known.</p><button id="resetBtn">' + icon('reset',{size:14}) + ' Reset Picks</button></div>';
+  var resetButton = bracketViewMode === 'picks' ? '<button id="resetBtn">' + icon('reset',{size:14}) + ' Reset Picks</button>' : '';
+  var html = '<div class="bracket-info"><div><h3>Elimination Bracket</h3><p>' +
+    (bracketViewMode === 'live'
+      ? 'Confirmed teams and FT winners lead the bracket. Your saved picks remain as comparison data.'
+      : 'Manual predictions lead the bracket. Confirmed teams fill empty slots, and original picks are preserved.') +
+    '</p></div><div class="bracket-actions"><div class="bracket-mode-toggle" role="tablist" aria-label="Bracket view">' +
+    '<button class="' + (bracketViewMode === 'picks' ? 'active' : '') + '" data-bracket-mode="picks" role="tab" aria-selected="' + (bracketViewMode === 'picks') + '">My Picks</button>' +
+    '<button class="' + (bracketViewMode === 'live' ? 'active' : '') + '" data-bracket-mode="live" role="tab" aria-selected="' + (bracketViewMode === 'live') + '">Live Bracket</button>' +
+    '</div>' + resetButton + '</div></div>';
 
   // === GROUP PICKS ===
-  html += '<div class="bracket-round-title">Group Stage Picks</div>';
+  var groupTitle = bracketViewMode === 'live' ? 'Group Seeds' : 'Group Stage Picks';
+  html += '<div class="bracket-round-title">' + groupTitle + '</div>';
   html += '<div class="bracket-grid" id="bracketGrid">';
   var idx = 0;
   Object.keys(wcData.groups).forEach(function(letter) {
     var group = wcData.groups[letter];
     var k1 = 'g_' + letter + '_1', k2 = 'g_' + letter + '_2';
-    var live1 = liveGroupSeed(letter, '1'), live2 = liveGroupSeed(letter, '2'), live3 = liveGroupSeed(letter, '3');
+    var directLive3 = liveGroupSeed(letter, '3');
+    var autoLive3 = directLive3 ? null : autoThirdSeed(letter);
+    var live1 = liveGroupSeed(letter, '1'), live2 = liveGroupSeed(letter, '2'), live3 = directLive3 || autoLive3;
     html += '<div class="bracket-match"><div class="bracket-match-lbl" style="color:' + groupColors[letter] + '">Group ' + letter + '</div>';
     var k3 = 'g_' + letter + '_3';
     group.teams.forEach(function(team) {
       var liveRank = live1 === team ? '1st' : live2 === team ? '2nd' : live3 === team ? '3rd' : '';
       var eliminated = isTeamEliminatedFromGroup(letter, team);
-      var is1 = !liveRank && !eliminated && bracketState[k1] === team, is2 = !liveRank && !eliminated && bracketState[k2] === team, is3 = !liveRank && !eliminated && bracketState[k3] === team;
+      var pickedInLiveFilledSlot = !liveRank && !eliminated && (bracketState[k1] === team || bracketState[k2] === team) && (live1 || live2);
+      var is1 = !liveRank && !eliminated && !live1 && bracketState[k1] === team;
+      var is2 = !liveRank && !eliminated && !live2 && bracketState[k2] === team;
+      var is3 = !liveRank && !eliminated && !live3 && (bracketState[k3] === team || pickedInLiveFilledSlot);
       var cls = liveRank === '1st' ? ' winner locked' : liveRank === '2nd' ? ' runner locked' : liveRank === '3rd' ? ' third locked' : eliminated ? ' eliminated locked' : is1 ? ' winner' : is2 ? ' runner' : is3 ? ' third' : '';
-      var rank = liveRank ? liveRank + ' live' : eliminated ? 'out' : is1 ? '1st pick' : is2 ? '2nd pick' : is3 ? '3rd pick' : '';
+      var liveSuffix = autoLive3 === team ? ' auto' : ' confirmed';
+      var rank = liveRank ? liveRank + liveSuffix : eliminated ? 'out' : is1 ? '1st pick' : is2 ? '2nd pick' : is3 ? '3rd pick' : '';
       html += '<div class="bracket-team' + cls + '" data-idx="' + idx + '"' + ((liveRank || eliminated) ? ' data-locked="true"' : '') + '>' +
         '<span class="bt-name">' + getFlag(team) + team + '</span>' +
         '<span class="bt-rank">' + rank + '</span></div>';
@@ -915,8 +1038,8 @@ function renderBracket() {
   html += '<div class="bracket-grid">';
   r32Matches.forEach(function(m) {
     var matchId = m[0];
-    var homeTeam = resolveSlot(m[1]);
-    var awayTeam = resolveSlot(m[2]);
+    var homeTeam = resolveSlot(m[1], matchId);
+    var awayTeam = resolveSlot(m[2], matchId);
     html += koMatchCard(matchId, homeTeam, awayTeam, matchId + ' · ' + m[1] + ' vs ' + m[2], bracketVenues[matchId]);
   });
   html += '</div>';
@@ -926,8 +1049,8 @@ function renderBracket() {
   html += '<div class="bracket-grid">';
   r16Pairs.forEach(function(pair, i) {
     var matchId = 'R16_' + i;
-    var home = pickedWinner(pair[0]) || 'W ' + pair[0];
-    var away = pickedWinner(pair[1]) || 'W ' + pair[1];
+    var home = resolvedWinners[pair[0]] || 'W ' + pair[0];
+    var away = resolvedWinners[pair[1]] || 'W ' + pair[1];
     html += koMatchCard(matchId, home, away, 'R16 · W' + pair[0] + ' vs W' + pair[1], bracketVenues[matchId]);
   });
   html += '</div>';
@@ -938,8 +1061,8 @@ function renderBracket() {
   qfPairs.forEach(function(pair, i) {
     var matchId = 'QF_' + i;
     var r16a = 'R16_' + pair[0], r16b = 'R16_' + pair[1];
-    var home = pickedWinner(r16a) || 'W R16.' + (pair[0]+1);
-    var away = pickedWinner(r16b) || 'W R16.' + (pair[1]+1);
+    var home = resolvedWinners[r16a] || 'W R16.' + (pair[0]+1);
+    var away = resolvedWinners[r16b] || 'W R16.' + (pair[1]+1);
     html += koMatchCard(matchId, home, away, 'QF' + (i+1), bracketVenues[matchId]);
   });
   html += '</div>';
@@ -950,8 +1073,8 @@ function renderBracket() {
   sfPairs.forEach(function(pair, i) {
     var matchId = 'SF_' + i;
     var qfa = 'QF_' + pair[0], qfb = 'QF_' + pair[1];
-    var home = pickedWinner(qfa) || 'W QF' + (pair[0]+1);
-    var away = pickedWinner(qfb) || 'W QF' + (pair[1]+1);
+    var home = resolvedWinners[qfa] || 'W QF' + (pair[0]+1);
+    var away = resolvedWinners[qfb] || 'W QF' + (pair[1]+1);
     html += koMatchCard(matchId, home, away, 'SF' + (i+1), bracketVenues[matchId]);
   });
   html += '</div>';
@@ -959,22 +1082,24 @@ function renderBracket() {
   // === FINAL ===
   html += '<div class="bracket-round-title">' + icon('trophy',{size:14}) + ' Final</div>';
   html += '<div class="bracket-grid">';
-  var finalHome = pickedWinner('SF_0') || 'W SF1';
-  var finalAway = pickedWinner('SF_1') || 'W SF2';
+  var finalHome = resolvedWinners['SF_0'] || 'W SF1';
+  var finalAway = resolvedWinners['SF_1'] || 'W SF2';
   html += koMatchCard('FINAL', finalHome, finalAway, 'Final · MetLife Stadium', null);
-  var champion = pickedWinner('FINAL');
+  var champion = resolvedWinners['FINAL'];
   if (champion && wcData.teams[champion]) {
     html += '<div style="text-align:center;padding:20px;font-size:1.5rem">' + icon('trophy',{size:28,cls:'champion-trophy'}) + ' ' + wcData.teams[champion].flag + ' <strong>' + champion + '</strong> wins the World Cup!</div>';
   }
   html += '</div>';
 
   // Insert progress bar after bracket-info (before group picks)
-  var progressPct = totalKoPicks > 0 ? Math.round((madeKoPicks / totalKoPicks) * 100) : 0;
-  var progressHtml = '<div class="bracket-progress"><div class="bracket-progress-bar"><div class="bracket-progress-fill" style="width:' + progressPct + '%"></div></div><span class="bracket-progress-label">' + madeKoPicks + '/' + totalKoPicks + ' picks made</span></div>';
-  // Insert after bracket-info closing tag
-  html = html.replace('</div>\n', '</div>\n'); // no-op placeholder
-  // Actually just prepend it after the info section by finding the first bracket-round-title
-  html = html.replace('<div class="bracket-round-title">Group Stage Picks', progressHtml + '<div class="bracket-round-title">Group Stage Picks');
+  var progressHtml = '';
+  if (bracketViewMode === 'picks') {
+    var progressPct = totalKoPicks > 0 ? Math.round((madeKoPicks / totalKoPicks) * 100) : 0;
+    progressHtml = '<div class="bracket-progress"><div class="bracket-progress-bar"><div class="bracket-progress-fill" style="width:' + progressPct + '%"></div></div><span class="bracket-progress-label">' + madeKoPicks + '/' + totalKoPicks + ' knockout picks made</span></div>';
+  } else {
+    progressHtml = '<div class="bracket-progress bracket-progress-live"><span class="bracket-progress-label">Live bracket uses confirmed seeds and FT winners only</span></div>';
+  }
+  html = html.replace('<div class="bracket-round-title">' + groupTitle, progressHtml + '<div class="bracket-round-title">' + groupTitle);
 
   el.innerHTML = html;
 
@@ -982,6 +1107,11 @@ function renderBracket() {
   if (!el._hasListener) {
     el._hasListener = true;
     el.addEventListener('click', function(e) {
+      var modeBtn = e.target.closest('[data-bracket-mode]');
+      if (modeBtn) {
+        switchBracketMode(modeBtn.getAttribute('data-bracket-mode'));
+        return;
+      }
       // Group pick
       var teamDiv = e.target.closest('.bracket-team[data-idx]');
       if (teamDiv) {
@@ -995,6 +1125,7 @@ function renderBracket() {
       // Knockout pick
       var koDiv = e.target.closest('.bracket-team[data-ko]');
       if (koDiv) {
+        if (koDiv.classList.contains('locked') && bracketViewMode === 'live') return;
         var matchId = koDiv.getAttribute('data-ko');
         var pick = koDiv.getAttribute('data-pick');
         var nameEl = koDiv.querySelector('.bt-name');
@@ -1002,7 +1133,7 @@ function renderBracket() {
           var teamName = nameEl.textContent.trim();
           // Remove flag emoji (first 2+ chars that are emoji)
           teamName = teamName.replace(/^[\u{1F1E0}-\u{1F1FF}\u{1F3F4}\u{E0061}-\u{E007A}\u{E007F}\s]+/u, '').trim();
-          if (teamName && !isTeamEliminated(teamName) && teamName.indexOf('W ') !== 0 && teamName.indexOf('W R') !== 0 && teamName.indexOf('W Q') !== 0 && teamName.indexOf('W S') !== 0 && teamName !== '3rd Place') {
+          if (teamName && wcData.teams[teamName] && !isTeamEliminated(teamName) && teamName.indexOf('W ') !== 0 && teamName.indexOf('W R') !== 0 && teamName.indexOf('W Q') !== 0 && teamName.indexOf('W S') !== 0 && teamName !== '3rd Place') {
             pickKnockout(matchId, teamName);
           }
         }
@@ -1021,16 +1152,41 @@ function pickGroup(letter, team) {
   var row = rows.find(function(candidate) { return candidate.t === team; });
   if (row && row.status && row.status.code === 'eliminated') return;
   var k1 = 'g_' + letter + '_1', k2 = 'g_' + letter + '_2', k3 = 'g_' + letter + '_3';
+  var live1 = (function() {
+    var winner = rows.find(function(candidate) { return candidate.status && candidate.status.code === 'won-group'; });
+    return winner ? winner.t : (rows.length === 4 && rows.every(function(candidate) { return candidate.p === 3; }) ? rows[0].t : null);
+  })();
+  var live2 = rows.length === 4 && rows.every(function(candidate) { return candidate.p === 3; }) ? rows[1].t : null;
+  var directLive3 = rows[2] && rows[2].status && rows[2].status.code === 'qualified-third' ? rows[2].t : null;
+  var autoLive3 = null;
+  if (!directLive3 && live1 && live2) {
+    var remaining = rows.filter(function(candidate) {
+      var code = candidate.status && candidate.status.code;
+      return candidate.t !== live1 && candidate.t !== live2 && code !== 'eliminated';
+    });
+    autoLive3 = remaining.length === 1 ? remaining[0].t : null;
+  }
+  if (team === live1 || team === live2 || team === directLive3 || team === autoLive3) return;
+  var available = [];
+  if (!live1) available.push(k1);
+  if (!live2) available.push(k2);
+  if (!directLive3 && !autoLive3) available.push(k3);
   // Toggle: if already selected at a position, remove it
   if (bracketState[k1] === team) { delete bracketState[k1]; }
   else if (bracketState[k2] === team) { delete bracketState[k2]; }
   else if (bracketState[k3] === team) { delete bracketState[k3]; }
-  // Assign to first empty slot
-  else if (!bracketState[k1]) { bracketState[k1] = team; }
-  else if (!bracketState[k2]) { bracketState[k2] = team; }
-  else if (!bracketState[k3]) { bracketState[k3] = team; }
-  else { bracketState[k3] = team; } // Override 3rd
-  try { localStorage.setItem('wc2026bracket', JSON.stringify(bracketState)); } catch(e) {}
+  else {
+    var target = null;
+    for (var i = 0; i < available.length; i++) {
+      if (!bracketState[available[i]]) { target = available[i]; break; }
+    }
+    if (!target && available.length) target = available[available.length - 1];
+    if (target) {
+      rememberOriginalPick(target, team);
+      bracketState[target] = team;
+    }
+  }
+  saveBracketState();
   renderBracket();
 }
 
@@ -1045,16 +1201,19 @@ function pickKnockout(matchId, team) {
   if (bracketState[key] === team) {
     delete bracketState[key];
   } else {
+    rememberOriginalPick(key, team);
     bracketState[key] = team;
   }
-  try { localStorage.setItem('wc2026bracket', JSON.stringify(bracketState)); } catch(e) {}
+  saveBracketState();
   renderBracket();
 }
 
 function resetBracket() {
   bracketState = {};
+  bracketOriginalState = {};
   window._bracketMap = [];
   try { localStorage.removeItem('wc2026bracket'); } catch(e) {}
+  try { localStorage.removeItem('wc2026bracketOriginal'); } catch(e) {}
   renderBracket();
 }
 
@@ -1491,6 +1650,12 @@ applyTheme();
 
 // Load bracket state once from localStorage (if available)
 try { var saved = localStorage.getItem('wc2026bracket'); if (saved) bracketState = JSON.parse(saved); } catch(e) {}
+try { var savedOriginal = localStorage.getItem('wc2026bracketOriginal'); if (savedOriginal) bracketOriginalState = JSON.parse(savedOriginal); } catch(e) {}
+try { var savedMode = localStorage.getItem('wc2026bracketMode'); if (savedMode === 'picks' || savedMode === 'live') bracketViewMode = savedMode; } catch(e) {}
+if (Object.keys(bracketState || {}).length && !Object.keys(bracketOriginalState || {}).length) {
+  bracketOriginalState = Object.assign({}, bracketState);
+  saveBracketOriginalState();
+}
 
 
 // === ASYNC INITIALIZATION ===

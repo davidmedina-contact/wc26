@@ -303,6 +303,7 @@ const TEAM_CONFED = {
   'Senegal': 'CAF',
   'Cape Verde': 'CAF',
 };
+const SURNAME_FIRST_TEAMS = new Set(['Japan', 'South Korea']);
 
 function parseScorerTokens(raw) {
   if (!raw || raw === 'null') return [];
@@ -378,8 +379,10 @@ function playerScore(token, playerName) {
   const pInitials = pWords.map(w => w[0]).join('');
   const tSkeleton = feedSkeleton(token);
   const pSkeleton = feedSkeleton(playerName);
+  const reverseName = pWords.length > 1 ? pWords.slice().reverse().join(' ') : '';
 
   let score = 0;
+  if (reverseName && t === reverseName) score += 90;
   if (tLast && (pFirst === tLast || pLast === tLast)) score += 35;
   if (tInitials && pInitials && tInitials === pInitials) score += 25;
   if (p.includes(t) || t.includes(p)) score += 20;
@@ -456,7 +459,12 @@ function formatScorerToken(token, scoringTeam, opponentTeam) {
   if (!resolved || !resolved.name) return null;
   const minute = scorerMinute(token);
   const ogMatch = isOwnGoalToken(token) || (resolved.team && resolved.team !== scoringTeam);
-  const surname = resolved.name.split(' ').slice(-1)[0];
+  const cleanedWords = words(scorerName(token));
+  const resolvedWords = words(resolved.name);
+  const isReversedName = resolvedWords.length > 1 && cleanedWords.join(' ') === resolvedWords.slice().reverse().join(' ');
+  const surname = isReversedName && SURNAME_FIRST_TEAMS.has(resolved.team) && scorerName(token)
+    ? scorerName(token).split(/\s+/).slice(-1)[0]
+    : resolved.name.split(' ').slice(-1)[0];
   return surname + (minute ? ' ' + minute : '') + (ogMatch ? ' (OG)' : '');
 }
 
