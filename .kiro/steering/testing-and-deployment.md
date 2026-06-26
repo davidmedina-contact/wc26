@@ -213,6 +213,11 @@ Rules for bracket/live-results balance:
   strength. FIFA uses an Annex C combination matrix based on exactly which
   third-place groups qualify; show candidate-group placeholders until that
   combination is known.
+- The Groups tab may show the current top-eight third-place teams' provisional
+  Round-of-32 paths, but those paths must come from the local generated Annex C
+  matrix in `data/third-place-combinations.json`. Do not scrape Wikipedia or
+  compute a probability heuristic at request time. Tests should pin the current
+  combination number and opponent slots.
 
 ## Static vs Dynamic Data Architecture
 

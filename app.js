@@ -64,6 +64,21 @@ function getTeamsIndex() {
   return (typeof wcData !== 'undefined' && wcData && wcData.teams) ? wcData.teams : {};
 }
 
+function compactTeamLabel(name) {
+  var labels = {
+    'United States': 'USA',
+    'Bosnia and Herzegovina': 'Bosnia',
+    'Switzerland': 'SUI',
+    'Colombia': 'COL',
+    'Czech Republic': 'Czechia',
+    'South Korea': 'S. Korea',
+    'South Africa': 'S. Africa',
+    'DR Congo': 'DR Congo',
+    'Democratic Republic of the Congo': 'DR Congo',
+  };
+  return labels[name] || name;
+}
+
 function handleSearch(q) {
   var el = document.getElementById('searchResults');
   if (!q || q.length < 2) { el.classList.remove('visible'); return; }
@@ -509,13 +524,20 @@ function renderThirdPlaceTable() {
   var teamsIndex = getTeamsIndex();
   var html = '<section class="third-place-section" aria-label="Third-place qualification table">' +
     '<div class="third-place-header"><div><div class="third-place-title">Third-place race</div><div class="third-place-subtitle">Top 8 advance · fair-play/FIFA ranking may decide tied rows</div></div></div>' +
-    '<div class="standings-table-wrap"><table class="standings-table third-place-table"><thead><tr><th>#</th><th>Team</th><th>Grp</th><th>P</th><th>GD</th><th>GF</th><th>Pts</th><th>Status</th></tr></thead><tbody>';
+    '<div class="standings-table-wrap"><table class="standings-table third-place-table"><thead><tr><th>#</th><th>Team</th><th>Grp</th><th>P</th><th>GD</th><th>GF</th><th>Pts</th><th>Status</th><th title="Likely Round of 32 opponent from the current Annex C combination">R32</th></tr></thead><tbody>';
   thirdPlaceData.forEach(function(row) {
     var flag = (teamsIndex[row.t] && teamsIndex[row.t].flag) ? teamsIndex[row.t].flag + ' ' : '';
     var status = row.status || {};
     var code = status.code || '';
     var label = status.label || '';
     var pending = row.tieBreakPending ? '<span class="third-place-pending" title="Fair-play/FIFA ranking tie-break may be needed">TB</span>' : '';
+    var path = row.path || null;
+    var pathTitle = path
+      ? 'Annex C combination ' + path.combinationNo + ': ' + path.opponentSlot + ' in ' + path.match
+      : 'Current row is outside the top-eight third-place combination';
+    var pathLabel = path
+      ? '<span class="third-place-path" title="' + esc(pathTitle) + '">vs ' + esc(compactTeamLabel(path.opponentTeam || path.opponentSlot)) + '<span>' + esc(path.match || '') + '</span></span>'
+      : '<span class="third-place-path muted" title="' + esc(pathTitle) + '">If qualifies</span>';
     html += '<tr class="third-place-row third-place-status-' + code + '" data-team="' + row.t + '">' +
       '<td>' + row.rank + '</td>' +
       '<td>' + flag + row.t + pending + '</td>' +
@@ -525,6 +547,7 @@ function renderThirdPlaceTable() {
       '<td>' + row.gf + '</td>' +
       '<td class="pts">' + row.pts + '</td>' +
       '<td><span class="third-place-status-label">' + esc(label) + '</span></td>' +
+      '<td>' + pathLabel + '</td>' +
       '</tr>';
   });
   html += '</tbody></table></div></section>';

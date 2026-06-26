@@ -675,7 +675,9 @@
 .third-place-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
 .third-place-title { font-size: 0.95rem; font-weight: 800; color: var(--text); }
 .third-place-subtitle { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+.third-place-table { min-width: 760px; }
 .third-place-table td:nth-child(2) { min-width: 150px; }
+.third-place-table td:nth-child(9), .third-place-table th:nth-child(9) { min-width: 116px; }
 .third-place-row { cursor: pointer; transition: background 0.15s, opacity 0.15s; }
 .third-place-row:hover td { background: var(--surface-hover, var(--surface2)); }
 .third-place-status-in-position { border-left: 3px solid var(--color-green, #22c55e); }
@@ -687,6 +689,9 @@
 .third-place-status-qualified-third .third-place-status-label { color: var(--color-green, #22c55e); }
 .third-place-status-eliminated .third-place-status-label { color: var(--color-red, #ef4444); }
 .third-place-pending { display: inline-flex; align-items: center; justify-content: center; margin-left: 5px; padding: 1px 4px; border-radius: 4px; background: rgba(245, 158, 11, 0.14); color: var(--color-amber, #f59e0b); font-size: 0.56rem; font-weight: 900; font-family: var(--mono); vertical-align: middle; }
+.third-place-path { display: inline-flex; align-items: baseline; gap: 5px; color: var(--text); font-weight: 800; white-space: nowrap; }
+.third-place-path span { color: var(--text-muted); font-size: 0.62rem; font-family: var(--mono); font-weight: 800; }
+.third-place-path.muted { color: var(--text-muted); font-weight: 700; }
 
 /* Stats scorers */
 .scorer-leader { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,180,0,0.06)); border: 1.5px solid rgba(255,215,0,0.4); border-radius: 12px; margin-bottom: 12px; }
@@ -741,6 +746,24 @@
 .mc-scorers-home { text-align: right; flex: 1; }
 .mc-scorers-away { text-align: left; flex: 1; }
 @media (max-width: 768px) {
+  .third-place-header { align-items: flex-start; }
+  .third-place-subtitle { max-width: 260px; line-height: 1.25; }
+  .third-place-table { min-width: 100%; table-layout: fixed; font-size: 0.72rem; }
+  .third-place-table th { padding: 5px 3px; font-size: 0.62rem; }
+  .third-place-table td { padding: 7px 3px; font-size: 0.72rem; }
+  .third-place-table th:nth-child(1), .third-place-table td:nth-child(1) { width: 22px; }
+  .third-place-table th:nth-child(2), .third-place-table td:nth-child(2) { width: 128px; min-width: 0; }
+  .third-place-table th:nth-child(3), .third-place-table td:nth-child(3) { width: 28px; }
+  .third-place-table th:nth-child(4), .third-place-table td:nth-child(4) { width: 24px; }
+  .third-place-table th:nth-child(5), .third-place-table td:nth-child(5) { width: 32px; }
+  .third-place-table th:nth-child(6), .third-place-table td:nth-child(6),
+  .third-place-table th:nth-child(8), .third-place-table td:nth-child(8) { display: none; }
+  .third-place-table th:nth-child(7), .third-place-table td:nth-child(7) { width: 30px; }
+  .third-place-table th:nth-child(9), .third-place-table td:nth-child(9) { width: 96px; min-width: 0; }
+  .third-place-status-label { font-size: 0.56rem; }
+  .third-place-path { gap: 4px; }
+  .third-place-path span { font-size: 0.56rem; }
+
   .mc-scorers { padding: 4px 16px 0; gap: 12px; }
   .mc-scorers-home, .mc-scorers-away { font-size: 0.68rem; }
 }

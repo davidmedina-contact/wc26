@@ -14,6 +14,7 @@ const {
   scorerCompletenessIssues,
   sourceEventsToTokens,
   sortGroupStandings,
+  thirdPlaceDataForStandings,
   validFinishedGames,
 } = handler._test;
 
@@ -31,6 +32,20 @@ function game(overrides) {
     home_scorers: '',
     away_scorers: '',
   }, overrides);
+}
+
+function standingRow(t, pts, gd, gf) {
+  return {
+    t,
+    p: 3,
+    w: Math.floor(pts / 3),
+    d: pts % 3,
+    l: 0,
+    gf: gf === undefined ? Math.max(gd, 0) : gf,
+    ga: gf === undefined ? Math.max(-gd, 0) : gf - gd,
+    gd,
+    pts,
+  };
 }
 
 function responseRecorder() {
@@ -208,6 +223,41 @@ test('third-place table is ranked server-side from standings data', () => {
   assert.ok(result.data.thirdPlaceData.every(row => row.group && row.t && row.status && typeof row.tieBreakPending === 'boolean'));
   assert.equal(result.data.thirdPlaceData.filter(row => row.status.code === 'in-position').length, 8);
   assert.equal(result.data.thirdPlaceData[8].status.code, 'below-cut');
+});
+
+test('third-place paths use the Annex C round-of-32 combination table', () => {
+  const standings = {
+    A: [standingRow('Mexico', 9, 6), standingRow('South Africa', 4, -1), standingRow('South Korea', 3, -1)],
+    B: [standingRow('Switzerland', 7, 4), standingRow('Canada', 4, 5), standingRow('Bosnia and Herzegovina', 4, -1, 5)],
+    C: [standingRow('Brazil', 7, 6), standingRow('Morocco', 7, 3), standingRow('Scotland', 3, -3)],
+    D: [standingRow('United States', 6, 5), standingRow('Australia', 3, 0), standingRow('Paraguay', 3, -2)],
+    E: [standingRow('Germany', 6, 6), standingRow('Ivory Coast', 6, 2), standingRow('Ecuador', 4, 0)],
+    F: [standingRow('Netherlands', 4, 4), standingRow('Japan', 4, 4), standingRow('Sweden', 3, 0, 6)],
+    G: [standingRow('Egypt', 4, 2), standingRow('Iran', 2, 0), standingRow('Belgium', 2, 0)],
+    H: [standingRow('Spain', 4, 4), standingRow('Uruguay', 2, 0), standingRow('Cape Verde', 2, 0, 2)],
+    I: [standingRow('France', 6, 5), standingRow('Norway', 6, 4), standingRow('Senegal', 0, -3, 3)],
+    J: [standingRow('Argentina', 6, 5), standingRow('Austria', 3, 0), standingRow('Algeria', 3, -2, 2)],
+    K: [standingRow('Colombia', 6, 3), standingRow('Portugal', 4, 5), standingRow('DR Congo', 1, -1)],
+    L: [standingRow('England', 4, 2), standingRow('Ghana', 4, 1), standingRow('Croatia', 3, -1, 3)],
+  };
+
+  const paths = Object.fromEntries(thirdPlaceDataForStandings(standings)
+    .filter(row => row.path)
+    .map(row => [row.group, row.path]));
+
+  assert.equal(paths.E.combinationNo, 482);
+  assert.deepEqual(Object.fromEntries(Object.entries(paths).map(([group, path]) => [group, path.opponentSlot])), {
+    E: '1L',
+    B: '1D',
+    F: '1I',
+    L: '1K',
+    A: '1G',
+    J: '1B',
+    D: '1E',
+    C: '1A',
+  });
+  assert.equal(paths.E.opponentTeam, 'England');
+  assert.equal(paths.B.opponentTeam, 'United States');
 });
 
 test('scorer aliases preserve every goal event on match cards', () => {
@@ -538,6 +588,8 @@ test('client renders compact standings status markers with an inline legend', ()
   assert.match(app, /aria-label="Qualification legend"/);
   assert.match(app, /function renderThirdPlaceTable/);
   assert.match(app, /Third-place race/);
+  assert.match(app, /Likely Round of 32 opponent/);
+  assert.match(app, /third-place-path/);
   assert.match(app, /thirdPlaceData = data\.thirdPlaceData/);
   assert.match(app, /thirdPlaceData: thirdPlaceData/);
 });

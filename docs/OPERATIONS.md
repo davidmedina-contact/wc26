@@ -23,6 +23,14 @@ The Groups tab borrows the common sports-standings convention of compact status 
 
 The Bracket tab must prefer live locked seeds over user picks. A mathematically locked group winner can flow into its official Round-of-32 slot immediately; completed runner-up and qualified third-place seeds can flow once known. User picks remain useful for unresolved groups and knockout guesses, but they must not override live results. Third-place Round-of-32 slots should show FIFA candidate groups such as `3 C/E/F/H/I` until the exact Annex C combination is known; do not route third-place teams by Elo or prediction strength.
 
+The third-place race table can show a provisional Round-of-32 path for the
+current top-eight third-place groups. This is derived server-side from
+`data/third-place-combinations.json`, a generated local copy of the 495
+Annex C combinations published in the Wikipedia knockout-stage table and
+sourced from FIFA's tournament regulations. Do not scrape this table at request
+time. If the source matrix changes, regenerate the JSON, rerun tests, and verify
+the current combination number and opponent slots.
+
 The client only renders that payload. It does not call third-party APIs or infer whether a game is complete.
 
 ## Freshness And Failure Behavior

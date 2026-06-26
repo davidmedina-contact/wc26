@@ -4,6 +4,7 @@
 const crypto = require('node:crypto');
 const SNAPSHOT = require('../data.json');
 const SCORER_OVERRIDES = require('../data/scorer-overrides.json');
+const THIRD_PLACE_COMBINATIONS = require('../data/third-place-combinations.json');
 
 const NAME_MAP = {
   'USA': 'United States',
@@ -1002,6 +1003,37 @@ function thirdPlaceRanking(rows) {
   );
 }
 
+const THIRD_PLACE_MATCHES_BY_WINNER_SLOT = {
+  '1A': 'M79',
+  '1B': 'M85',
+  '1D': 'M81',
+  '1E': 'M74',
+  '1G': 'M82',
+  '1I': 'M77',
+  '1K': 'M87',
+  '1L': 'M80',
+};
+
+function groupWinnerForSlot(standings, slot) {
+  const group = String(slot || '').slice(1);
+  const row = standings[group]?.[0];
+  return row?.t || null;
+}
+
+function thirdPlacePathForRow(row, standings, combination) {
+  if (!combination) return null;
+  const opponentSlot = combination[row.group];
+  if (!opponentSlot) return null;
+  const opponentTeam = groupWinnerForSlot(standings, opponentSlot);
+  return {
+    combinationNo: combination.no,
+    opponentSlot,
+    opponentGroup: opponentSlot.slice(1),
+    opponentTeam,
+    match: THIRD_PLACE_MATCHES_BY_WINNER_SLOT[opponentSlot] || null,
+  };
+}
+
 function thirdPlaceDataForStandings(standings) {
   const thirds = Object.keys(SNAPSHOT.groups || {})
     .map(letter => {
@@ -1010,6 +1042,8 @@ function thirdPlaceDataForStandings(standings) {
     })
     .filter(Boolean);
   const ranked = thirdPlaceRanking(thirds);
+  const currentCombinationGroups = ranked.slice(0, 8).map(row => row.group).sort().join('');
+  const currentCombination = THIRD_PLACE_COMBINATIONS[currentCombinationGroups] || null;
 
   return ranked.map((row, index) => {
     const tiedOnKnownCriteria = ranked.some((other, otherIndex) =>
@@ -1042,6 +1076,7 @@ function thirdPlaceDataForStandings(standings) {
       pts: row.pts,
       status: { code, label: labels[code] },
       tieBreakPending: tiedOnKnownCriteria,
+      path: index < 8 ? thirdPlacePathForRow(row, standings, currentCombination) : null,
     };
   });
 }
