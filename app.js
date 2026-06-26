@@ -566,7 +566,7 @@ function renderThirdPlaceTable() {
   if (!Array.isArray(thirdPlaceData) || !thirdPlaceData.length) return '';
   var teamsIndex = getTeamsIndex();
   var html = '<section class="third-place-section" aria-label="Third-place qualification table">' +
-    '<div class="third-place-header"><div><div class="third-place-title">Third-place race</div><div class="third-place-subtitle">Top 8 advance · fair-play/FIFA ranking may decide tied rows</div></div></div>' +
+    '<div class="third-place-header"><div><div class="third-place-title">Third-place race</div><div class="third-place-subtitle">Top 8 advance · fair-play/FIFA ranking may decide ties</div></div></div>' +
     '<div class="standings-table-wrap"><table class="standings-table third-place-table"><thead><tr><th>#</th><th>Team</th><th>Grp</th><th>P</th><th>GD</th><th>GF</th><th>Pts</th><th>Status</th><th title="Likely Round of 32 opponent from the current Annex C combination">R32</th></tr></thead><tbody>';
   thirdPlaceData.forEach(function(row) {
     var flag = (teamsIndex[row.t] && teamsIndex[row.t].flag) ? teamsIndex[row.t].flag + ' ' : '';
@@ -1981,7 +1981,7 @@ async function init() {
   if (el && !el._hasTeamListener) {
     el._hasTeamListener = true;
     el.addEventListener('click', function(e) {
-      var row = e.target.closest('.standings-row[data-team]');
+      var row = e.target.closest('.standings-row[data-team], .third-place-row[data-team]');
       if (row && row.dataset.team) {
         if (typeof wcData !== 'undefined' && wcData && wcData.teams && wcData.teams[row.dataset.team]) {
           openTeamModal(row.dataset.team);

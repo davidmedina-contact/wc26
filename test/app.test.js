@@ -622,8 +622,10 @@ test('client renders compact standings status markers with an inline legend', ()
   assert.match(app, /aria-label="Qualification legend"/);
   assert.match(app, /function renderThirdPlaceTable/);
   assert.match(app, /Third-place race/);
+  assert.match(app, /fair-play\/FIFA ranking may decide ties/);
   assert.match(app, /Likely Round of 32 opponent/);
   assert.match(app, /third-place-path/);
+  assert.match(app, /\.standings-row\[data-team\], \.third-place-row\[data-team\]/);
   assert.match(app, /thirdPlaceData = data\.thirdPlaceData/);
   assert.match(app, /thirdPlaceData: thirdPlaceData/);
 });

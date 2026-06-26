@@ -237,6 +237,19 @@ Rules for bracket/live-results balance:
   which teams are data-backed. Keep the browser smoke script aligned with this
   behavior.
 
+Rules for Groups tab interactions:
+
+- Standings rows and third-place race rows represent teams and should open the
+  same team modal. Keep row click delegation aligned for both
+  `.standings-row[data-team]` and `.third-place-row[data-team]`.
+- The Groups tab has an early shell listener that attaches before live data
+  loads. Because it sets `_hasTeamListener`, later full renders will not attach
+  another listener. If a new row type is added, update the early shell listener
+  and any full-render listener together.
+- Compact mobile subtitles should be written to wrap cleanly. Avoid long
+  trailing phrases that can orphan on narrow screens; prefer short wording such
+  as "may decide ties."
+
 ## Static vs Dynamic Data Architecture
 
 The app uses a split architecture:
