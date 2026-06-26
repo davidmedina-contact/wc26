@@ -716,7 +716,8 @@
 .third-place-section { margin: 12px 0 28px; }
 .third-place-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
 .third-place-title { font-size: 0.95rem; font-weight: 800; color: var(--text); }
-.third-place-subtitle { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+.third-place-subtitle { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 5px; font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; line-height: 1.3; }
+.third-place-subtitle span:not(.third-place-subtitle-sep) { white-space: nowrap; }
 .third-place-table { min-width: 760px; }
 .third-place-table td:nth-child(2) { min-width: 150px; }
 .third-place-table td:nth-child(9), .third-place-table th:nth-child(9) { min-width: 116px; }
@@ -789,7 +790,7 @@
 .mc-scorers-away { text-align: left; flex: 1; }
 @media (max-width: 768px) {
   .third-place-header { align-items: flex-start; }
-  .third-place-subtitle { max-width: 260px; line-height: 1.25; }
+  .third-place-subtitle { max-width: none; }
   .third-place-table { min-width: 100%; table-layout: fixed; font-size: 0.72rem; }
   .third-place-table th { padding: 5px 3px; font-size: 0.62rem; }
   .third-place-table td { padding: 7px 3px; font-size: 0.72rem; }

@@ -566,7 +566,7 @@ function renderThirdPlaceTable() {
   if (!Array.isArray(thirdPlaceData) || !thirdPlaceData.length) return '';
   var teamsIndex = getTeamsIndex();
   var html = '<section class="third-place-section" aria-label="Third-place qualification table">' +
-    '<div class="third-place-header"><div><div class="third-place-title">Third-place race</div><div class="third-place-subtitle">Top 8 advance · fair-play/FIFA ranking may decide ties</div></div></div>' +
+    '<div class="third-place-header"><div><div class="third-place-title">Third-place race</div><div class="third-place-subtitle"><span>Top 8 advance</span><span class="third-place-subtitle-sep">·</span><span>fair-play/FIFA ranking may decide ties</span></div></div></div>' +
     '<div class="standings-table-wrap"><table class="standings-table third-place-table"><thead><tr><th>#</th><th>Team</th><th>Grp</th><th>P</th><th>GD</th><th>GF</th><th>Pts</th><th>Status</th><th title="Likely Round of 32 opponent from the current Annex C combination">R32</th></tr></thead><tbody>';
   thirdPlaceData.forEach(function(row) {
     var flag = (teamsIndex[row.t] && teamsIndex[row.t].flag) ? teamsIndex[row.t].flag + ' ' : '';
