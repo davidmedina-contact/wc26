@@ -10,6 +10,21 @@ function isValidBootstrapData(data) {
   return Boolean(data && data.groups && data.teams && Array.isArray(data.matchesData));
 }
 
+function isValidThirdPlaceData(rows) {
+  if (!Array.isArray(rows) || !rows.length) return true;
+  var topRows = rows.filter(function(row) {
+    return row && row.status && (row.status.code === 'in-position' || row.status.code === 'qualified-third');
+  });
+  if (!topRows.length) topRows = rows.slice(0, 8);
+  return topRows.every(function(row) {
+    return row && row.path && row.path.opponentSlot && row.path.match;
+  });
+}
+
+function isUsableDynamicCache(data) {
+  return Boolean(data && isValidThirdPlaceData(data.thirdPlaceData));
+}
+
 let bracketState = {};
 var selectedMatchDate = '2026-06-11';
 
@@ -51,6 +66,8 @@ function switchTab(tab, btn) {
   document.getElementById('tab-' + tab).classList.add('active');
   document.body.setAttribute('data-active-tab', tab);
   ensureTabRendered(tab);
+  var nextHash = tab === 'matches' ? '#matches/' + selectedMatchDate : '#' + tab;
+  if (window.location.hash !== nextHash) history.replaceState(null, '', nextHash);
 }
 
 function getPC(pos) {
@@ -1495,7 +1512,8 @@ function dynamicMatchCount(data) {
 function applyDynamicData(data, meta) {
   if (!data || !isValidBootstrapData(data)) return false;
   var incomingVersion = meta && meta.dataVersion;
-  if (incomingVersion && currentDataVersion && incomingVersion === currentDataVersion) {
+  var repairsThirdPlacePath = !isValidThirdPlaceData(thirdPlaceData) && isValidThirdPlaceData(data.thirdPlaceData);
+  if (incomingVersion && currentDataVersion && incomingVersion === currentDataVersion && !repairsThirdPlacePath) {
     currentDataMeta = meta;
     return false;
   }
@@ -1511,7 +1529,7 @@ function applyDynamicData(data, meta) {
 
   actualScores = data.actualScores || actualScores;
   standingsData = data.standingsData || standingsData;
-  thirdPlaceData = data.thirdPlaceData || thirdPlaceData;
+  if (data.thirdPlaceData && isValidThirdPlaceData(data.thirdPlaceData)) thirdPlaceData = data.thirdPlaceData;
   statsData = data.statsData || statsData;
   if (incomingVersion) currentDataVersion = incomingVersion;
   if (meta) currentDataMeta = meta;
@@ -1716,6 +1734,10 @@ async function init() {
       var raw = localStorage.getItem(DATA_CACHE_KEY);
       if (raw) cachedDynamic = JSON.parse(raw);
     } catch(e) {}
+    if (cachedDynamic && !isUsableDynamicCache(cachedDynamic)) {
+      cachedDynamic = null;
+      try { localStorage.removeItem(DATA_CACHE_KEY); } catch(e) {}
+    }
 
     // Apply static data as the base
     assignDataGlobals(staticData);
@@ -1724,7 +1746,7 @@ async function init() {
     if (cachedDynamic) {
       if (cachedDynamic.actualScores) actualScores = cachedDynamic.actualScores;
       if (cachedDynamic.standingsData) standingsData = cachedDynamic.standingsData;
-      if (cachedDynamic.thirdPlaceData) thirdPlaceData = cachedDynamic.thirdPlaceData;
+      if (cachedDynamic.thirdPlaceData && isValidThirdPlaceData(cachedDynamic.thirdPlaceData)) thirdPlaceData = cachedDynamic.thirdPlaceData;
       if (cachedDynamic.statsData) statsData = cachedDynamic.statsData;
       if (cachedDynamic.dataVersion) currentDataVersion = cachedDynamic.dataVersion;
       if (cachedDynamic.dataMeta) currentDataMeta = cachedDynamic.dataMeta;
@@ -1757,6 +1779,10 @@ async function init() {
       var raw2 = localStorage.getItem(DATA_CACHE_KEY);
       if (raw2) cachedData = JSON.parse(raw2);
     } catch(e) {}
+    if (cachedData && !isUsableDynamicCache(cachedData)) {
+      cachedData = null;
+      try { localStorage.removeItem(DATA_CACHE_KEY); } catch(e) {}
+    }
 
     if (cachedData && isValidBootstrapData(cachedData)) {
       assignDataGlobals(cachedData);

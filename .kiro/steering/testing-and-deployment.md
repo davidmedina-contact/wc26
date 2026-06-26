@@ -90,6 +90,12 @@ Rules for dynamic tournament data:
 
 - `/api/data` must emit a stable `meta.dataVersion` and matching `ETag` based on
   football data, not `updatedAt`.
+- Include every UI-visible dynamic field in `meta.dataVersion`, especially
+  `actualScores`, `standingsData`, `thirdPlaceData`, and `statsData`. A shell
+  update can still render stale `localStorage` data if a new required field was
+  omitted from the version hash and the server returns `304 Not Modified`.
+- When adding a required dynamic field, add a client schema guard that discards
+  old cached payloads before first render and forces a fresh `/api/data` merge.
 - The service worker compares `meta.dataVersion` before posting `DATA_UPDATED`;
   full-body comparison creates false updates because `updatedAt` changes.
 - The app should pull on startup, `focus`, and `visibilitychange`, with a

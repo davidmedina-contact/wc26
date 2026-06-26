@@ -9,6 +9,7 @@ const {
   buildScorerVerification,
   cachePolicyFor,
   computeStandings,
+  dataVersionFor,
   expectedFinishedKeys,
   parseScore,
   scorerCompletenessIssues,
@@ -258,6 +259,12 @@ test('third-place paths use the Annex C round-of-32 combination table', () => {
   });
   assert.equal(paths.E.opponentTeam, 'England');
   assert.equal(paths.B.opponentTeam, 'United States');
+
+  const data = { actualScores: {}, standingsData: {}, thirdPlaceData: [{ group: 'E', path: { opponentSlot: '1L', match: 'M80' } }], statsData: {} };
+  const first = dataVersionFor(data, { scorerCompleteness: 'verified', scorerIssueCount: 0, finishedMatches: 1, standingsSource: 'test' });
+  data.thirdPlaceData[0].path.match = 'M81';
+  const second = dataVersionFor(data, { scorerCompleteness: 'verified', scorerIssueCount: 0, finishedMatches: 1, standingsSource: 'test' });
+  assert.notEqual(first, second);
 });
 
 test('scorer aliases preserve every goal event on match cards', () => {
@@ -575,7 +582,16 @@ test('client uses one stable same-origin data endpoint', () => {
   assert.match(app, /cache: 'reload'/);
   assert.match(app, /Cache-Control': 'no-cache'/);
   assert.match(app, /incomingCount < currentCount/);
+  assert.match(app, /function isValidThirdPlaceData/);
+  assert.match(app, /localStorage\.removeItem\(DATA_CACHE_KEY\)/);
   assert.doesNotMatch(app, /worldcup26\.ir|api\/scores|api\/standings|dataCacheKey/);
+});
+
+test('client hash routing persists every primary tab across refreshes', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  assert.match(app, /var nextHash = tab === 'matches' \? '#matches\/' \+ selectedMatchDate : '#' \+ tab/);
+  assert.match(app, /if \(tab === 'matches' && parts\[1\]\) selectedMatchDate = parts\[1\]/);
+  assert.match(app, /var validTabs = \['groups', 'matches', 'bracket', 'stats'\]/);
 });
 
 test('client renders compact standings status markers with an inline legend', () => {

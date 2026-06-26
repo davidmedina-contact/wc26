@@ -45,6 +45,15 @@ The client only renders that payload. It does not call third-party APIs or infer
 - `/api/data` includes `meta.dataVersion` and an `ETag` based on the football
   payload, not `updatedAt`. The app and service worker compare this stable
   version before re-rendering or showing an update toast.
+- `meta.dataVersion` must include every dynamic field that can change what the
+  UI shows, including `actualScores`, `standingsData`, `thirdPlaceData`, and
+  `statsData`. If a new UI reads a new field from an existing cached object but
+  that field was omitted from the version hash, installed PWAs can receive `304
+  Not Modified`, keep stale `localStorage`, and show fallback text even though
+  the app shell updated.
+- Add a schema guard for cached dynamic data whenever a new required dynamic
+  field is introduced. Stale cached objects should be discarded before the
+  initial render, then replaced by a forced fresh `/api/data` fetch.
 - The app pulls fresh data on startup, focus, and `visibilitychange`, then
   schedules foreground-only refreshes from `meta.nextRefreshSeconds`. Closed or
   backgrounded PWAs update on the next foreground launch/focus.

@@ -34,6 +34,7 @@ function dataVersionFor(data, meta) {
     .update(stableStringify({
       actualScores: data.actualScores,
       standingsData: data.standingsData,
+      thirdPlaceData: data.thirdPlaceData,
       statsData: data.statsData,
       scorerCompleteness: meta.scorerCompleteness,
       scorerIssueCount: meta.scorerIssueCount,
