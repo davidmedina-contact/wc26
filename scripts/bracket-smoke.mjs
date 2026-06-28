@@ -77,6 +77,9 @@ try {
       .filter(node => node.textContent.includes('confirmed')).length,
     dateTimeLabels: [...document.querySelectorAll('#tab-bracket .bracket-date-time')]
       .map(node => node.textContent.trim()).slice(0, 4),
+    matchLabels: [...document.querySelectorAll('#tab-bracket .bracket-match-lbl')]
+      .map(node => node.childNodes[0]?.textContent?.trim() || node.textContent.trim()),
+    banner: document.querySelector('#matchStrip .ms-teams')?.textContent.trim() || '',
   }));
   assert(live.mode === 'Live Bracket', 'Live Bracket should be the default mode', live);
   assert(live.progress === 'Live bracket uses confirmed seeds and FT winners only', 'Live mode should not show a picks-made counter', live);
@@ -84,6 +87,11 @@ try {
   assert(live.tapHints === 0, 'Live mode should be read-only and hide tap-to-pick hints', live);
   assert(live.confirmedRanks > 0, 'Live bracket should visibly mark confirmed teams', live);
   assert(live.dateTimeLabels.some(label => /Jun|Jul/.test(label) && /\d:\d{2} (AM|PM)/.test(label)), 'Bracket cards should show date and local time labels', live);
+  assert(live.matchLabels.includes('M89 · W M74 vs W M77'), 'R16 Match 89 must follow FIFA official paths', live);
+  assert(live.matchLabels.includes('M98 · W M93 vs W M94'), 'Quarterfinal Match 98 must follow FIFA official paths', live);
+  assert(live.matchLabels.includes('M103 · L M101 vs L M102'), 'Bronze final must receive both semifinal losers', live);
+  assert(live.matchLabels.includes('M104 · Final'), 'Final must use FIFA Match 104', live);
+  assert(!/Group|TBD|W M|L M/.test(live.banner), 'Next-match banner should use confirmed teams when available', live);
 
   await page.evaluate(() => {
     localStorage.setItem('wc2026bracketMode', 'picks');
@@ -91,6 +99,7 @@ try {
       g_H_3: 'Uruguay',
       g_I_1: 'Uruguay',
       ko_M79: 'Uruguay',
+      ko_R16_0: 'South Africa',
     }));
     localStorage.setItem('wc2026bracketOriginal', JSON.stringify({
       g_H_3: 'Uruguay',
@@ -113,7 +122,8 @@ try {
   assert(picks.resetVisible === true, 'My Picks should show Reset Picks', picks);
   assert(picks.tapHints > 0, 'My Picks should keep tap-to-pick affordances', picks);
   assert(count(picksR32, 'Uruguay') <= 1, 'A stale third-place Uruguay pick must not be reused across R32 slots', { picksR32 });
-  assert(picks.groupText.includes('3rd pick') || picks.groupText.includes('3rd auto'), 'Group cards should expose third-place pick/auto labels', picks);
+  assert(/3rd (pick|auto|confirmed)/.test(picks.groupText), 'Group cards should expose third-place state labels', picks);
+  assert(picks.progress === '1/32 knockout picks made', 'Legacy R16 picks should migrate to official match IDs', picks);
 
   await page.click('[data-bracket-mode="live"]');
   await page.waitForTimeout(250);
@@ -131,6 +141,7 @@ try {
   assert(returnedLive.tapHints === 0, 'Switching to Live should hide pick hints', returnedLive);
   assert(count(liveR32, 'Uruguay') <= 1, 'Live Bracket must not display stale duplicate Uruguay picks', { liveR32 });
   assert(returnedLive.savedPicks.g_H_3 === 'Uruguay', 'Switching to Live should not delete saved My Picks data', returnedLive);
+  assert(returnedLive.savedPicks.ko_M90 === 'South Africa' && !returnedLive.savedPicks.ko_R16_0, 'Legacy internal match IDs should migrate without losing picks', returnedLive);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload({ waitUntil: 'networkidle' });

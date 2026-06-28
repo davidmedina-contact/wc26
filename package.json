@@ -2,7 +2,7 @@
   "name": "wc26-guide",
   "private": true,
   "scripts": {
-    "check": "node --check app.js && node --check service-worker.js && node --check api/data.js && node --test",
+    "check": "node --check knockout-bracket.js && node --check app.js && node --check service-worker.js && node --check api/data.js && node --test",
     "test": "node --test",
     "smoke:bracket": "node scripts/bracket-smoke.mjs",
     "stamp-sw": "node scripts/stamp-sw.js",

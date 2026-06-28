@@ -1,5 +1,5 @@
 var CACHE = 'wc26-v20';
-var BUILD_TS = '2026-06-26T06:14:36.404Z'; // auto-updated by npm run stamp-sw
+var BUILD_TS = '2026-06-28T05:58:34.607Z'; // auto-updated by npm run stamp-sw
 
 // Only precache assets that rarely change
 var PRECACHE = [
@@ -10,7 +10,7 @@ var PRECACHE = [
 ];
 
 // Files that change frequently: always fetch fresh, cache as offline fallback
-var NETWORK_FIRST = ['/', '/index.html', '/app.js', '/style.css', '/world-cup-2026-schedule.ics'];
+var NETWORK_FIRST = ['/', '/index.html', '/app.js', '/knockout-bracket.js', '/style.css', '/world-cup-2026-schedule.ics'];
 
 // Stale-while-revalidate + notify: serve cache instantly, fetch fresh in background,
 // notify client if fresh data differs so it can re-render

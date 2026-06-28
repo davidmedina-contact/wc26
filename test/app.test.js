@@ -6,6 +6,7 @@ const test = require('node:test');
 const handler = require('../api/data');
 const {
   buildData,
+  buildScores,
   buildScorerVerification,
   cachePolicyFor,
   computeStandings,
@@ -20,6 +21,7 @@ const {
 } = handler._test;
 
 const root = path.join(__dirname, '..');
+const knockoutBracket = require('../knockout-bracket');
 
 function game(overrides) {
   return Object.assign({
@@ -68,6 +70,23 @@ test('scores must be finite non-negative integers', () => {
   assert.equal(parseScore(undefined), null);
   assert.equal(parseScore('-1'), null);
   assert.equal(parseScore('1.5'), null);
+});
+
+test('knockout scores preserve the winner when penalties decide a tie', () => {
+  const scores = buildScores([
+    game({
+      type: 'r32',
+      home_team_name_en: 'Mexico',
+      away_team_name_en: 'South Africa',
+      home_score: '1',
+      away_score: '1',
+      home_penalties: '4',
+      away_penalties: '3',
+    }),
+  ]);
+  assert.equal(scores['Mexico_South Africa'].winner, 'Mexico');
+  assert.equal(scores['Mexico_South Africa'].hp, 4);
+  assert.equal(scores['Mexico_South Africa'].ap, 3);
 });
 
 test('only complete, recognized finished games become finals', () => {
@@ -645,7 +664,7 @@ test('bracket uses live locked seeds before user picks and keeps third-place slo
   assert.match(app, /team === live1 \|\| team === live2 \|\| team === directLive3 \|\| team === autoLive3/);
   assert.match(app, /if \(eliminated\) return;/);
   assert.match(app, /Confirmed teams and FT winners lead the bracket/);
-  assert.match(app, /3 C\/E\/F\/H\/I/);
+  assert.equal(knockoutBracket.byId.M79.a, '3 C/E/F/H/I');
   assert.match(app, /return liveThird \|\| slot/);
   assert.doesNotMatch(app, /validStoredThirdPlacePick/);
   assert.doesNotMatch(app, /getQualified3rdTeams/);
@@ -664,34 +683,61 @@ test('bracket preserves original picks and supports live versus prediction modes
   assert.match(app, /Live bracket uses confirmed seeds and FT winners only/);
   assert.match(app, /knockout picks made/);
   assert.match(app, /if \(bracketViewMode === 'picks'\) totalKoPicks\+\+/);
-  assert.match(app, /actualWinner\(homeTeam, awayTeam\)/);
+  assert.match(app, /knockoutScoreOutcome\(homeTeam, awayTeam\)/);
+  assert.match(app, /migrateLegacyBracketMatchIds/);
   assert.match(app, /wcData\.teams\[teamName\]/);
   assert.match(app, /orig /);
 });
 
 test('bracket cards include knockout dates and local-time labels', () => {
   const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
-  assert.match(app, /var bracketSchedule = \{/);
-  assert.match(app, /M73: \{d:'2026-06-28', t:'15:00'\}/);
-  assert.match(app, /FINAL: \{d:'2026-07-19', t:'15:00'\}/);
+  assert.equal(knockoutBracket.byId.M73.d, '2026-06-28');
+  assert.equal(knockoutBracket.byId.M104.d, '2026-07-19');
   assert.match(app, /function bracketDateTime\(matchId\)/);
   assert.match(app, /etToLocal\(schedule\.t, schedule\.d\) \+ ' ' \+ localTz/);
   assert.match(app, /bracket-date-time/);
   assert.match(app, /bracket-venue-name/);
 });
 
+test('official knockout graph defines every FIFA path through the final', () => {
+  const expected = {
+    M89: ['W M74', 'W M77'], M90: ['W M73', 'W M75'],
+    M91: ['W M76', 'W M78'], M92: ['W M79', 'W M80'],
+    M93: ['W M83', 'W M84'], M94: ['W M81', 'W M82'],
+    M95: ['W M86', 'W M88'], M96: ['W M85', 'W M87'],
+    M97: ['W M89', 'W M90'], M98: ['W M93', 'W M94'],
+    M99: ['W M91', 'W M92'], M100: ['W M95', 'W M96'],
+    M101: ['W M97', 'W M98'], M102: ['W M99', 'W M100'],
+    M103: ['L M101', 'L M102'], M104: ['W M101', 'W M102'],
+  };
+  assert.equal(knockoutBracket.matches.length, 32);
+  Object.entries(expected).forEach(([id, slots]) => {
+    assert.deepEqual([knockoutBracket.byId[id].h, knockoutBracket.byId[id].a], slots, id);
+  });
+  assert.equal(new Set(knockoutBracket.matches.map(match => match.id)).size, 32);
+  assert.equal(Object.keys(knockoutBracket.bySchedule).length, 32);
+});
+
 test('matches tab resolves knockout teams from live standings data', () => {
   const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
-  assert.match(app, /var knockoutMatchSlots = \{/);
+  assert.match(app, /KnockoutBracket\.bySchedule/);
   assert.match(app, /function liveKnockoutTeamsForMatch\(m\)/);
   assert.match(app, /function liveGroupSeedForSlot\(slot\)/);
   assert.match(app, /function liveThirdPlaceForMatch\(matchId\)/);
   assert.match(app, /function liveKnockoutWinners\(\)/);
+  assert.match(app, /function liveKnockoutOutcomes\(\)/);
   assert.match(app, /var displayTeams = liveKnockoutTeamsForMatch\(m\)/);
   assert.match(app, /var homeName = displayTeams\.h/);
   assert.match(app, /var awayName = displayTeams\.a/);
   assert.match(app, /h: wcData\.teams\[home\] \? home : m\.h/);
   assert.match(app, /a: wcData\.teams\[away\] \? away : m\.a/);
+});
+
+test('next-match banner uses the same confirmed knockout team resolver', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  const strip = app.slice(app.indexOf('function renderMatchStrip'), app.indexOf('function getMatchKickoffDate'));
+  assert.match(strip, /liveKnockoutTeamsForMatch\(target\)/);
+  assert.match(strip, /homeName \+ ' vs ' \+ awayName/);
 });
 
 test('service worker keeps a last-known-good API response', () => {

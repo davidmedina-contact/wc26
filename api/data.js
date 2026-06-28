@@ -1255,13 +1255,28 @@ function buildScores(games, verifiedScorers) {
     const awayScorers = scorerTokensFor(game, 'away', verifiedScorers)
       .map(token => formatScorerToken(token, away, home))
       .filter(Boolean);
-    scores[`${home}_${away}`] = {
+    const score = {
       h: parseScore(game.home_score),
       a: parseScore(game.away_score),
       status: 'FT',
       hs: homeScorers.length > 0 ? homeScorers : undefined,
       as: awayScorers.length > 0 ? awayScorers : undefined,
     };
+    if (game.type !== 'group') {
+      const homePens = parseScore(game.home_penalties ?? game.home_penalty_score ?? game.home_score_penalties);
+      const awayPens = parseScore(game.away_penalties ?? game.away_penalty_score ?? game.away_score_penalties);
+      const sourceWinner = norm(game.winner_team_name_en || game.winning_team_name_en || game.winner);
+      if (homePens !== null && awayPens !== null) {
+        score.hp = homePens;
+        score.ap = awayPens;
+      }
+      if (sourceWinner === home || sourceWinner === away) score.winner = sourceWinner;
+      else if (score.h !== score.a) score.winner = score.h > score.a ? home : away;
+      else if (homePens !== null && awayPens !== null && homePens !== awayPens) {
+        score.winner = homePens > awayPens ? home : away;
+      }
+    }
+    scores[`${home}_${away}`] = score;
   });
   return scores;
 }
@@ -1352,6 +1367,7 @@ module.exports = async (req, res) => {
 
 module.exports._test = {
   buildData,
+  buildScores,
   buildScorerVerification,
   cachePolicyFor,
   annotateQualificationStatuses,

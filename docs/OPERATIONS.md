@@ -48,15 +48,26 @@ may change what is displayed, but it must not overwrite the user's original
 prediction.
 
 Bracket match cards display knockout dates and kickoff times in the user's
-local timezone, derived from the static ET schedule in `data.json`. Keep this in
-the client rendering layer; it is presentation data, not a serverless live-data
-computation.
+local timezone. `knockout-bracket.js` is the canonical static source for FIFA
+match numbers, dates, venues, and advancement paths. The Bracket tab, Matches
+tab, and next-match banner must all resolve teams through this graph; do not
+copy pairings into another UI component. The graph follows FIFA Matches 73-104,
+including Match 103 (`L M101` vs `L M102`) and Match 104 (`W M101` vs `W M102`).
+Keep schedule formatting in the client layer; it is presentation data, not a
+serverless live-data computation.
+
+Older releases stored later-round picks under aliases such as `R16_0`, `QF_0`,
+and `FINAL`. `migrateLegacyBracketMatchIds()` maps those keys to FIFA match IDs
+without overwriting an existing new-format pick. Do not remove that migration
+while installed PWAs may still hold legacy localStorage.
 
 The Matches tab also renders knockout fixtures from the static schedule, but it
 must progressively replace placeholders with live data when available. Round of
 32 cards should resolve `1A`, `2A`, and Annex C third-place slots from
 `standingsData` and `thirdPlaceData`; later knockout cards should resolve only
-from actual FT knockout winners. Keep the static `TBD`, `Best 3rd`, and
+from actual FT knockout winners. Penalty-decided matches must include an
+explicit `winner` (and `hp`/`ap` when available) in `actualScores`; a tied FT
+score alone cannot advance a team. Keep the static `TBD`, `Best 3rd`, and
 group-position labels as fallbacks until the live data can prove the team.
 
 Keep compact mobile copy intentional. Short subtitles such as the third-place

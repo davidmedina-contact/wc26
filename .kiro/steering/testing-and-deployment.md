@@ -241,6 +241,20 @@ Rules for bracket/live-results balance:
   fallbacks. Replace them with confirmed teams from `standingsData`,
   `thirdPlaceData`, and actual FT knockout winners as soon as those data are
   available.
+- Keep FIFA knockout paths in exactly one executable source:
+  `knockout-bracket.js`. The Bracket tab, Matches tab, and next-match banner
+  must all use `KnockoutBracket`; parallel pairing tables drifted and previously
+  produced incorrect Round-of-16 routes. Pin every path from M89 through M104 in
+  tests, including semifinal losers advancing to the M103 bronze final.
+- Use official FIFA match IDs as prediction keys. When replacing historical
+  internal aliases, migrate localStorage keys in place and never overwrite an
+  existing official-ID pick. Installed PWAs can retain those aliases for weeks.
+- Knockout games can finish level before penalties. Server data should preserve
+  an explicit winner and penalty scores when the source provides them; the
+  client must not guess an advancing team from a tied FT score.
+- The browser smoke must assert official downstream labels, saved-pick
+  migration, the 32-match knockout count (including bronze), mobile width, and
+  confirmed-team resolution in the next-match banner.
 
 Rules for Groups tab interactions:
 
