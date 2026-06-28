@@ -22,10 +22,6 @@ function count(text, needle) {
   return (text.match(new RegExp(needle, 'g')) || []).length;
 }
 
-function mobileMatchRange(start, end) {
-  return Array.from({ length: end - start + 1 }, (_, index) => 'M' + (start + index));
-}
-
 async function bracketText(page) {
   return page.evaluate(() => [...document.querySelectorAll('.bracket-desktop-map [data-match-id]')]
     .filter(node => /^M(7[3-9]|8[0-8])$/.test(node.dataset.matchId))
@@ -94,8 +90,8 @@ try {
     cityLabels: [...document.querySelectorAll('.bracket-desktop-map .bracket-node-city')]
       .map(node => node.textContent.trim()).slice(0, 4),
     desktopIds: [...document.querySelectorAll('.bracket-desktop-map [data-match-id]')].map(node => node.dataset.matchId),
-    mobilePanels: document.querySelectorAll('[data-mobile-panel]').length,
-    activeMobileIds: [...document.querySelectorAll('[data-mobile-panel].active [data-match-id]')].map(node => node.dataset.matchId),
+    mobileRoundAnchors: document.querySelectorAll('[data-mobile-round-anchor]').length,
+    mobileIds: [...document.querySelectorAll('.bracket-mobile-visual [data-match-id]')].map(node => node.dataset.matchId),
     banner: document.querySelector('#matchStrip .ms-teams')?.textContent.trim() || '',
   }));
   assert(live.mode === 'Live Bracket', 'Live Bracket should be the default mode', live);
@@ -106,8 +102,8 @@ try {
   assert(live.dateTimeLabels.some(label => /Jun|Jul/.test(label) && /\d:\d{2} (AM|PM)/.test(label)), 'Bracket cards should show date and local time labels', live);
   assert(live.cityLabels.includes('Boston'), 'Bracket cards should show canonical host cities', live);
   assert(live.desktopIds.length === 32 && new Set(live.desktopIds).size === 32, 'Desktop map should render every knockout match exactly once', live);
-  assert(live.mobilePanels === 5, 'Mobile map should expose each knockout round', live);
-  assert(live.activeMobileIds.length === 16 && mobileMatchRange(73, 88).every(id => live.activeMobileIds.includes(id)), 'R32 panel should contain all 16 first-round matches', live);
+  assert(live.mobileRoundAnchors === 5, 'Mobile map should expose an anchor for each knockout round', live);
+  assert(live.mobileIds.length === 32 && new Set(live.mobileIds).size === 32, 'Mobile map should render every knockout match exactly once', live);
   assert(!/Group|TBD|W M|L M/.test(live.banner), 'Next-match banner should use confirmed teams when available', live);
   if (screenshotDir) {
     await mkdir(screenshotDir, { recursive: true });
@@ -155,7 +151,7 @@ try {
 
   await page.setViewportSize({ width: 390, height: 844 });
   const mobileOriginalMarker = await page.evaluate(() => {
-    const marker = document.querySelector('[data-mobile-panel].active [data-match-id="M74"] .bracket-original');
+    const marker = document.querySelector('.bracket-mobile-visual [data-match-id="M74"] .bracket-original');
     const header = marker?.closest('.bracket-node-meta');
     return marker && header ? { width: marker.getBoundingClientRect().width, headerWidth: header.getBoundingClientRect().width } : null;
   });
@@ -198,7 +194,16 @@ try {
     viewport: window.innerWidth,
     progress: document.querySelector('.bracket-progress-label')?.textContent.trim(),
     dateTimeSample: document.querySelector('#tab-bracket .bracket-date-time')?.textContent.trim(),
-    citySample: document.querySelector('[data-mobile-panel].active .bracket-node-city')?.textContent.trim(),
+    citySample: document.querySelector('.bracket-mobile-visual .bracket-node-city')?.textContent.trim(),
+    teamCodeSample: (() => {
+      const row = document.querySelector('.bracket-mobile-visual [data-match-id="M74"] [data-team="Germany"]');
+      const code = row?.querySelector('.bt-label-code');
+      return row && code ? {
+        code: code.textContent.trim(),
+        label: row.getAttribute('aria-label'),
+        visible: getComputedStyle(code).display !== 'none',
+      } : null;
+    })(),
     buttons: [...document.querySelectorAll('[data-bracket-mode]')].map(button => ({
       text: button.textContent.trim(),
       width: Math.round(button.getBoundingClientRect().width),
@@ -206,22 +211,45 @@ try {
     sectionButtons: [...document.querySelectorAll('[data-bracket-section]')].map(button => button.textContent.trim()),
     desktopVisible: getComputedStyle(document.querySelector('.bracket-desktop-shell')).display !== 'none',
     mobileVisible: getComputedStyle(document.querySelector('.bracket-mobile-map')).display !== 'none',
-    activePanel: document.querySelector('[data-mobile-panel].active')?.dataset.mobilePanel,
+    activeSection: document.querySelector('[data-bracket-section].active')?.dataset.bracketSection,
+    scroller: (() => {
+      const node = document.querySelector('[data-mobile-bracket-scroll]');
+      return node ? {
+        scrollWidth: node.scrollWidth, clientWidth: node.clientWidth, scrollLeft: node.scrollLeft,
+        scrollHeight: node.scrollHeight, clientHeight: node.clientHeight, scrollTop: node.scrollTop,
+      } : null;
+    })(),
   }));
   assert(mobile.bodyWidth <= mobile.viewport + 2, 'Bracket should not horizontally overflow on mobile', mobile);
-  assert(mobile.citySample === 'Los Angeles', 'Mobile R32 cards should retain host-city labels in match-number order', mobile);
+  assert(mobile.citySample === 'Boston', 'Mobile R32 cards should retain canonical host-city labels', mobile);
+  assert(mobile.teamCodeSample?.code === 'GER' && mobile.teamCodeSample.label === 'Germany' && mobile.teamCodeSample.visible, 'Known mobile teams should use consistent three-letter codes with full accessible labels', mobile);
   assert(mobile.buttons.every(button => button.width > 90), 'Mode buttons should remain usable on mobile', mobile);
   assert(mobile.sectionButtons.join(',') === 'R32,R16,QF,SF,Final', 'Mobile navigation should use standard tournament round names', mobile);
-  assert(!mobile.desktopVisible && mobile.mobileVisible, 'Mobile should use the sectioned bracket instead of the full desktop canvas', mobile);
+  assert(mobile.activeSection === 'r32', 'Mobile bracket should begin at the Round of 32', mobile);
+  assert(mobile.scroller && mobile.scroller.scrollWidth > mobile.scroller.clientWidth, 'Mobile bracket should scroll inside its own viewport', mobile);
+  assert(mobile.scroller && mobile.scroller.scrollHeight > mobile.scroller.clientHeight, 'Tall mobile bracket should scroll inside its own viewport', mobile);
+  assert(!mobile.desktopVisible && mobile.mobileVisible, 'Mobile should use the connected compact bracket instead of the desktop canvas', mobile);
   if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-r32.png'), fullPage: false });
 
   await page.click('[data-bracket-section="final"]');
+  await page.waitForTimeout(500);
   const finals = await page.evaluate(() => ({
-    activePanel: document.querySelector('[data-mobile-panel].active')?.dataset.mobilePanel,
-    ids: [...document.querySelectorAll('[data-mobile-panel="final"] [data-match-id]')].map(node => node.dataset.matchId),
+    activeSection: document.querySelector('[data-bracket-section].active')?.dataset.bracketSection,
+    ids: [...document.querySelectorAll('.bracket-mobile-visual [data-match-id]')]
+      .filter(node => node.dataset.matchId === 'M103' || node.dataset.matchId === 'M104')
+      .map(node => node.dataset.matchId).sort(),
+    scroller: (() => {
+      const node = document.querySelector('[data-mobile-bracket-scroll]');
+      return node ? {
+        scrollLeft: node.scrollLeft, maxScroll: node.scrollWidth - node.clientWidth,
+        scrollTop: node.scrollTop, maxScrollTop: node.scrollHeight - node.clientHeight,
+      } : null;
+    })(),
   }));
-  assert(finals.activePanel === 'final', 'Final tab should activate the championship panel', finals);
-  assert(finals.ids.join(',') === 'M104,M103', 'Final panel should contain the final and third-place match', finals);
+  assert(finals.activeSection === 'final', 'Final tab should select the championship stage', finals);
+  assert(finals.ids.join(',') === 'M103,M104', 'Connected mobile bracket should contain the final and third-place match', finals);
+  assert(finals.scroller && finals.scroller.scrollLeft > finals.scroller.maxScroll * 0.7, 'Final tab should scroll the connected bracket to its last stage', finals);
+  assert(finals.scroller && finals.scroller.scrollTop > finals.scroller.maxScrollTop * 0.35, 'Final tab should vertically center the championship match', finals);
   const localStaticTarget = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//.test(target);
   const actionableBrowserErrors = browserErrors.filter(error =>
     !(localStaticTarget && error.includes('/_vercel/insights/script.js'))

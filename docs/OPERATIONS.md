@@ -61,12 +61,15 @@ serverless live-data computation.
 The Bracket tab renders that graph differently by viewport without changing its
 meaning. Desktop uses one mirrored tournament tree with the final in the
 center. Mobile uses standard round tabs: `R32`, `R16`, `QF`, `SF`, and `Final`.
-Each panel shows only that round's fixtures in a two-column list; the Final panel
-also shows the champion and third-place match. Official match IDs remain on the
-cards, where they identify individual fixtures without replacing fan-facing
-round names. Group seed controls remain below the bracket. Both layouts must be
-generated from the same resolved match models and official match IDs, never
-from separate progression data.
+The tabs center the matching column and its first fixture inside one bounded,
+internally scrollable connected tree; the page itself must not overflow.
+Official match IDs remain on the cards, where they identify individual fixtures
+without replacing fan-facing round names. Confirmed teams use consistent
+three-letter codes in the compact mobile tree, while unresolved structural
+slots remain `W M...` or `L M...` until a team is known. Full team names remain
+in accessibility labels and on desktop. Group seed controls remain below the
+bracket. Both layouts must be generated from the same resolved match models and
+official match IDs, never from separate progression data.
 
 Original-pick comparisons use a compact history icon plus three-letter team
 code in the match header. Keep the full `Original pick: Team` value in the

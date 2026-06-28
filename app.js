@@ -1069,35 +1069,39 @@ function renderBracket() {
     return out + '</div></div>';
   }
 
-  function mobileMatchIds(start, end) {
-    var ids = [];
-    for (var number = start; number <= end; number++) ids.push('M' + number);
-    return ids;
-  }
-
   var mobileRounds = [
-    {id:'r32', label:'R32', title:'Round of 32', matches:mobileMatchIds(73, 88)},
-    {id:'r16', label:'R16', title:'Round of 16', matches:mobileMatchIds(89, 96)},
-    {id:'qf', label:'QF', title:'Quarter-finals', matches:mobileMatchIds(97, 100)},
-    {id:'sf', label:'SF', title:'Semi-finals', matches:mobileMatchIds(101, 102)}
+    {id:'r32', label:'R32', title:'Round of 32', col:1, focus:'M74'},
+    {id:'r16', label:'R16', title:'Round of 16', col:2, focus:'M89'},
+    {id:'qf', label:'QF', title:'Quarter-finals', col:3, focus:'M97'},
+    {id:'sf', label:'SF', title:'Semi-finals', col:4, focus:'M101'},
+    {id:'final', label:'Final', title:'Final', col:5, focus:'M104'}
   ];
 
-  function mobileRoundPanel(round) {
-    var active = bracketMobileSection === round.id ? ' active' : '';
-    var out = '<section class="bracket-mobile-panel' + active + '" data-mobile-panel="' + round.id + '">' +
-      '<div class="bracket-mobile-panel-title">' + round.title + '</div><div class="bracket-mobile-round-list">';
-    round.matches.forEach(function(matchId) { out += compactMatchNode(matchId); });
-    return out + '</div></section>';
-  }
+  function mobileVisualBracket() {
+    var out = '<div class="bracket-mobile-scroll" data-mobile-bracket-scroll><div class="bracket-mobile-visual" aria-label="World Cup knockout bracket">';
+    mobileRounds.forEach(function(round) {
+      out += '<div class="bracket-mobile-column-title" style="--bracket-col:' + round.col + '">' + round.title + '</div>' +
+        '<span class="bracket-mobile-round-anchor" data-mobile-round-anchor="' + round.id + '" style="--bracket-col:' + round.col + '" aria-hidden="true"></span>';
+    });
 
-  function mobileFinalPanel() {
-    var active = bracketMobileSection === 'final' ? ' active' : '';
-    var out = '<section class="bracket-mobile-panel' + active + '" data-mobile-panel="final"><div class="bracket-mobile-panel-title">Final</div>' +
-      '<div class="bracket-mobile-champion">' + icon('trophy',{size:22,cls:'champion-trophy'}) +
-      (resolvedWinners.M104 && wcData.teams[resolvedWinners.M104] ? wcData.teams[resolvedWinners.M104].flag + ' ' + esc(resolvedWinners.M104) : 'Champion') + '</div>' +
-      '<div class="bracket-mobile-round-list bracket-mobile-final-list">' + compactMatchNode('M104') + '</div>' +
-      '<div class="bracket-mobile-bronze"><span>Third place</span>' + compactMatchNode('M103') + '</div></section>';
-    return out;
+    var r32 = ['M74','M77','M73','M75','M83','M84','M81','M82','M76','M78','M79','M80','M86','M88','M85','M87'];
+    var r16 = ['M89','M90','M93','M94','M91','M92','M95','M96'];
+    var qf = ['M97','M98','M99','M100'];
+    var r32Rows = [2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32];
+    var r16Rows = [3,7,11,15,19,23,27,31];
+    var qfRows = [5,13,21,29];
+    var sfRows = [9,25];
+
+    r32.forEach(function(id, i) { out += visualSlot(id, 1, r32Rows[i], 'connect-right', 0); });
+    r16.forEach(function(id, i) { out += visualSlot(id, 2, r16Rows[i], 'connect-left connect-right join-left', 2); });
+    qf.forEach(function(id, i) { out += visualSlot(id, 3, qfRows[i], 'connect-left connect-right join-left', 4); });
+    ['M101','M102'].forEach(function(id, i) { out += visualSlot(id, 4, sfRows[i], 'connect-left connect-right join-left', 8); });
+    out += visualSlot('M104', 5, 17, 'connect-left bracket-final-node', 0);
+    out += visualSlot('M103', 5, 25, 'bracket-bronze-node', 0);
+    out += '<div class="bracket-mobile-visual-champion">' + icon('trophy',{size:20,cls:'champion-trophy'}) +
+      (resolvedWinners.M104 && wcData.teams[resolvedWinners.M104] ? '<strong>' + wcData.teams[resolvedWinners.M104].flag + ' ' + esc(resolvedWinners.M104) + '</strong>' : '<strong>Champion</strong>') + '</div>' +
+      '<div class="bracket-mobile-third-label">Third place</div>';
+    return out + '</div></div>';
   }
 
   function mobileBracketMap() {
@@ -1105,9 +1109,21 @@ function renderBracket() {
     mobileRounds.forEach(function(round) {
       out += '<button type="button" role="tab" data-bracket-section="' + round.id + '" aria-selected="' + (bracketMobileSection === round.id) + '" class="' + (bracketMobileSection === round.id ? 'active' : '') + '">' + round.label + '</button>';
     });
-    out += '<button type="button" role="tab" data-bracket-section="final" aria-selected="' + (bracketMobileSection === 'final') + '" class="' + (bracketMobileSection === 'final' ? 'active' : '') + '">Final</button></div>';
-    mobileRounds.forEach(function(round) { out += mobileRoundPanel(round); });
-    return out + mobileFinalPanel() + '</div>';
+    return out + '</div>' + mobileVisualBracket() + '</div>';
+  }
+
+  function scrollMobileBracketTo(roundId, behavior) {
+    var scroller = el.querySelector('[data-mobile-bracket-scroll]');
+    var anchor = el.querySelector('[data-mobile-round-anchor="' + roundId + '"]');
+    var round = mobileRounds.find(function(candidate) { return candidate.id === roundId; });
+    var focusNode = round && el.querySelector('.bracket-mobile-visual [data-match-id="' + round.focus + '"]');
+    var focus = focusNode && focusNode.closest('.bracket-visual-slot');
+    if (!scroller || !anchor || !scroller.clientWidth) return;
+    var targetLeft = anchor.offsetLeft - (scroller.clientWidth - anchor.offsetWidth) / 2;
+    var targetTop = roundId === 'r32' || !focus
+      ? 0
+      : focus.offsetTop - (scroller.clientHeight - focus.offsetHeight) / 2;
+    scroller.scrollTo({left:Math.max(0, targetLeft), top:Math.max(0, targetTop), behavior:behavior || 'smooth'});
   }
 
   // Build HTML
@@ -1169,6 +1185,11 @@ function renderBracket() {
 
   el.innerHTML = html;
 
+  // A mode change rerenders the bracket. Restore the selected mobile stage.
+  window.requestAnimationFrame(function() {
+    scrollMobileBracketTo(bracketMobileSection, 'auto');
+  });
+
   // Event delegation (set once)
   if (!el._hasListener) {
     el._hasListener = true;
@@ -1181,9 +1202,7 @@ function renderBracket() {
           button.classList.toggle('active', active);
           button.setAttribute('aria-selected', active);
         });
-        el.querySelectorAll('[data-mobile-panel]').forEach(function(panel) {
-          panel.classList.toggle('active', panel.getAttribute('data-mobile-panel') === bracketMobileSection);
-        });
+        scrollMobileBracketTo(bracketMobileSection, 'smooth');
         return;
       }
       var modeBtn = e.target.closest('[data-bracket-mode]');

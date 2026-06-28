@@ -257,24 +257,31 @@ Rules for bracket/live-results balance:
   confirmed-team resolution in the next-match banner.
 - Do not shrink the full 32-team tree into an unreadable mobile overview.
   Desktop should use a mirrored tree centered on the final. Mobile should use
-  standard round tabs (`R32`, `R16`, `QF`, `SF`, `Final`) with a readable
-  fixture list for one round at a time. Keep official match IDs on cards, not as
-  the primary round-navigation labels. Generate every section from the same
-  official-ID match models.
+  standard round tabs (`R32`, `R16`, `QF`, `SF`, `Final`) that jump across one
+  bounded, internally scrollable connected tree and center a representative
+  fixture vertically. Keep official match IDs on cards, not as the primary
+  round-navigation labels. Generate the tree from the same official-ID match
+  models.
+- In the compact mobile tree, confirmed teams always use mapped three-letter
+  codes. Unresolved sources such as `W M89` remain structural labels until a
+  team is known. Keep the full team name in `aria-label`; desktop uses full
+  names.
 - Original-pick comparison markers must use a history icon plus compact team
   code, with the full team in `title` and `aria-label`. Full team names do not
   fit the mobile match header; browser smoke must enforce the marker width.
-- Keep full team names in the two-column mobile round lists and retain accessible
-  labels on every selectable row. The bracket may scroll inside its desktop
-  shell, but the mobile page itself must not overflow horizontally.
+- Keep accessible full-team labels on every selectable row. The bracket may
+  scroll inside its own mobile shell, but the page itself must not overflow
+  horizontally.
 - Interactive bracket nodes must expose the canonical team name in `data-team`.
   Do not derive picks from rendered `textContent`: responsive nodes contain both
   full-name and compact-code spans, including CSS-hidden text. Browser smoke
   must click a knockout team and verify both localStorage and pick progress.
-- Browser smoke for bracket layout changes must assert 32 unique desktop match
-  nodes, five mobile sections, exact subtree membership, Live/My Picks state
-  preservation, and no mobile body overflow. Capture desktop, QF-path, and
-  Finals screenshots when visually reviewing a substantial bracket change.
+- Browser smoke for bracket layout changes must assert 32 unique match nodes in
+  both renderings, five mobile stage anchors, internal two-axis scrolling,
+  mobile code/accessibility-label consistency, working stage jumps, Live/My
+  Picks state preservation, and no mobile body overflow. Capture desktop,
+  mobile R32, and mobile Final screenshots when visually reviewing a substantial
+  bracket change.
 - Vercel preview deployments may be protected by Vercel Authentication. Keep
   protection enabled. Pass the configured automation bypass to Playwright via
   `VERCEL_AUTOMATION_BYPASS_SECRET`; never print, persist, or commit the secret.
