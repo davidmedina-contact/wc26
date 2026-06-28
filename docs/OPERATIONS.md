@@ -48,8 +48,10 @@ may change what is displayed, but it must not overwrite the user's original
 prediction.
 
 Bracket match cards display knockout dates and kickoff times in the user's
-local timezone. `knockout-bracket.js` is the canonical static source for FIFA
-match numbers, dates, venues, and advancement paths. The Bracket tab, Matches
+local timezone plus the host city. Stadium names stay in the canonical schedule
+data but are intentionally omitted from compact bracket cards.
+`knockout-bracket.js` is the canonical static source for FIFA match numbers,
+dates, venues, and advancement paths. The Bracket tab, Matches
 tab, and next-match banner must all resolve teams through this graph; do not
 copy pairings into another UI component. The graph follows FIFA Matches 73-104,
 including Match 103 (`L M101` vs `L M102`) and Match 104 (`W M101` vs `W M102`).

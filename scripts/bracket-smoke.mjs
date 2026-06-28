@@ -87,6 +87,8 @@ try {
       .filter(node => node.textContent.includes('set')).length,
     dateTimeLabels: [...document.querySelectorAll('#tab-bracket .bracket-date-time')]
       .map(node => node.textContent.trim()).slice(0, 4),
+    cityLabels: [...document.querySelectorAll('.bracket-desktop-map .bracket-node-city')]
+      .map(node => node.textContent.trim()).slice(0, 4),
     desktopIds: [...document.querySelectorAll('.bracket-desktop-map [data-match-id]')].map(node => node.dataset.matchId),
     mobilePanels: document.querySelectorAll('[data-mobile-panel]').length,
     activeMobileIds: [...document.querySelectorAll('[data-mobile-panel].active [data-match-id]')].map(node => node.dataset.matchId),
@@ -98,6 +100,7 @@ try {
   assert(live.tapHints === 0, 'Live mode should be read-only and hide tap-to-pick hints', live);
   assert(live.confirmedNodes > 0, 'Live bracket should visibly mark confirmed matchups', live);
   assert(live.dateTimeLabels.some(label => /Jun|Jul/.test(label) && /\d:\d{2} (AM|PM)/.test(label)), 'Bracket cards should show date and local time labels', live);
+  assert(live.cityLabels.includes('Boston'), 'Bracket cards should show canonical host cities', live);
   assert(live.desktopIds.length === 32 && new Set(live.desktopIds).size === 32, 'Desktop map should render every knockout match exactly once', live);
   assert(live.mobilePanels === 5, 'Mobile map should expose four QF paths and a Finals panel', live);
   assert(['M74','M77','M89','M73','M75','M90','M97'].every(id => live.activeMobileIds.includes(id)), 'QF1 mobile path should contain its complete eight-team subtree', live);
@@ -174,6 +177,7 @@ try {
     viewport: window.innerWidth,
     progress: document.querySelector('.bracket-progress-label')?.textContent.trim(),
     dateTimeSample: document.querySelector('#tab-bracket .bracket-date-time')?.textContent.trim(),
+    citySample: document.querySelector('[data-mobile-panel].active .bracket-node-city')?.textContent.trim(),
     buttons: [...document.querySelectorAll('[data-bracket-mode]')].map(button => ({
       text: button.textContent.trim(),
       width: Math.round(button.getBoundingClientRect().width),
@@ -184,6 +188,7 @@ try {
     activePanel: document.querySelector('[data-mobile-panel].active')?.dataset.mobilePanel,
   }));
   assert(mobile.bodyWidth <= mobile.viewport + 2, 'Bracket should not horizontally overflow on mobile', mobile);
+  assert(mobile.citySample === 'Boston', 'Mobile bracket cards should retain host-city labels', mobile);
   assert(mobile.buttons.every(button => button.width > 90), 'Mode buttons should remain usable on mobile', mobile);
   assert(mobile.sectionButtons.join(',') === 'QF1,QF2,QF3,QF4,Finals', 'Mobile path navigation should expose all five sections', mobile);
   assert(!mobile.desktopVisible && mobile.mobileVisible, 'Mobile should use the sectioned bracket instead of the full desktop canvas', mobile);

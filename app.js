@@ -998,6 +998,12 @@ function renderBracket() {
     return info.date + ' · ' + etToLocal(match.t, match.d);
   }
 
+  function compactVenueCity(matchId) {
+    var venue = KnockoutBracket.byId[matchId].v;
+    var parsed = venue.match(/^(.*?) \((.*?)\)$/);
+    return parsed ? parsed[1] : venue;
+  }
+
   function compactMatchNode(matchId) {
     var model = knockoutModels[matchId];
     var original = bracketOriginalState['ko_' + matchId];
@@ -1015,14 +1021,16 @@ function renderBracket() {
     var awayScore = score ? score.a + (typeof score.ap === 'number' ? ' (' + score.ap + ')' : '') : (model.userPick === model.away && !model.liveWinner ? '&#10003;' : '');
     var lockedHome = bracketViewMode === 'live' && wcData.teams[model.home] ? ' locked' : '';
     var lockedAway = bracketViewMode === 'live' && wcData.teams[model.away] ? ' locked' : '';
-    var title = compactDateTime(matchId) + ' ' + localTz + ' · ' + model.match.v;
+    var venueCity = compactVenueCity(matchId);
+    var title = compactDateTime(matchId) + ' ' + localTz + ' · ' + venueCity;
     return '<div class="bracket-node bracket-match' + (model.needsPick ? ' needs-pick' : '') + '" data-match-id="' + matchId + '" title="' + esc(title) + '">' +
       '<div class="bracket-node-meta"><span>' + matchId + '</span>' + badge + '</div>' +
       '<div class="bracket-team' + (model.winner === model.home ? ' winner' : '') + lockedHome + '" data-ko="' + matchId + '" data-pick="home" data-team="' + esc(model.home) + '" aria-label="' + esc(model.home) + '">' +
         '<span class="bt-name"><span class="bt-flag">' + getFlag(model.home) + '</span><span class="bt-label bt-label-full">' + esc(compactTeamLabel(model.home)) + '</span><span class="bt-label bt-label-code">' + esc(bracketTeamCode(model.home)) + '</span></span><span class="bt-score">' + homeScore + '</span></div>' +
       '<div class="bracket-team' + (model.winner === model.away ? ' winner' : '') + lockedAway + '" data-ko="' + matchId + '" data-pick="away" data-team="' + esc(model.away) + '" aria-label="' + esc(model.away) + '">' +
         '<span class="bt-name"><span class="bt-flag">' + getFlag(model.away) + '</span><span class="bt-label bt-label-full">' + esc(compactTeamLabel(model.away)) + '</span><span class="bt-label bt-label-code">' + esc(bracketTeamCode(model.away)) + '</span></span><span class="bt-score">' + awayScore + '</span></div>' +
-      '<div class="bracket-node-time bracket-date-time">' + compactDateTime(matchId) + '</div>' +
+      '<div class="bracket-node-footer"><div class="bracket-node-time bracket-date-time">' + compactDateTime(matchId) + '</div>' +
+        '<div class="bracket-node-city">' + esc(venueCity) + '</div></div>' +
       '</div>';
   }
 

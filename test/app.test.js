@@ -702,8 +702,10 @@ test('bracket cards include knockout dates and local-time labels', () => {
   assert.match(app, /function bracketDateTime\(matchId\)/);
   assert.match(app, /etToLocal\(schedule\.t, schedule\.d\) \+ ' ' \+ localTz/);
   assert.match(app, /function compactDateTime\(matchId\)/);
+  assert.match(app, /function compactVenueCity\(matchId\)/);
   assert.match(app, /bracket-date-time/);
-  assert.match(app, /model\.match\.v/);
+  assert.match(app, /bracket-node-city/);
+  assert.match(app, /KnockoutBracket\.byId\[matchId\]\.v/);
 });
 
 test('bracket uses a mirrored desktop map and sectioned mobile paths', () => {

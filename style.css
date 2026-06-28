@@ -355,15 +355,27 @@
   font-size: 0.68rem;
   font-weight: 800;
 }
-.bracket-node-time {
+.bracket-node-footer {
   padding: 2px 6px 3px;
   overflow: hidden;
   background: var(--surface2);
   border-radius: 0 0 5px 5px;
+  text-align: center;
+}
+.bracket-node-time {
+  overflow: hidden;
   color: var(--text-muted);
   font-size: 0.52rem;
   line-height: 1.2;
-  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bracket-node-city {
+  overflow: hidden;
+  color: var(--text-sec);
+  font-size: 0.48rem;
+  font-weight: 700;
+  line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -808,7 +820,9 @@
     text-overflow: clip;
   }
   .bracket-mobile-tree .bt-score { font-size: 0.56rem; }
-  .bracket-mobile-tree .bracket-node-time { padding: 2px 3px; font-size: 0.43rem; }
+  .bracket-mobile-tree .bracket-node-footer { padding: 2px 3px 3px; }
+  .bracket-mobile-tree .bracket-node-time { font-size: 0.43rem; }
+  .bracket-mobile-tree .bracket-node-city { font-size: 0.39rem; line-height: 1.12; }
   .bracket-mobile-champion {
     min-height: 38px;
     display: flex;
