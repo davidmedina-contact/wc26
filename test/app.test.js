@@ -692,7 +692,7 @@ test('bracket preserves original picks and supports live versus prediction modes
   assert.match(app, /knockoutScoreOutcome\(homeTeam, awayTeam\)/);
   assert.match(app, /migrateLegacyBracketMatchIds/);
   assert.match(app, /wcData\.teams\[teamName\]/);
-  assert.match(app, /orig /);
+  assert.match(app, /Original pick: /);
 });
 
 test('bracket cards include knockout dates and local-time labels', () => {
@@ -708,15 +708,18 @@ test('bracket cards include knockout dates and local-time labels', () => {
   assert.match(app, /KnockoutBracket\.byId\[matchId\]\.v/);
 });
 
-test('bracket uses a mirrored desktop map and sectioned mobile paths', () => {
+test('bracket uses a mirrored desktop map and standard mobile round tabs', () => {
   const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   const css = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
   assert.match(app, /function desktopBracketMap\(\)/);
   assert.match(app, /function mobileBracketMap\(\)/);
   assert.match(app, /data-bracket-section=/);
-  assert.match(app, /\{id:'M97', left:'M89', leftFeed:\['M74','M77'\], right:'M90', rightFeed:\['M73','M75'\]\}/);
-  assert.match(app, /\{id:'M100', left:'M95', leftFeed:\['M86','M88'\], right:'M96', rightFeed:\['M85','M87'\]\}/);
-  assert.match(app, /visualSlot\('M104', 3, 2/);
+  assert.match(app, /\{id:'r32', label:'R32', title:'Round of 32'/);
+  assert.match(app, /\{id:'sf', label:'SF', title:'Semi-finals'/);
+  assert.match(app, /function mobileFinalPanel\(\)/);
+  assert.match(app, /Original pick: /);
+  assert.match(app, /icon\('history',\{size:9\}\)/);
+  assert.match(app, /visualSlot\('M104', 5, 8/);
   assert.match(app, /compactMatchNode\('M103'\)/);
   assert.match(app, /'South Africa':'RSA'/);
   assert.match(app, /aria-label="' \+ esc\(model\.home\)/);
@@ -724,8 +727,8 @@ test('bracket uses a mirrored desktop map and sectioned mobile paths', () => {
   assert.match(app, /var teamName = koDiv\.getAttribute\('data-team'\)/);
   assert.match(css, /\.bracket-desktop-map/);
   assert.match(css, /\.bracket-mobile-panel\.active/);
-  assert.match(css, /\.bracket-mobile-tree \.bt-label-code/);
-  assert.match(css, /grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/);
+  assert.match(css, /\.bracket-mobile-round-list/);
+  assert.match(css, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
 });
 
 test('official knockout graph defines every FIFA path through the final', () => {

@@ -28,7 +28,7 @@ function isUsableDynamicCache(data) {
 let bracketState = {};
 let bracketOriginalState = {};
 let bracketViewMode = 'live';
-let bracketMobileSection = 'M97';
+let bracketMobileSection = 'r32';
 var selectedMatchDate = '2026-06-11';
 
 function saveBracketState() {
@@ -387,6 +387,7 @@ var ICONS = {
   award: '<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>',
   calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
   trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+  history: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
   reset: '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
   x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
   arrowLeft: '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>'
@@ -1007,7 +1008,10 @@ function renderBracket() {
   function compactMatchNode(matchId) {
     var model = knockoutModels[matchId];
     var original = bracketOriginalState['ko_' + matchId];
-    var originalBadge = original && original !== model.winner ? '<span class="bracket-original">orig ' + esc(compactTeamLabel(original)) + '</span>' : '';
+    var originalLabel = original ? 'Original pick: ' + original : '';
+    var originalBadge = original && original !== model.winner
+      ? '<span class="bracket-original" role="img" aria-label="' + esc(originalLabel) + '" title="' + esc(originalLabel) + '">' + icon('history',{size:9}) + '<span>' + esc(bracketTeamCode(original)) + '</span></span>'
+      : '';
     var confirmed = bracketViewMode === 'live' && wcData.teams[model.home] && wcData.teams[model.away];
     var badge = model.liveWinner
       ? '<span class="bracket-live-badge">FT</span>'
@@ -1065,51 +1069,45 @@ function renderBracket() {
     return out + '</div></div>';
   }
 
-  var mobilePaths = [
-    {id:'M97', left:'M89', leftFeed:['M74','M77'], right:'M90', rightFeed:['M73','M75']},
-    {id:'M98', left:'M93', leftFeed:['M83','M84'], right:'M94', rightFeed:['M81','M82']},
-    {id:'M99', left:'M91', leftFeed:['M76','M78'], right:'M92', rightFeed:['M79','M80']},
-    {id:'M100', left:'M95', leftFeed:['M86','M88'], right:'M96', rightFeed:['M85','M87']},
+  function mobileMatchIds(start, end) {
+    var ids = [];
+    for (var number = start; number <= end; number++) ids.push('M' + number);
+    return ids;
+  }
+
+  var mobileRounds = [
+    {id:'r32', label:'R32', title:'Round of 32', matches:mobileMatchIds(73, 88)},
+    {id:'r16', label:'R16', title:'Round of 16', matches:mobileMatchIds(89, 96)},
+    {id:'qf', label:'QF', title:'Quarter-finals', matches:mobileMatchIds(97, 100)},
+    {id:'sf', label:'SF', title:'Semi-finals', matches:mobileMatchIds(101, 102)}
   ];
 
-  function mobilePathPanel(path, index) {
-    var active = bracketMobileSection === path.id ? ' active' : '';
-    var out = '<section class="bracket-mobile-panel' + active + '" data-mobile-panel="' + path.id + '">' +
-      '<div class="bracket-mobile-panel-title">Quarterfinal ' + (index + 1) + ' path</div><div class="bracket-mobile-tree">';
-    out += visualSlot(path.leftFeed[0], 1, 1, 'connect-right', 0);
-    out += visualSlot(path.leftFeed[1], 1, 3, 'connect-right', 0);
-    out += visualSlot(path.left, 2, 2, 'connect-left connect-right join-left', 2);
-    out += visualSlot(path.id, 3, 2, 'connect-left connect-right bracket-final-node', 0);
-    out += visualSlot(path.right, 4, 2, 'connect-left connect-right join-right', 2);
-    out += visualSlot(path.rightFeed[0], 5, 1, 'connect-left', 0);
-    out += visualSlot(path.rightFeed[1], 5, 3, 'connect-left', 0);
+  function mobileRoundPanel(round) {
+    var active = bracketMobileSection === round.id ? ' active' : '';
+    var out = '<section class="bracket-mobile-panel' + active + '" data-mobile-panel="' + round.id + '">' +
+      '<div class="bracket-mobile-panel-title">' + round.title + '</div><div class="bracket-mobile-round-list">';
+    round.matches.forEach(function(matchId) { out += compactMatchNode(matchId); });
     return out + '</div></section>';
   }
 
-  function mobileFinalsPanel() {
-    var active = bracketMobileSection === 'finals' ? ' active' : '';
-    var out = '<section class="bracket-mobile-panel' + active + '" data-mobile-panel="finals"><div class="bracket-mobile-panel-title">Championship path</div>' +
+  function mobileFinalPanel() {
+    var active = bracketMobileSection === 'final' ? ' active' : '';
+    var out = '<section class="bracket-mobile-panel' + active + '" data-mobile-panel="final"><div class="bracket-mobile-panel-title">Final</div>' +
       '<div class="bracket-mobile-champion">' + icon('trophy',{size:22,cls:'champion-trophy'}) +
       (resolvedWinners.M104 && wcData.teams[resolvedWinners.M104] ? wcData.teams[resolvedWinners.M104].flag + ' ' + esc(resolvedWinners.M104) : 'Champion') + '</div>' +
-      '<div class="bracket-mobile-tree bracket-mobile-finals">';
-    out += visualSlot('M97', 1, 1, 'connect-right', 0);
-    out += visualSlot('M98', 1, 3, 'connect-right', 0);
-    out += visualSlot('M101', 2, 2, 'connect-left connect-right join-left', 2);
-    out += visualSlot('M104', 3, 2, 'connect-left connect-right bracket-final-node', 0);
-    out += visualSlot('M102', 4, 2, 'connect-left connect-right join-right', 2);
-    out += visualSlot('M99', 5, 1, 'connect-left', 0);
-    out += visualSlot('M100', 5, 3, 'connect-left', 0);
-    return out + '</div><div class="bracket-mobile-bronze"><span>Third place</span>' + compactMatchNode('M103') + '</div></section>';
+      '<div class="bracket-mobile-round-list bracket-mobile-final-list">' + compactMatchNode('M104') + '</div>' +
+      '<div class="bracket-mobile-bronze"><span>Third place</span>' + compactMatchNode('M103') + '</div></section>';
+    return out;
   }
 
   function mobileBracketMap() {
     var out = '<div class="bracket-mobile-map"><div class="bracket-section-tabs" role="tablist" aria-label="Bracket section">';
-    mobilePaths.forEach(function(path, i) {
-      out += '<button type="button" role="tab" data-bracket-section="' + path.id + '" aria-selected="' + (bracketMobileSection === path.id) + '" class="' + (bracketMobileSection === path.id ? 'active' : '') + '">QF' + (i + 1) + '</button>';
+    mobileRounds.forEach(function(round) {
+      out += '<button type="button" role="tab" data-bracket-section="' + round.id + '" aria-selected="' + (bracketMobileSection === round.id) + '" class="' + (bracketMobileSection === round.id ? 'active' : '') + '">' + round.label + '</button>';
     });
-    out += '<button type="button" role="tab" data-bracket-section="finals" aria-selected="' + (bracketMobileSection === 'finals') + '" class="' + (bracketMobileSection === 'finals' ? 'active' : '') + '">Finals</button></div>';
-    mobilePaths.forEach(function(path, i) { out += mobilePathPanel(path, i); });
-    return out + mobileFinalsPanel() + '</div>';
+    out += '<button type="button" role="tab" data-bracket-section="final" aria-selected="' + (bracketMobileSection === 'final') + '" class="' + (bracketMobileSection === 'final' ? 'active' : '') + '">Final</button></div>';
+    mobileRounds.forEach(function(round) { out += mobileRoundPanel(round); });
+    return out + mobileFinalPanel() + '</div>';
   }
 
   // Build HTML

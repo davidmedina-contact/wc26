@@ -257,12 +257,16 @@ Rules for bracket/live-results balance:
   confirmed-team resolution in the next-match banner.
 - Do not shrink the full 32-team tree into an unreadable mobile overview.
   Desktop should use a mirrored tree centered on the final. Mobile should use
-  four eight-team quarterfinal paths (`QF1`-`QF4`) plus a `Finals` section that
-  contains the quarterfinals, semifinals, final, champion, and bronze match.
-  Generate every section from the same official-ID match models.
-- Use stable three-letter team codes in the five-column mobile tree and retain
-  the full team name in accessible/title text. The bracket may scroll inside
-  its desktop shell, but the mobile page itself must not overflow horizontally.
+  standard round tabs (`R32`, `R16`, `QF`, `SF`, `Final`) with a readable
+  fixture list for one round at a time. Keep official match IDs on cards, not as
+  the primary round-navigation labels. Generate every section from the same
+  official-ID match models.
+- Original-pick comparison markers must use a history icon plus compact team
+  code, with the full team in `title` and `aria-label`. Full team names do not
+  fit the mobile match header; browser smoke must enforce the marker width.
+- Keep full team names in the two-column mobile round lists and retain accessible
+  labels on every selectable row. The bracket may scroll inside its desktop
+  shell, but the mobile page itself must not overflow horizontally.
 - Interactive bracket nodes must expose the canonical team name in `data-team`.
   Do not derive picks from rendered `textContent`: responsive nodes contain both
   full-name and compact-code spans, including CSS-hidden text. Browser smoke

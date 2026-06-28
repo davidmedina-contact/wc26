@@ -60,14 +60,18 @@ serverless live-data computation.
 
 The Bracket tab renders that graph differently by viewport without changing its
 meaning. Desktop uses one mirrored tournament tree with the final in the
-center. Mobile uses five fixed sections: `QF1` through `QF4` each show the two
-Round-of-16 matches and four Round-of-32 matches that feed one quarterfinal;
-`Finals` shows all four quarterfinals, both semifinals, the final, champion, and
-third-place match. Mobile nodes use three-letter team codes so the five-column
-tree stays readable without horizontal page scrolling; full names remain in
-the node title. Group seed controls remain below the visual bracket. Both
-layouts must be generated from the same resolved match models and official
-match IDs, never from separate progression data.
+center. Mobile uses standard round tabs: `R32`, `R16`, `QF`, `SF`, and `Final`.
+Each panel shows only that round's fixtures in a two-column list; the Final panel
+also shows the champion and third-place match. Official match IDs remain on the
+cards, where they identify individual fixtures without replacing fan-facing
+round names. Group seed controls remain below the bracket. Both layouts must be
+generated from the same resolved match models and official match IDs, never
+from separate progression data.
+
+Original-pick comparisons use a compact history icon plus three-letter team
+code in the match header. Keep the full `Original pick: Team` value in the
+tooltip and accessibility label. Never put a full team name in that compact
+header; it can overflow the narrow mobile match node.
 
 Older releases stored later-round picks under aliases such as `R16_0`, `QF_0`,
 and `FINAL`. `migrateLegacyBracketMatchIds()` maps those keys to FIFA match IDs

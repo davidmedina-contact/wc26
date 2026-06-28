@@ -22,6 +22,10 @@ function count(text, needle) {
   return (text.match(new RegExp(needle, 'g')) || []).length;
 }
 
+function mobileMatchRange(start, end) {
+  return Array.from({ length: end - start + 1 }, (_, index) => 'M' + (start + index));
+}
+
 async function bracketText(page) {
   return page.evaluate(() => [...document.querySelectorAll('.bracket-desktop-map [data-match-id]')]
     .filter(node => /^M(7[3-9]|8[0-8])$/.test(node.dataset.matchId))
@@ -102,8 +106,8 @@ try {
   assert(live.dateTimeLabels.some(label => /Jun|Jul/.test(label) && /\d:\d{2} (AM|PM)/.test(label)), 'Bracket cards should show date and local time labels', live);
   assert(live.cityLabels.includes('Boston'), 'Bracket cards should show canonical host cities', live);
   assert(live.desktopIds.length === 32 && new Set(live.desktopIds).size === 32, 'Desktop map should render every knockout match exactly once', live);
-  assert(live.mobilePanels === 5, 'Mobile map should expose four QF paths and a Finals panel', live);
-  assert(['M74','M77','M89','M73','M75','M90','M97'].every(id => live.activeMobileIds.includes(id)), 'QF1 mobile path should contain its complete eight-team subtree', live);
+  assert(live.mobilePanels === 5, 'Mobile map should expose each knockout round', live);
+  assert(live.activeMobileIds.length === 16 && mobileMatchRange(73, 88).every(id => live.activeMobileIds.includes(id)), 'R32 panel should contain all 16 first-round matches', live);
   assert(!/Group|TBD|W M|L M/.test(live.banner), 'Next-match banner should use confirmed teams when available', live);
   if (screenshotDir) {
     await mkdir(screenshotDir, { recursive: true });
@@ -117,10 +121,11 @@ try {
       g_I_1: 'Uruguay',
       ko_M79: 'Uruguay',
       ko_R16_0: 'South Africa',
+      ko_M74: 'Germany',
     }));
     localStorage.setItem('wc2026bracketOriginal', JSON.stringify({
       g_H_3: 'Uruguay',
-      ko_M79: 'Uruguay',
+      ko_M74: 'Portugal',
     }));
   });
   await page.reload({ waitUntil: 'networkidle' });
@@ -133,6 +138,10 @@ try {
     resetVisible: Boolean(document.querySelector('#resetBtn')),
     tapHints: document.querySelectorAll('#tab-bracket .bracket-tap-hint').length,
     groupText: document.querySelector('#bracketGrid')?.innerText || '',
+    originalMarker: (() => {
+      const marker = document.querySelector('.bracket-desktop-map [data-match-id="M74"] .bracket-original');
+      return marker ? { text: marker.textContent.trim(), label: marker.getAttribute('aria-label'), width: marker.getBoundingClientRect().width } : null;
+    })(),
   }));
   assert(picks.mode === 'My Picks', 'Saved picks mode should restore My Picks', picks);
   assert(/knockout picks made$/.test(picks.progress), 'My Picks should show knockout-pick progress', picks);
@@ -140,16 +149,28 @@ try {
   assert(picks.tapHints > 0, 'My Picks should keep tap-to-pick affordances', picks);
   assert(count(picksR32, 'Uruguay') <= 1, 'A stale third-place Uruguay pick must not be reused across R32 slots', { picksR32 });
   assert(/3rd (pick|auto|confirmed)/.test(picks.groupText), 'Group cards should expose third-place state labels', picks);
-  assert(picks.progress === '1/32 knockout picks made', 'Legacy R16 picks should migrate to official match IDs', picks);
+  assert(Number.parseInt(picks.progress, 10) >= 2, 'Legacy R16 picks should migrate alongside current official-ID picks and live winners', picks);
+  assert(picks.originalMarker?.text === 'POR' && picks.originalMarker.label === 'Original pick: Portugal', 'Original picks should use a compact code with a full accessible label', picks);
+  assert(picks.originalMarker.width <= 42, 'Original-pick marker should stay within the compact match header', picks);
 
-  await page.click('.bracket-desktop-map [data-match-id="M74"] [data-pick="home"]');
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobileOriginalMarker = await page.evaluate(() => {
+    const marker = document.querySelector('[data-mobile-panel].active [data-match-id="M74"] .bracket-original');
+    const header = marker?.closest('.bracket-node-meta');
+    return marker && header ? { width: marker.getBoundingClientRect().width, headerWidth: header.getBoundingClientRect().width } : null;
+  });
+  assert(mobileOriginalMarker && mobileOriginalMarker.width <= 42 && mobileOriginalMarker.width < mobileOriginalMarker.headerWidth, 'Original-pick marker should remain contained on mobile', mobileOriginalMarker || {});
+  if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-picks.png'), fullPage: false });
+  await page.setViewportSize({ width: 1440, height: 900 });
+
+  await page.click('.bracket-desktop-map [data-match-id="M74"] [data-pick="away"]');
   await page.waitForTimeout(100);
   const clickedPick = await page.evaluate(() => ({
     saved: JSON.parse(localStorage.getItem('wc2026bracket') || '{}').ko_M74,
     progress: document.querySelector('.bracket-progress-label')?.textContent.trim(),
   }));
-  assert(clickedPick.saved === 'Germany', 'Clicking a compact knockout team should save the explicit data-team value', clickedPick);
-  assert(clickedPick.progress === '2/32 knockout picks made', 'A knockout click should update pick progress immediately', clickedPick);
+  assert(clickedPick.saved === 'Paraguay', 'Clicking a compact knockout team should replace the saved data-team value', clickedPick);
+  assert(clickedPick.progress === picks.progress, 'Replacing a knockout pick should keep the progress count accurate', { before: picks.progress, after: clickedPick.progress });
 
   await page.click('[data-bracket-mode="live"]');
   await page.waitForTimeout(250);
@@ -188,25 +209,25 @@ try {
     activePanel: document.querySelector('[data-mobile-panel].active')?.dataset.mobilePanel,
   }));
   assert(mobile.bodyWidth <= mobile.viewport + 2, 'Bracket should not horizontally overflow on mobile', mobile);
-  assert(mobile.citySample === 'Boston', 'Mobile bracket cards should retain host-city labels', mobile);
+  assert(mobile.citySample === 'Los Angeles', 'Mobile R32 cards should retain host-city labels in match-number order', mobile);
   assert(mobile.buttons.every(button => button.width > 90), 'Mode buttons should remain usable on mobile', mobile);
-  assert(mobile.sectionButtons.join(',') === 'QF1,QF2,QF3,QF4,Finals', 'Mobile path navigation should expose all five sections', mobile);
+  assert(mobile.sectionButtons.join(',') === 'R32,R16,QF,SF,Final', 'Mobile navigation should use standard tournament round names', mobile);
   assert(!mobile.desktopVisible && mobile.mobileVisible, 'Mobile should use the sectioned bracket instead of the full desktop canvas', mobile);
-  if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-qf1.png'), fullPage: false });
+  if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-r32.png'), fullPage: false });
 
-  await page.click('[data-bracket-section="finals"]');
+  await page.click('[data-bracket-section="final"]');
   const finals = await page.evaluate(() => ({
     activePanel: document.querySelector('[data-mobile-panel].active')?.dataset.mobilePanel,
-    ids: [...document.querySelectorAll('[data-mobile-panel="finals"] [data-match-id]')].map(node => node.dataset.matchId),
+    ids: [...document.querySelectorAll('[data-mobile-panel="final"] [data-match-id]')].map(node => node.dataset.matchId),
   }));
-  assert(finals.activePanel === 'finals', 'Finals tab should activate the championship path', finals);
-  assert(['M97','M98','M101','M99','M100','M102','M103','M104'].every(id => finals.ids.includes(id)), 'Finals panel should include QFs, semifinals, bronze, and final', finals);
+  assert(finals.activePanel === 'final', 'Final tab should activate the championship panel', finals);
+  assert(finals.ids.join(',') === 'M104,M103', 'Final panel should contain the final and third-place match', finals);
   const localStaticTarget = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//.test(target);
   const actionableBrowserErrors = browserErrors.filter(error =>
     !(localStaticTarget && error.includes('/_vercel/insights/script.js'))
   );
   assert(actionableBrowserErrors.length === 0, 'Bracket preview should not emit browser errors', { browserErrors: actionableBrowserErrors });
-  if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-finals.png'), fullPage: false });
+  if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-final.png'), fullPage: false });
 
   console.log(JSON.stringify({ target, live, picks, clickedPick, returnedLive, mobile, finals, browserErrors: actionableBrowserErrors }, null, 2));
 } finally {

@@ -227,7 +227,17 @@
   font-size: 0.58rem; font-weight: 900; text-transform: uppercase; border-radius: 4px; padding: 2px 5px; white-space: nowrap;
 }
 .bracket-live-badge { color: var(--color-green, #22c55e); background: rgba(34,197,94,0.12); }
-.bracket-original { color: var(--color-amber, #f59e0b); background: rgba(245,158,11,0.12); }
+.bracket-original {
+  max-width: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  overflow: hidden;
+  color: var(--color-amber, #f59e0b);
+  background: rgba(245,158,11,0.12);
+}
+.bracket-original .ui-icon { flex: 0 0 auto; }
+.bracket-original > span { overflow: hidden; text-overflow: ellipsis; }
 .bracket-team {
   display: flex; align-items: center; justify-content: space-between;
   padding: 9px 12px; cursor: pointer; transition: background 0.15s, transform 0.1s;
@@ -791,38 +801,14 @@
     font-weight: 750;
     text-align: center;
   }
-  .bracket-mobile-tree {
-    --bracket-gap: 6px;
-    --bracket-track: 92px;
+  .bracket-mobile-round-list {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    grid-template-rows: repeat(3, var(--bracket-track));
-    column-gap: var(--bracket-gap);
-    position: relative;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
-  .bracket-mobile-tree .bracket-node-meta {
-    height: 16px;
-    padding: 2px 4px;
-    font-size: 0.49rem;
-  }
-  .bracket-mobile-tree .bracket-live-badge,
-  .bracket-mobile-tree .bracket-original { padding: 1px 2px; font-size: 0.42rem; }
-  .bracket-mobile-tree .bracket-tap-hint { font-size: 0.45rem; }
-  .bracket-mobile-tree .bracket-team {
-    min-height: 20px;
-    padding: 2px 4px;
-  }
-  .bracket-mobile-tree .bt-name { gap: 2px; font-size: 0.58rem; }
-  .bracket-mobile-tree .bt-label-full { display: none; }
-  .bracket-mobile-tree .bt-label-code {
-    display: inline;
-    overflow: visible;
-    text-overflow: clip;
-  }
-  .bracket-mobile-tree .bt-score { font-size: 0.56rem; }
-  .bracket-mobile-tree .bracket-node-footer { padding: 2px 3px 3px; }
-  .bracket-mobile-tree .bracket-node-time { font-size: 0.43rem; }
-  .bracket-mobile-tree .bracket-node-city { font-size: 0.39rem; line-height: 1.12; }
+  .bracket-mobile-round-list .bracket-node { min-width: 0; }
+  .bracket-mobile-round-list .bracket-original { max-width: 42px; }
+  .bracket-mobile-final-list { width: min(220px, 100%); margin: 0 auto; grid-template-columns: 1fr; }
   .bracket-mobile-champion {
     min-height: 38px;
     display: flex;
