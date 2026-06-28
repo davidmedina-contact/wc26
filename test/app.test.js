@@ -718,6 +718,8 @@ test('bracket uses a mirrored desktop map and sectioned mobile paths', () => {
   assert.match(app, /compactMatchNode\('M103'\)/);
   assert.match(app, /'South Africa':'RSA'/);
   assert.match(app, /aria-label="' \+ esc\(model\.home\)/);
+  assert.match(app, /data-team="' \+ esc\(model\.home\)/);
+  assert.match(app, /var teamName = koDiv\.getAttribute\('data-team'\)/);
   assert.match(css, /\.bracket-desktop-map/);
   assert.match(css, /\.bracket-mobile-panel\.active/);
   assert.match(css, /\.bracket-mobile-tree \.bt-label-code/);

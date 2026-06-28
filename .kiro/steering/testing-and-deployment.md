@@ -263,6 +263,10 @@ Rules for bracket/live-results balance:
 - Use stable three-letter team codes in the five-column mobile tree and retain
   the full team name in accessible/title text. The bracket may scroll inside
   its desktop shell, but the mobile page itself must not overflow horizontally.
+- Interactive bracket nodes must expose the canonical team name in `data-team`.
+  Do not derive picks from rendered `textContent`: responsive nodes contain both
+  full-name and compact-code spans, including CSS-hidden text. Browser smoke
+  must click a knockout team and verify both localStorage and pick progress.
 - Browser smoke for bracket layout changes must assert 32 unique desktop match
   nodes, five mobile sections, exact subtree membership, Live/My Picks state
   preservation, and no mobile body overflow. Capture desktop, QF-path, and

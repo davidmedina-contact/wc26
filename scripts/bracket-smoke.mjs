@@ -139,6 +139,15 @@ try {
   assert(/3rd (pick|auto|confirmed)/.test(picks.groupText), 'Group cards should expose third-place state labels', picks);
   assert(picks.progress === '1/32 knockout picks made', 'Legacy R16 picks should migrate to official match IDs', picks);
 
+  await page.click('.bracket-desktop-map [data-match-id="M74"] [data-pick="home"]');
+  await page.waitForTimeout(100);
+  const clickedPick = await page.evaluate(() => ({
+    saved: JSON.parse(localStorage.getItem('wc2026bracket') || '{}').ko_M74,
+    progress: document.querySelector('.bracket-progress-label')?.textContent.trim(),
+  }));
+  assert(clickedPick.saved === 'Germany', 'Clicking a compact knockout team should save the explicit data-team value', clickedPick);
+  assert(clickedPick.progress === '2/32 knockout picks made', 'A knockout click should update pick progress immediately', clickedPick);
+
   await page.click('[data-bracket-mode="live"]');
   await page.waitForTimeout(250);
   const liveR32 = await bracketText(page);
@@ -187,10 +196,14 @@ try {
   }));
   assert(finals.activePanel === 'finals', 'Finals tab should activate the championship path', finals);
   assert(['M97','M98','M101','M99','M100','M102','M103','M104'].every(id => finals.ids.includes(id)), 'Finals panel should include QFs, semifinals, bronze, and final', finals);
-  assert(browserErrors.length === 0, 'Bracket preview should not emit browser errors', { browserErrors });
+  const localStaticTarget = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//.test(target);
+  const actionableBrowserErrors = browserErrors.filter(error =>
+    !(localStaticTarget && error.includes('/_vercel/insights/script.js'))
+  );
+  assert(actionableBrowserErrors.length === 0, 'Bracket preview should not emit browser errors', { browserErrors: actionableBrowserErrors });
   if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-finals.png'), fullPage: false });
 
-  console.log(JSON.stringify({ target, live, picks, returnedLive, mobile, finals, browserErrors }, null, 2));
+  console.log(JSON.stringify({ target, live, picks, clickedPick, returnedLive, mobile, finals, browserErrors: actionableBrowserErrors }, null, 2));
 } finally {
   await browser.close();
 }

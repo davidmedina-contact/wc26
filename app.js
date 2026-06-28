@@ -1018,9 +1018,9 @@ function renderBracket() {
     var title = compactDateTime(matchId) + ' ' + localTz + ' · ' + model.match.v;
     return '<div class="bracket-node bracket-match' + (model.needsPick ? ' needs-pick' : '') + '" data-match-id="' + matchId + '" title="' + esc(title) + '">' +
       '<div class="bracket-node-meta"><span>' + matchId + '</span>' + badge + '</div>' +
-      '<div class="bracket-team' + (model.winner === model.home ? ' winner' : '') + lockedHome + '" data-ko="' + matchId + '" data-pick="home" aria-label="' + esc(model.home) + '">' +
+      '<div class="bracket-team' + (model.winner === model.home ? ' winner' : '') + lockedHome + '" data-ko="' + matchId + '" data-pick="home" data-team="' + esc(model.home) + '" aria-label="' + esc(model.home) + '">' +
         '<span class="bt-name"><span class="bt-flag">' + getFlag(model.home) + '</span><span class="bt-label bt-label-full">' + esc(compactTeamLabel(model.home)) + '</span><span class="bt-label bt-label-code">' + esc(bracketTeamCode(model.home)) + '</span></span><span class="bt-score">' + homeScore + '</span></div>' +
-      '<div class="bracket-team' + (model.winner === model.away ? ' winner' : '') + lockedAway + '" data-ko="' + matchId + '" data-pick="away" aria-label="' + esc(model.away) + '">' +
+      '<div class="bracket-team' + (model.winner === model.away ? ' winner' : '') + lockedAway + '" data-ko="' + matchId + '" data-pick="away" data-team="' + esc(model.away) + '" aria-label="' + esc(model.away) + '">' +
         '<span class="bt-name"><span class="bt-flag">' + getFlag(model.away) + '</span><span class="bt-label bt-label-full">' + esc(compactTeamLabel(model.away)) + '</span><span class="bt-label bt-label-code">' + esc(bracketTeamCode(model.away)) + '</span></span><span class="bt-score">' + awayScore + '</span></div>' +
       '<div class="bracket-node-time bracket-date-time">' + compactDateTime(matchId) + '</div>' +
       '</div>';
@@ -1200,15 +1200,9 @@ function renderBracket() {
       if (koDiv) {
         if (koDiv.classList.contains('locked') && bracketViewMode === 'live') return;
         var matchId = koDiv.getAttribute('data-ko');
-        var pick = koDiv.getAttribute('data-pick');
-        var nameEl = koDiv.querySelector('.bt-name');
-        if (nameEl) {
-          var teamName = nameEl.textContent.trim();
-          // Remove flag emoji (first 2+ chars that are emoji)
-          teamName = teamName.replace(/^[\u{1F1E0}-\u{1F1FF}\u{1F3F4}\u{E0061}-\u{E007A}\u{E007F}\s]+/u, '').trim();
-          if (teamName && wcData.teams[teamName] && !isTeamEliminated(teamName) && teamName.indexOf('W ') !== 0 && teamName.indexOf('W R') !== 0 && teamName.indexOf('W Q') !== 0 && teamName.indexOf('W S') !== 0 && teamName !== '3rd Place') {
-            pickKnockout(matchId, teamName);
-          }
+        var teamName = koDiv.getAttribute('data-team');
+        if (teamName && wcData.teams[teamName] && !isTeamEliminated(teamName)) {
+          pickKnockout(matchId, teamName);
         }
         return;
       }
