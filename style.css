@@ -190,6 +190,13 @@
 }
 .bracket-info h3 { color: var(--bracket-info-accent); margin-bottom: 6px; font-size: 1rem; }
 .bracket-info p { color: var(--text-sec); font-size: 0.9rem; }
+.bracket-info-toggle {
+  flex: 0 0 auto; padding: 4px 8px; border: none; background: none; cursor: pointer;
+  color: var(--text-muted); font-size: 0.8rem; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 4px; margin-top: -4px;
+}
+.bracket-info-toggle:hover { background: var(--surface2); border-radius: 4px; }
+.bracket-info-toggle .icon { font-size: 0.7rem; margin-left: 4px; }
 .bracket-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .bracket-mode-toggle { display: inline-flex; padding: 3px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-xs); }
 .bracket-mode-toggle button {
@@ -214,7 +221,13 @@
   text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 14px;
   display: flex; align-items: center; justify-content: center; gap: 6px;
 }
-.bracket-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin-bottom: 28px; }
+.bracket-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin-bottom: 28px;
+  transition: max-height 0.2s ease-out, opacity 0.2s ease-out, visibility 0.2s;
+}
+.bracket-grid.collapsed {
+  max-height: 0; opacity: 0; visibility: hidden; margin: 0;
+}
 .bracket-match {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
   overflow: hidden; box-shadow: var(--card-shadow);

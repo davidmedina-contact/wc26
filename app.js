@@ -55,6 +55,17 @@ function switchBracketMode(mode) {
   renderBracket();
 }
 
+function toggleBracketInfo() {
+  var grid = document.getElementById('bracketGrid');
+  var toggleBtn = document.querySelector('.bracket-info-toggle');
+  if (!grid || !toggleBtn) return;
+  var isCollapsed = grid.classList.toggle('collapsed');
+  toggleBtn.setAttribute('aria-pressed', String(!isCollapsed));
+  toggleBtn.innerHTML = (isCollapsed
+    ? icon('arrowDown',{size:12}) + ' Show controls<span class="icon">▼</span>'
+    : icon('arrowUp',{size:12}) + ' Hide controls<span class="icon">▼</span>');
+}
+
 function getMatchPrediction(home, away) {
   var hStr = teamStrength[home] || 50;
   var aStr = teamStrength[away] || 50;
@@ -390,7 +401,9 @@ var ICONS = {
   history: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
   reset: '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
   x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
-  arrowLeft: '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>'
+  arrowLeft: '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+  arrowUp: '<polyline points="18 15 12 9 6 15"/>',
+  arrowDown: '<polyline points="6 9 12 15 18 9"/>'
 };
 
 // Returns an inline SVG string. opts: {size, cls, fill}
@@ -409,7 +422,7 @@ function renderMatchStrip() {
   if (!el || !matchesData || !matchesData.length) { if (el) el.innerHTML = ''; return; }
   var now = new Date();
   var todayStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
-  
+
   // Find live match (match happening right now based on kickoff + ~2h window)
   var liveMatch = null, nextMatch = null;
   for (var i = 0; i < matchesData.length; i++) {
@@ -1132,7 +1145,9 @@ function renderBracket() {
     (bracketViewMode === 'live'
       ? 'Confirmed teams and FT winners lead the bracket. Your saved picks remain as comparison data.'
       : 'Manual predictions lead the bracket. Confirmed teams fill empty slots, and original picks are preserved.') +
-    '</p></div><div class="bracket-actions"><div class="bracket-mode-toggle" role="tablist" aria-label="Bracket view">' +
+    '</p></div><div class="bracket-actions"><button class="bracket-info-toggle" type="button" aria-pressed="true">' +
+    icon('arrowUp',{size:12}) + ' Hide controls<span class="icon">▼</span></button>' +
+    '<div class="bracket-mode-toggle" role="tablist" aria-label="Bracket view">' +
     '<button class="' + (bracketViewMode === 'picks' ? 'active' : '') + '" data-bracket-mode="picks" role="tab" aria-selected="' + (bracketViewMode === 'picks') + '">My Picks</button>' +
     '<button class="' + (bracketViewMode === 'live' ? 'active' : '') + '" data-bracket-mode="live" role="tab" aria-selected="' + (bracketViewMode === 'live') + '">Live Bracket</button>' +
     '</div>' + resetButton + '</div></div>';
@@ -1234,6 +1249,12 @@ function renderBracket() {
       // Reset button
       if (e.target.id === 'resetBtn' || e.target.closest('#resetBtn')) {
         resetBracket();
+      }
+      // Bracket info toggle
+      var toggleBtn = e.target.closest('.bracket-info-toggle');
+      if (toggleBtn) {
+        toggleBracketInfo();
+        return;
       }
     });
   }
@@ -1339,7 +1360,7 @@ function renderStats() {
     {label:'Haaland arrives', detail:'Two goals in Norway debut (4-1 vs Iraq). First WC goals of his career.'},
     {label:'Kane joins race', detail:'Two goals in England\'s 4-2 win over Croatia. 67 career international goals.'}
   ];
-  
+
   // Tournament overview
   html += '<h2 style="margin-bottom:16px;font-size:1.1rem">Tournament Statistics</h2>';
   html += '<div class="stats-grid">';
@@ -1348,7 +1369,7 @@ function renderStats() {
   html += '<div class="stat-card"><div class="stat-val stat-val-amber">' + overview.goalsPerMatch.toFixed(1) + '</div><div class="stat-lbl">Goals/Match</div></div>';
   html += '<div class="stat-card"><div class="stat-val stat-val-pink">' + overview.teams + '</div><div class="stat-lbl">Teams</div></div>';
   html += '</div>';
-  
+
   // Top Scorers
   html += '<div class="modal-section"><h3 style="color:var(--accent)">' + icon('target') + ' Top Scorers</h3>';
   var maxGoals = scorers[0].g;
@@ -1374,7 +1395,7 @@ function renderStats() {
     html += '</tr>';
   }
   html += '</table></div>';
-  
+
   // Group Goals — horizontal bar chart
   html += '<div class="modal-section"><h3 style="color:var(--accent)">' + icon('barChart') + ' Goals by Group</h3>';
   var maxGroupGoals = Math.max.apply(null, groupGoals.map(function(gg) { return gg.goals; })) || 1;
@@ -1389,7 +1410,7 @@ function renderStats() {
     '</div>';
   });
   html += '</div></div>';
-  
+
   // Confederation stats — dual bar (scored vs conceded)
   html += '<div class="modal-section"><h3 style="color:var(--accent)">' + icon('globe') + ' Goals by Confederation</h3>';
   var maxConfGoals = Math.max.apply(null, confStats.map(function(cs) { return Math.max(cs.s, cs.con); })) || 1;
@@ -1409,7 +1430,7 @@ function renderStats() {
   });
   html += '<div class="stat-bar-legend"><span class="stat-bar-legend-dot stat-bar-scored"></span> Scored <span class="stat-bar-legend-dot stat-bar-conceded"></span> Conceded</div>';
   html += '</div></div>';
-  
+
   // Key records
   html += '<div class="modal-section"><h3 style="color:var(--accent)">' + icon('award') + ' Records &amp; Milestones</h3>';
   html += '<table class="key-dates"><tbody>';
@@ -1417,7 +1438,7 @@ function renderStats() {
     html += '<tr><td>' + esc(record.label) + '</td><td>' + esc(record.detail) + '</td></tr>';
   });
   html += '</tbody></table></div>';
-  
+
   el.innerHTML = html;
 }
 
