@@ -731,8 +731,8 @@ test('bracket uses connected desktop and mobile maps with standard round tabs', 
   assert.match(css, /\.bracket-desktop-map/);
   assert.match(css, /\.bracket-mobile-scroll/);
   assert.match(css, /\.bracket-mobile-visual/);
-  assert.match(css, /grid-template-columns: repeat\(5, 156px\)/);
-  assert.match(css, /max-height: min\(58vh, 560px\)/);
+  assert.match(css, /grid-template-columns: repeat\(5, 136px\)/);
+  assert.match(css, /max-height: min\(60vh, 620px\)/);
   assert.match(css, /\.bracket-mobile-visual \.bt-label-code/);
 });
 
