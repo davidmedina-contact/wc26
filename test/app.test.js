@@ -624,6 +624,11 @@ test('client uses one stable same-origin data endpoint', () => {
   assert.doesNotMatch(app, /worldcup26\.ir|api\/scores|api\/standings|dataCacheKey/);
 });
 
+test('app shell declares an existing browser icon', () => {
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  assert.match(html, /<link rel="icon" type="image\/png" href="\/icon-512\.png">/);
+});
+
 test('client hash routing persists every primary tab across refreshes', () => {
   const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   assert.match(app, /var nextHash = tab === 'matches' \? '#matches\/' \+ selectedMatchDate : '#' \+ tab/);
@@ -679,7 +684,8 @@ test('bracket preserves original picks and supports live versus prediction modes
   assert.match(app, /data-bracket-mode="picks"/);
   assert.match(app, /data-bracket-mode="live"/);
   assert.match(app, /liveThirdPlaceSeedForMatch/);
-  assert.match(app, /teamBracketRank/);
+  assert.match(app, /function compactMatchNode/);
+  assert.match(app, /var knockoutModels = \{\}/);
   assert.match(app, /Live bracket uses confirmed seeds and FT winners only/);
   assert.match(app, /knockout picks made/);
   assert.match(app, /if \(bracketViewMode === 'picks'\) totalKoPicks\+\+/);
@@ -695,8 +701,27 @@ test('bracket cards include knockout dates and local-time labels', () => {
   assert.equal(knockoutBracket.byId.M104.d, '2026-07-19');
   assert.match(app, /function bracketDateTime\(matchId\)/);
   assert.match(app, /etToLocal\(schedule\.t, schedule\.d\) \+ ' ' \+ localTz/);
+  assert.match(app, /function compactDateTime\(matchId\)/);
   assert.match(app, /bracket-date-time/);
-  assert.match(app, /bracket-venue-name/);
+  assert.match(app, /model\.match\.v/);
+});
+
+test('bracket uses a mirrored desktop map and sectioned mobile paths', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  const css = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  assert.match(app, /function desktopBracketMap\(\)/);
+  assert.match(app, /function mobileBracketMap\(\)/);
+  assert.match(app, /data-bracket-section=/);
+  assert.match(app, /\{id:'M97', left:'M89', leftFeed:\['M74','M77'\], right:'M90', rightFeed:\['M73','M75'\]\}/);
+  assert.match(app, /\{id:'M100', left:'M95', leftFeed:\['M86','M88'\], right:'M96', rightFeed:\['M85','M87'\]\}/);
+  assert.match(app, /visualSlot\('M104', 3, 2/);
+  assert.match(app, /compactMatchNode\('M103'\)/);
+  assert.match(app, /'South Africa':'RSA'/);
+  assert.match(app, /aria-label="' \+ esc\(model\.home\)/);
+  assert.match(css, /\.bracket-desktop-map/);
+  assert.match(css, /\.bracket-mobile-panel\.active/);
+  assert.match(css, /\.bracket-mobile-tree \.bt-label-code/);
+  assert.match(css, /grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/);
 });
 
 test('official knockout graph defines every FIFA path through the final', () => {

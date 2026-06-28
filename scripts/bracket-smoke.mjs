@@ -1,4 +1,6 @@
 import { pathToFileURL } from 'node:url';
+import { mkdir } from 'node:fs/promises';
+import path from 'node:path';
 
 async function loadPlaywright() {
   try {
@@ -13,21 +15,17 @@ async function loadPlaywright() {
 const target = process.argv[2] || 'http://127.0.0.1:4173/#bracket';
 const apiUrl = process.env.BRACKET_SMOKE_API_URL || '';
 const executablePath = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const screenshotDir = process.env.BRACKET_SMOKE_SCREENSHOTS || '';
+const protectionBypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET || '';
 
 function count(text, needle) {
   return (text.match(new RegExp(needle, 'g')) || []).length;
 }
 
 async function bracketText(page) {
-  const titles = await page.locator('#tab-bracket .bracket-round-title').evaluateAll(nodes => nodes.map((node, index) => ({
-    index,
-    text: node.textContent || '',
-  })));
-  const r32 = titles.find(row => row.text.includes('Round of 32'));
-  return page.evaluate(index => {
-    const title = document.querySelectorAll('#tab-bracket .bracket-round-title')[index];
-    return title && title.nextElementSibling ? title.nextElementSibling.innerText : '';
-  }, r32.index);
+  return page.evaluate(() => [...document.querySelectorAll('.bracket-desktop-map [data-match-id]')]
+    .filter(node => /^M(7[3-9]|8[0-8])$/.test(node.dataset.matchId))
+    .map(node => node.innerText).join('\n'));
 }
 
 function assert(condition, message, details = {}) {
@@ -44,6 +42,18 @@ try {
   const page = await browser.newPage({
     viewport: { width: 1440, height: 900 },
     serviceWorkers: 'block',
+    extraHTTPHeaders: protectionBypass ? {
+      'x-vercel-protection-bypass': protectionBypass,
+      'x-vercel-set-bypass-cookie': 'true',
+    } : {},
+  });
+  const browserErrors = [];
+  page.on('pageerror', error => browserErrors.push('pageerror: ' + error.message));
+  page.on('console', message => {
+    if (message.type() === 'error') {
+      const location = message.location();
+      browserErrors.push('console: ' + message.text() + (location.url ? ' [' + location.url + ']' : ''));
+    }
   });
   if (apiUrl) {
     await page.route('**/api/data', async route => {
@@ -73,25 +83,29 @@ try {
     progress: document.querySelector('.bracket-progress-label')?.textContent.trim(),
     resetVisible: Boolean(document.querySelector('#resetBtn')),
     tapHints: document.querySelectorAll('#tab-bracket .bracket-tap-hint').length,
-    confirmedRanks: [...document.querySelectorAll('#tab-bracket .bt-rank')]
-      .filter(node => node.textContent.includes('confirmed')).length,
+    confirmedNodes: [...document.querySelectorAll('.bracket-desktop-map .bracket-live-badge')]
+      .filter(node => node.textContent.includes('set')).length,
     dateTimeLabels: [...document.querySelectorAll('#tab-bracket .bracket-date-time')]
       .map(node => node.textContent.trim()).slice(0, 4),
-    matchLabels: [...document.querySelectorAll('#tab-bracket .bracket-match-lbl')]
-      .map(node => node.childNodes[0]?.textContent?.trim() || node.textContent.trim()),
+    desktopIds: [...document.querySelectorAll('.bracket-desktop-map [data-match-id]')].map(node => node.dataset.matchId),
+    mobilePanels: document.querySelectorAll('[data-mobile-panel]').length,
+    activeMobileIds: [...document.querySelectorAll('[data-mobile-panel].active [data-match-id]')].map(node => node.dataset.matchId),
     banner: document.querySelector('#matchStrip .ms-teams')?.textContent.trim() || '',
   }));
   assert(live.mode === 'Live Bracket', 'Live Bracket should be the default mode', live);
   assert(live.progress === 'Live bracket uses confirmed seeds and FT winners only', 'Live mode should not show a picks-made counter', live);
   assert(live.resetVisible === false, 'Live mode should not show Reset Picks', live);
   assert(live.tapHints === 0, 'Live mode should be read-only and hide tap-to-pick hints', live);
-  assert(live.confirmedRanks > 0, 'Live bracket should visibly mark confirmed teams', live);
+  assert(live.confirmedNodes > 0, 'Live bracket should visibly mark confirmed matchups', live);
   assert(live.dateTimeLabels.some(label => /Jun|Jul/.test(label) && /\d:\d{2} (AM|PM)/.test(label)), 'Bracket cards should show date and local time labels', live);
-  assert(live.matchLabels.includes('M89 · W M74 vs W M77'), 'R16 Match 89 must follow FIFA official paths', live);
-  assert(live.matchLabels.includes('M98 · W M93 vs W M94'), 'Quarterfinal Match 98 must follow FIFA official paths', live);
-  assert(live.matchLabels.includes('M103 · L M101 vs L M102'), 'Bronze final must receive both semifinal losers', live);
-  assert(live.matchLabels.includes('M104 · Final'), 'Final must use FIFA Match 104', live);
+  assert(live.desktopIds.length === 32 && new Set(live.desktopIds).size === 32, 'Desktop map should render every knockout match exactly once', live);
+  assert(live.mobilePanels === 5, 'Mobile map should expose four QF paths and a Finals panel', live);
+  assert(['M74','M77','M89','M73','M75','M90','M97'].every(id => live.activeMobileIds.includes(id)), 'QF1 mobile path should contain its complete eight-team subtree', live);
   assert(!/Group|TBD|W M|L M/.test(live.banner), 'Next-match banner should use confirmed teams when available', live);
+  if (screenshotDir) {
+    await mkdir(screenshotDir, { recursive: true });
+    await page.screenshot({ path: path.join(screenshotDir, 'bracket-desktop.png'), fullPage: false });
+  }
 
   await page.evaluate(() => {
     localStorage.setItem('wc2026bracketMode', 'picks');
@@ -155,11 +169,28 @@ try {
       text: button.textContent.trim(),
       width: Math.round(button.getBoundingClientRect().width),
     })),
+    sectionButtons: [...document.querySelectorAll('[data-bracket-section]')].map(button => button.textContent.trim()),
+    desktopVisible: getComputedStyle(document.querySelector('.bracket-desktop-shell')).display !== 'none',
+    mobileVisible: getComputedStyle(document.querySelector('.bracket-mobile-map')).display !== 'none',
+    activePanel: document.querySelector('[data-mobile-panel].active')?.dataset.mobilePanel,
   }));
   assert(mobile.bodyWidth <= mobile.viewport + 2, 'Bracket should not horizontally overflow on mobile', mobile);
   assert(mobile.buttons.every(button => button.width > 90), 'Mode buttons should remain usable on mobile', mobile);
+  assert(mobile.sectionButtons.join(',') === 'QF1,QF2,QF3,QF4,Finals', 'Mobile path navigation should expose all five sections', mobile);
+  assert(!mobile.desktopVisible && mobile.mobileVisible, 'Mobile should use the sectioned bracket instead of the full desktop canvas', mobile);
+  if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-qf1.png'), fullPage: false });
 
-  console.log(JSON.stringify({ target, live, picks, returnedLive, mobile }, null, 2));
+  await page.click('[data-bracket-section="finals"]');
+  const finals = await page.evaluate(() => ({
+    activePanel: document.querySelector('[data-mobile-panel].active')?.dataset.mobilePanel,
+    ids: [...document.querySelectorAll('[data-mobile-panel="finals"] [data-match-id]')].map(node => node.dataset.matchId),
+  }));
+  assert(finals.activePanel === 'finals', 'Finals tab should activate the championship path', finals);
+  assert(['M97','M98','M101','M99','M100','M102','M103','M104'].every(id => finals.ids.includes(id)), 'Finals panel should include QFs, semifinals, bronze, and final', finals);
+  assert(browserErrors.length === 0, 'Bracket preview should not emit browser errors', { browserErrors });
+  if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-finals.png'), fullPage: false });
+
+  console.log(JSON.stringify({ target, live, picks, returnedLive, mobile, finals, browserErrors }, null, 2));
 } finally {
   await browser.close();
 }

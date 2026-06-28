@@ -56,6 +56,17 @@ including Match 103 (`L M101` vs `L M102`) and Match 104 (`W M101` vs `W M102`).
 Keep schedule formatting in the client layer; it is presentation data, not a
 serverless live-data computation.
 
+The Bracket tab renders that graph differently by viewport without changing its
+meaning. Desktop uses one mirrored tournament tree with the final in the
+center. Mobile uses five fixed sections: `QF1` through `QF4` each show the two
+Round-of-16 matches and four Round-of-32 matches that feed one quarterfinal;
+`Finals` shows all four quarterfinals, both semifinals, the final, champion, and
+third-place match. Mobile nodes use three-letter team codes so the five-column
+tree stays readable without horizontal page scrolling; full names remain in
+the node title. Group seed controls remain below the visual bracket. Both
+layouts must be generated from the same resolved match models and official
+match IDs, never from separate progression data.
+
 Older releases stored later-round picks under aliases such as `R16_0`, `QF_0`,
 and `FINAL`. `migrateLegacyBracketMatchIds()` maps those keys to FIFA match IDs
 without overwriting an existing new-format pick. Do not remove that migration
@@ -180,6 +191,15 @@ FIFA remains the manual cross-check for fixtures and published statistics:
 10. Test Groups, Matches, Bracket, Stats, search, and theme controls in a fresh browser tab.
 11. In an installed PWA or simulated service-worker session, confirm reopening the app refreshes `/api/data` with a no-cache request and does not downgrade from a newer local payload to the bundled snapshot.
 12. Confirm response security and cache headers on the production domain.
+
+For a branch preview, run `npm run stamp-sw` and then `vercel --yes` without
+`--prod`. This gives the preview a distinct service-worker byte stamp while
+leaving the production alias untouched. Run the bracket smoke against the
+returned preview URL before merging. Protected previews require the project's
+automation bypass in `VERCEL_AUTOMATION_BYPASS_SECRET`; the smoke runner sends
+it as `x-vercel-protection-bypass` and requests a browser cookie for subsequent
+assets. Retrieve the value at execution time and never print, persist, or commit
+it. Production remains `npm run deploy` only.
 
 Use `npm run deploy` for production releases, including serverless-only changes
 that alter visible scores, standings, stats, or refresh behavior. The

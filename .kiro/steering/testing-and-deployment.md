@@ -255,6 +255,21 @@ Rules for bracket/live-results balance:
 - The browser smoke must assert official downstream labels, saved-pick
   migration, the 32-match knockout count (including bronze), mobile width, and
   confirmed-team resolution in the next-match banner.
+- Do not shrink the full 32-team tree into an unreadable mobile overview.
+  Desktop should use a mirrored tree centered on the final. Mobile should use
+  four eight-team quarterfinal paths (`QF1`-`QF4`) plus a `Finals` section that
+  contains the quarterfinals, semifinals, final, champion, and bronze match.
+  Generate every section from the same official-ID match models.
+- Use stable three-letter team codes in the five-column mobile tree and retain
+  the full team name in accessible/title text. The bracket may scroll inside
+  its desktop shell, but the mobile page itself must not overflow horizontally.
+- Browser smoke for bracket layout changes must assert 32 unique desktop match
+  nodes, five mobile sections, exact subtree membership, Live/My Picks state
+  preservation, and no mobile body overflow. Capture desktop, QF-path, and
+  Finals screenshots when visually reviewing a substantial bracket change.
+- Vercel preview deployments may be protected by Vercel Authentication. Keep
+  protection enabled. Pass the configured automation bypass to Playwright via
+  `VERCEL_AUTOMATION_BYPASS_SECRET`; never print, persist, or commit the secret.
 
 Rules for Groups tab interactions:
 

@@ -55,6 +55,17 @@ changes that affect scores, standings, stats, or refresh behavior.
 After deploying, commit and push the stamped `service-worker.js` so GitHub and
 the Vercel deployment stay at parity.
 
+For a non-production branch preview, stamp the service worker and deploy without
+the production flag:
+
+```bash
+npm run stamp-sw
+vercel --yes
+```
+
+Test the returned preview URL before merging. Production must still use
+`npm run deploy`.
+
 Do not add sub-daily Vercel cron expressions on Hobby. Vercel rejects the entire deployment when a cron runs more than once per day.
 
 ## Local Development
