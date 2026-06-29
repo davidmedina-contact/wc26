@@ -222,6 +222,24 @@ try {
         target: target ? Math.round((target.left - center) * 10) / 10 : null,
       };
     }),
+    connectorAlignment: [...document.querySelectorAll('.bracket-mobile-path')].map(path => {
+      const junction = path.querySelector('.bracket-mobile-path-junction')?.getBoundingClientRect();
+      const sources = [...path.querySelectorAll('.bracket-mobile-source .bracket-node')];
+      const target = path.querySelector('.bracket-mobile-target .bracket-node')?.getBoundingClientRect();
+      if (!junction || sources.length !== 2 || !target) return null;
+      const relativeCenter = rect => rect.top + rect.height / 2 - junction.top;
+      return {
+        sources: sources.map(node => relativeCenter(node.getBoundingClientRect())),
+        expectedSources: [junction.height * 0.24, junction.height * 0.76],
+        target: relativeCenter(target),
+        expectedTarget: junction.height * 0.5,
+      };
+    }),
+    cardHeights: [...document.querySelectorAll('.bracket-mobile-visual .bracket-node')]
+      .map(node => node.getBoundingClientRect().height),
+    themeParent: document.querySelector('#themeBtn')?.parentElement?.id || '',
+    topBarHeight: document.querySelector('.top-bar')?.getBoundingClientRect().height || 0,
+    seedsContentParent: document.querySelector('#bracketSeedsContent')?.parentElement?.className || '',
     infoExpanded: document.querySelector('[data-bracket-info-toggle]')?.getAttribute('aria-expanded'),
     infoHeight: Math.round(document.querySelector('.bracket-info')?.getBoundingClientRect().height || 0),
     seedsExpanded: document.querySelector('[data-bracket-seeds-toggle]')?.getAttribute('aria-expanded'),
@@ -240,12 +258,55 @@ try {
   assert(mobile.sectionButtons.join(',') === 'R32,R16,QF,SF,Final', 'Mobile navigation should use standard tournament round names', mobile);
   assert(mobile.activeSection === 'r32', 'Mobile bracket should begin at the Round of 32', mobile);
   assert(mobile.connectorGaps.length === 8 && mobile.connectorGaps.every(gap => gap.target === 9 && gap.sources.length === 2 && gap.sources.every(value => value === 9)), 'Every mobile source and target card should meet its 9px connector arm', mobile);
+  assert(mobile.connectorAlignment.length === 8 && mobile.connectorAlignment.every(alignment => alignment &&
+    alignment.sources.every((value, index) => Math.abs(value - alignment.expectedSources[index]) < 0.2) &&
+    Math.abs(alignment.target - alignment.expectedTarget) < 0.2), 'Continuous connector corners should align with every card center', mobile);
+  assert(mobile.cardHeights.length === 24 && mobile.cardHeights.every(height => height >= 70 && height <= 73), 'Mobile cards should use the compact readable height contract', mobile);
+  assert(mobile.themeParent === 'navTabs' && mobile.topBarHeight < 2, 'Appearance belongs in mobile navigation and should not consume bracket height', mobile);
+  assert(mobile.seedsContentParent === 'bracket-seeds', 'Group Seeds content should remain inside its disclosure panel', mobile);
   assert(mobile.infoExpanded === 'false' && mobile.infoHeight < 70, 'Mobile bracket details should start compact', mobile);
   assert(mobile.seedsExpanded === 'false', 'Group Seeds should start collapsed', mobile);
   assert(mobile.scroller && mobile.scroller.scrollWidth <= mobile.scroller.clientWidth + 2, 'Mobile bracket should not scroll horizontally', mobile);
   assert(mobile.scroller && mobile.scroller.scrollHeight > mobile.scroller.clientHeight, 'Tall mobile bracket should scroll inside its own viewport', mobile);
   assert(!mobile.desktopVisible && mobile.mobileVisible, 'Mobile should use the connected compact bracket instead of the desktop canvas', mobile);
   if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-r32.png'), fullPage: false });
+
+  await page.setViewportSize({ width: 320, height: 700 });
+  const narrowMobile = await page.evaluate(() => {
+    const theme = document.querySelector('#themeBtn')?.getBoundingClientRect();
+    const heading = document.querySelector('.bracket-info-heading')?.getBoundingClientRect();
+    const narrowTitle = document.querySelector('.bracket-title-narrow');
+    const cards = [...document.querySelectorAll('.bracket-mobile-visual .bracket-node')];
+    return {
+      bodyWidth: document.body.scrollWidth,
+      viewport: window.innerWidth,
+      theme: theme ? { width: theme.width, height: theme.height } : null,
+      headingOverflow: heading ? heading.width < document.querySelector('.bracket-info-heading').scrollWidth : true,
+      narrowTitleVisible: narrowTitle ? getComputedStyle(narrowTitle).display !== 'none' : false,
+      cardWidths: cards.map(card => card.getBoundingClientRect().width),
+      footerOverflow: [...document.querySelectorAll('.bracket-mobile-visual .bracket-node-footer')]
+        .some(footer => footer.scrollWidth > footer.clientWidth),
+    };
+  });
+  assert(narrowMobile.bodyWidth <= narrowMobile.viewport + 2, 'Narrow mobile bracket should not overflow the page', narrowMobile);
+  assert(narrowMobile.theme?.width >= 44 && narrowMobile.theme?.height >= 44, 'Navigation appearance control should retain a mobile touch target', narrowMobile);
+  assert(narrowMobile.narrowTitleVisible && !narrowMobile.headingOverflow, 'Narrow mobile header should use its compact readable title', narrowMobile);
+  assert(narrowMobile.cardWidths.every(width => width >= 128) && !narrowMobile.footerOverflow, 'Narrow mobile cards should retain readable content without footer overflow', narrowMobile);
+  if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-320.png'), fullPage: false });
+  const startingTheme = await page.evaluate(() => document.documentElement.getAttribute('data-theme-pref'));
+  const themeCycle = [];
+  for (let i = 0; i < 3; i++) {
+    await page.click('#themeBtn');
+    themeCycle.push(await page.evaluate(() => ({
+      preference: document.documentElement.getAttribute('data-theme-pref'),
+      stored: localStorage.getItem('wc2026-theme'),
+      label: document.querySelector('#themeBtn')?.getAttribute('aria-label'),
+    })));
+  }
+  assert(new Set(themeCycle.map(state => state.preference)).size === 3 &&
+    themeCycle.every(state => state.preference === state.stored && state.label?.includes('Switch to')) &&
+    themeCycle[2].preference === startingTheme, 'Appearance control should cycle, persist, and describe all three modes', { startingTheme, themeCycle });
+  await page.setViewportSize({ width: 390, height: 844 });
 
   await page.click('[data-bracket-section="qf"]');
   await page.waitForTimeout(100);
@@ -294,6 +355,22 @@ try {
   assert(finals.ids.join(',') === 'M103,M104', 'Connected mobile bracket should contain the final and third-place match', finals);
   assert(finals.champion, 'Final stage should include the champion destination', finals);
   assert(finals.scroller && finals.scroller.clientHeight === finals.scroller.scrollHeight && finals.scroller.clientHeight < 280, 'Final stage should collapse to the final, champion, and third-place cards', finals);
+  await page.click('[data-bracket-seeds-toggle]');
+  const seedsPanel = await page.evaluate(() => {
+    const section = document.querySelector('.bracket-seeds');
+    const button = document.querySelector('.bracket-seeds-toggle');
+    const content = document.querySelector('#bracketSeedsContent');
+    if (!section || !button || !content) return null;
+    const buttonRect = button.getBoundingClientRect();
+    const contentRect = content.getBoundingClientRect();
+    return {
+      expanded: button.getAttribute('aria-expanded'),
+      sameParent: content.parentElement === section,
+      boundaryGap: Math.abs(contentRect.top - buttonRect.bottom),
+      sectionBorder: parseFloat(getComputedStyle(section).borderTopWidth),
+    };
+  });
+  assert(seedsPanel?.expanded === 'true' && seedsPanel.sameParent && seedsPanel.boundaryGap < 0.2 && seedsPanel.sectionBorder >= 1, 'Expanded Group Seeds should render as one connected disclosure panel', seedsPanel || {});
   const localStaticTarget = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//.test(target);
   const actionableBrowserErrors = browserErrors.filter(error =>
     !(localStaticTarget && error.includes('/_vercel/insights/script.js'))

@@ -711,6 +711,7 @@ test('bracket cards include knockout dates and local-time labels', () => {
 test('bracket uses connected desktop and dynamic two-column mobile maps', () => {
   const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   const css = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   assert.match(app, /function desktopBracketMap\(\)/);
   assert.match(app, /function mobileBracketMap\(\)/);
   assert.match(app, /data-bracket-section=/);
@@ -718,9 +719,12 @@ test('bracket uses connected desktop and dynamic two-column mobile maps', () => 
   assert.match(app, /\{id:'sf', label:'SF', title:'Semi-finals'/);
   assert.match(app, /function mobileVisualBracket\(round\)/);
   assert.match(app, /function mobileStagePath\(sourceIds, targetId\)/);
+  assert.match(app, /viewBox="0 0 18 100"/);
+  assert.match(app, /M0 24H9V76H0M9 50H18/);
   assert.match(app, /data-mobile-stage=/);
   assert.match(app, /\[\['M97','M98'\],'M101'\]/);
   assert.match(app, /data-bracket-info-toggle/);
+  assert.match(app, /bracket-title-narrow/);
   assert.match(app, /data-bracket-seeds-toggle/);
   assert.match(app, /Original pick: /);
   assert.match(app, /icon\('history',\{size:9\}\)/);
@@ -736,9 +740,13 @@ test('bracket uses connected desktop and dynamic two-column mobile maps', () => 
   assert.match(css, /\.bracket-mobile-path/);
   assert.match(css, /grid-template-columns: minmax\(0, 1fr\) 18px minmax\(0, 1fr\)/);
   assert.match(css, /\.bracket-mobile-source-stack > \.bracket-visual-slot \{[\s\S]*?width: 100%/);
+  assert.match(css, /--mobile-card-height: 72px/);
+  assert.match(css, /\.bracket-mobile-path-junction path/);
+  assert.match(css, /\.bracket-seeds-content \{ padding: 12px; border-top: 1px solid var\(--border\); \}/);
   assert.match(css, /--bracket-line:/);
   assert.match(css, /max-height: min\(64dvh, 620px\)/);
   assert.match(css, /\.bracket-mobile-visual \.bt-label-code/);
+  assert.match(html, /id="navTabs"[\s\S]*id="themeBtn"[\s\S]*<div class="top-actions">/);
 });
 
 test('official knockout graph defines every FIFA path through the final', () => {

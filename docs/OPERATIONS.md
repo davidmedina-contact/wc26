@@ -73,10 +73,23 @@ three-letter codes in the compact mobile tree, while unresolved structural
 slots remain `W M...` or `L M...` until a team is known. Full team names remain
 in accessibility labels and on desktop. The bracket description is collapsed by
 default without hiding the Live/My Picks control. Group Seeds remain below the
-bracket in an independently expandable section. Disclosure state and the
+bracket in an independently expandable disclosure whose header and body share
+one border and background. Disclosure state and the
 selected mobile stage survive Live/My Picks rerenders. Both layouts must be
 generated from the same resolved match models and official match IDs, never from
 separate progression data.
+
+Mobile match nodes use an explicit 72px height and 6px source gap. A single SVG
+path spans each 18px connector column at source-center positions 24% and 76%, so
+the two arms, merge spine, and target arm are one continuous stroke. Do not
+reintroduce separately positioned border fragments; even a small gap changes the
+source-center percentages and creates visibly disconnected corners. The compact
+height retains both teams, scores, local kickoff, and city.
+
+The appearance control lives in the navigation rail. On mobile this removes the
+otherwise empty action row from Bracket and Stats while retaining a 44px target.
+The default remains `system`, following platform appearance unless the user
+explicitly cycles to light or dark; the preference remains in `wc2026-theme`.
 
 The mobile interaction borrows two established patterns: ESPN has documented a
 vertical bracket with swipe navigation and explicit round jumps, while FotMob's

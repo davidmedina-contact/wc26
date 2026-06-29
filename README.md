@@ -9,7 +9,7 @@ A single-page web app for following the 2026 FIFA World Cup. Installable as a PW
 - **Bracket** — Interactive elimination bracket. Pick group stage finishers and knockout round winners through the Final.
 - **Stats** — Tournament stats: top scorers, goals by group, confederation breakdown, and records.
 - **Search** — Global search by team name or player name.
-- **Dark/light/system theme** toggle (persisted to `localStorage`).
+- **Dark/light/system appearance** control in the navigation rail (system by default, persisted to `localStorage`).
 - **ICS file** — `world-cup-2026-schedule.ics` for importing the full schedule into any calendar app.
 
 ## Stack

@@ -263,13 +263,23 @@ Rules for bracket/live-results balance:
   Keep official match IDs on cards, not as the primary round-navigation labels.
   Generate every stage from the same official-ID match models.
 - Keep the mobile bracket header compact. Explanatory copy may collapse, but the
-  Live/My Picks switch must remain visible. Group Seeds belong in a separate,
-  collapsed-by-default disclosure below the bracket. Preserve both disclosure
-  states and the selected stage when the bracket rerenders.
+  Live/My Picks switch must remain visible. Group Seeds belong in a
+  collapsed-by-default disclosure below the bracket, with the expanded content
+  inside the same bordered panel as its toggle. Preserve both disclosure states
+  and the selected stage when the bracket rerenders.
 - Two-column path cards must stretch to the full width of their grid tracks.
   Shrink-wrapped cards leave a gap before fixed-width connector arms even when
   the junction math is correct. Browser smoke must compare both card edges to
   the junction center and fail unless every arm reaches its card.
+- Connector tests must cover vertical alignment, not only horizontal reach.
+  Source-card centers shift when a stack has a gap; percentage-based border
+  fragments previously missed each corner by 1.75px. Keep mobile nodes at the
+  tested 72px height with a 6px gap and draw the merge as one SVG path aligned to
+  the 24%/50%/76% centers. Assert every endpoint within 0.2px in browser smoke.
+- Keep the appearance control in the navigation rail and default it to `system`.
+  On mobile, Bracket and Stats hide search; placing theme in the old action row
+  wasted an entire 38px row. The nav control must retain a 44px touch target and
+  an accessible label describing the current and next appearance.
 - In the compact mobile tree, confirmed teams always use mapped three-letter
   codes. Unresolved sources such as `W M89` remain structural labels until a
   team is known. Keep the full team name in `aria-label`; desktop uses full

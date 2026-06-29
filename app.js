@@ -1101,7 +1101,8 @@ function renderBracket() {
   function mobileStagePath(sourceIds, targetId) {
     var out = '<div class="bracket-mobile-path"><div class="bracket-mobile-source-stack">';
     sourceIds.forEach(function(id) { out += visualSlot(id, 1, 1, 'bracket-mobile-source', 0); });
-    return out + '</div><div class="bracket-mobile-path-junction" aria-hidden="true"></div>' +
+    return out + '</div><div class="bracket-mobile-path-junction" aria-hidden="true">' +
+      '<svg viewBox="0 0 18 100" preserveAspectRatio="none" focusable="false"><path d="M0 24H9V76H0M9 50H18"></path></svg></div>' +
       '<div class="bracket-mobile-target">' + visualSlot(targetId, 1, 1, '', 0) + '</div></div>';
   }
 
@@ -1137,7 +1138,7 @@ function renderBracket() {
     (bracketViewMode === 'live'
       ? 'Confirmed teams and FT winners lead the bracket. Your saved picks remain as comparison data.'
       : 'Manual predictions lead the bracket. Confirmed teams fill empty slots, and original picks are preserved.');
-  var html = '<section class="bracket-info' + (bracketInfoExpanded ? ' expanded' : '') + '"><div class="bracket-info-copy"><div class="bracket-info-heading"><h3>Elimination Bracket</h3>' +
+  var html = '<section class="bracket-info' + (bracketInfoExpanded ? ' expanded' : '') + '"><div class="bracket-info-copy"><div class="bracket-info-heading"><h3><span class="bracket-title-wide">Elimination Bracket</span><span class="bracket-title-narrow">Bracket</span></h3>' +
     '<button type="button" class="bracket-info-expand" data-bracket-info-toggle aria-expanded="' + bracketInfoExpanded + '" aria-label="' + (bracketInfoExpanded ? 'Hide bracket details' : 'Show bracket details') + '">' +
     icon(bracketInfoExpanded ? 'chevronUp' : 'chevronDown',{size:16}) + '</button></div>' +
     '<p' + (bracketInfoExpanded ? '' : ' hidden') + '>' + bracketDescription + '</p></div>' +
@@ -1804,7 +1805,13 @@ function applyTheme() {
   document.documentElement.setAttribute('data-theme', effective);
   document.documentElement.setAttribute('data-theme-pref', themePreference);
   var btn = document.getElementById('themeBtn');
-  if (btn) btn.title = 'Theme: ' + themePreference;
+  if (btn) {
+    var order = ['system', 'light', 'dark'];
+    var next = order[(order.indexOf(themePreference) + 1) % order.length];
+    var label = 'Appearance: ' + themePreference + '. Switch to ' + next;
+    btn.title = label;
+    btn.setAttribute('aria-label', label);
+  }
 }
 
 function cycleTheme() {
