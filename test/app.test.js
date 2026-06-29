@@ -735,6 +735,8 @@ test('bracket uses connected desktop and dynamic two-column mobile maps', () => 
   assert.match(css, /\.bracket-mobile-visual/);
   assert.match(css, /\.bracket-mobile-path/);
   assert.match(css, /grid-template-columns: minmax\(0, 1fr\) 18px minmax\(0, 1fr\)/);
+  assert.match(css, /\.bracket-mobile-source-stack > \.bracket-visual-slot \{[\s\S]*?width: 100%/);
+  assert.match(css, /--bracket-line:/);
   assert.match(css, /max-height: min\(64dvh, 620px\)/);
   assert.match(css, /\.bracket-mobile-visual \.bt-label-code/);
 });

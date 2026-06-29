@@ -832,6 +832,7 @@
   }
   .bracket-mobile-scroll::-webkit-scrollbar { display: none; }
   .bracket-mobile-visual {
+    --bracket-line: color-mix(in srgb, var(--text-muted) 72%, var(--border));
     width: 100%;
     padding: 9px 8px 12px;
   }
@@ -864,15 +865,29 @@
     margin-bottom: 10px;
   }
   .bracket-mobile-source-stack { position: relative; display: flex; flex-direction: column; gap: 7px; }
-  .bracket-mobile-source-stack > .bracket-visual-slot { flex: 0 0 auto; }
-  .bracket-mobile-path-junction { position: relative; align-self: stretch; }
-  .bracket-mobile-path-junction::before {
+  .bracket-mobile-source-stack > .bracket-visual-slot {
+    width: 100%;
+    flex: 0 0 auto;
+    align-self: stretch;
+  }
+  .bracket-mobile-target > .bracket-visual-slot { width: 100%; }
+  .bracket-mobile-path-junction { position: relative; z-index: 3; align-self: stretch; pointer-events: none; }
+  .bracket-mobile-path-junction::before,
+  .bracket-mobile-path-junction::after {
     content: '';
     position: absolute;
+  }
+  .bracket-mobile-path-junction::before {
     left: 50%;
     top: 25%;
     bottom: 25%;
-    border-left: 1px solid var(--border-strong, var(--border));
+    border-left: 1px solid var(--bracket-line);
+  }
+  .bracket-mobile-path-junction::after {
+    left: 50%;
+    right: 0;
+    top: 50%;
+    border-top: 1px solid var(--bracket-line);
   }
   .bracket-mobile-source .bracket-node::after,
   .bracket-mobile-target .bracket-node::before,
@@ -880,18 +895,17 @@
   .bracket-mobile-final-connector::after {
     content: '';
     position: absolute;
-    z-index: -1;
+    z-index: 3;
     top: 50%;
     width: 9px;
-    border-top: 1px solid var(--border-strong, var(--border));
+    border-top: 1px solid var(--bracket-line);
+    pointer-events: none;
   }
   .bracket-mobile-source .bracket-node::after,
   .bracket-mobile-final-path > div:first-child .bracket-node::after { left: 100%; }
   .bracket-mobile-target .bracket-node::before { right: 100%; }
   .bracket-mobile-final-connector { position: relative; align-self: stretch; }
   .bracket-mobile-final-connector::after { left: 0; width: 100%; }
-  .bracket-mobile-source .bracket-visual-slot,
-  .bracket-mobile-target .bracket-visual-slot { min-width: 0; }
   .bracket-mobile-visual .bracket-node-footer {
     min-height: 15px;
     display: flex;

@@ -212,6 +212,16 @@ try {
     desktopVisible: getComputedStyle(document.querySelector('.bracket-desktop-shell')).display !== 'none',
     mobileVisible: getComputedStyle(document.querySelector('.bracket-mobile-map')).display !== 'none',
     activeSection: document.querySelector('[data-bracket-section].active')?.dataset.bracketSection,
+    connectorGaps: [...document.querySelectorAll('.bracket-mobile-path')].map(path => {
+      const junction = path.querySelector('.bracket-mobile-path-junction')?.getBoundingClientRect();
+      const target = path.querySelector('.bracket-mobile-target .bracket-node')?.getBoundingClientRect();
+      const center = junction ? junction.left + junction.width / 2 : 0;
+      return {
+        sources: [...path.querySelectorAll('.bracket-mobile-source .bracket-node')]
+          .map(node => Math.round((center - node.getBoundingClientRect().right) * 10) / 10),
+        target: target ? Math.round((target.left - center) * 10) / 10 : null,
+      };
+    }),
     infoExpanded: document.querySelector('[data-bracket-info-toggle]')?.getAttribute('aria-expanded'),
     infoHeight: Math.round(document.querySelector('.bracket-info')?.getBoundingClientRect().height || 0),
     seedsExpanded: document.querySelector('[data-bracket-seeds-toggle]')?.getAttribute('aria-expanded'),
@@ -229,6 +239,7 @@ try {
   assert(mobile.buttons.every(button => button.width > 90), 'Mode buttons should remain usable on mobile', mobile);
   assert(mobile.sectionButtons.join(',') === 'R32,R16,QF,SF,Final', 'Mobile navigation should use standard tournament round names', mobile);
   assert(mobile.activeSection === 'r32', 'Mobile bracket should begin at the Round of 32', mobile);
+  assert(mobile.connectorGaps.length === 8 && mobile.connectorGaps.every(gap => gap.target === 9 && gap.sources.length === 2 && gap.sources.every(value => value === 9)), 'Every mobile source and target card should meet its 9px connector arm', mobile);
   assert(mobile.infoExpanded === 'false' && mobile.infoHeight < 70, 'Mobile bracket details should start compact', mobile);
   assert(mobile.seedsExpanded === 'false', 'Group Seeds should start collapsed', mobile);
   assert(mobile.scroller && mobile.scroller.scrollWidth <= mobile.scroller.clientWidth + 2, 'Mobile bracket should not scroll horizontally', mobile);

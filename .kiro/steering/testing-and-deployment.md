@@ -266,6 +266,10 @@ Rules for bracket/live-results balance:
   Live/My Picks switch must remain visible. Group Seeds belong in a separate,
   collapsed-by-default disclosure below the bracket. Preserve both disclosure
   states and the selected stage when the bracket rerenders.
+- Two-column path cards must stretch to the full width of their grid tracks.
+  Shrink-wrapped cards leave a gap before fixed-width connector arms even when
+  the junction math is correct. Browser smoke must compare both card edges to
+  the junction center and fail unless every arm reaches its card.
 - In the compact mobile tree, confirmed teams always use mapped three-letter
   codes. Unresolved sources such as `W M89` remain structural labels until a
   team is known. Keep the full team name in `aria-label`; desktop uses full
