@@ -91,6 +91,17 @@ otherwise empty action row from Bracket and Stats while retaining a 44px target.
 The default remains `system`, following platform appearance unless the user
 explicitly cycles to light or dark; the preference remains in `wc2026-theme`.
 
+Search and Appearance share a trailing utility cluster in the navigation rail.
+They are actions, not top-level destinations, and each keeps a 44px mobile touch
+target. Search expands the existing field only while active, so it consumes no
+document height at rest and remains available from every tab.
+
+The global live/next fixture uses a one-line 30px mobile ticker. Preserve the
+full matchup and local kickoff in its dynamic `aria-label` and `title` because
+the visible team line may ellipsize on narrow screens. Mobile content begins 8px
+below the ticker; do not restore an empty top-action row or margin between the
+ticker and the first panel.
+
 The mobile interaction borrows two established patterns: ESPN has documented a
 vertical bracket with swipe navigation and explicit round jumps, while FotMob's
 World Cup knockout view makes the bracket the dominant surface and compacts
@@ -218,14 +229,16 @@ FIFA remains the manual cross-check for fixtures and published statistics:
 2. Run `BRACKET_SMOKE_API_URL=https://wc26.medina.contact/api/data npm run smoke:bracket -- http://127.0.0.1:4173/#bracket` when the Bracket tab changes.
 3. For Groups tab changes, verify normal standings rows and third-place rows both open the team modal.
 4. Run `vercel build` to validate the deployment configuration.
-5. Deploy with `npm run deploy`.
-6. Verify `/service-worker.js` reports the expected cache version.
-7. Verify `/api/data` returns HTTP 200, nonzero stats, and all matches older than four hours have `status: "FT"`.
-8. Verify `/api/data` reports `meta.scorerCompleteness: "verified"` and `meta.scorerIssueCount: 0`.
-9. Verify completed or mathematically settled groups expose the expected standings `status` labels, while open groups do not show speculative badges.
-10. Test Groups, Matches, Bracket, Stats, search, and theme controls in a fresh browser tab.
-11. In an installed PWA or simulated service-worker session, confirm reopening the app refreshes `/api/data` with a no-cache request and does not downgrade from a newer local payload to the bundled snapshot.
-12. Confirm response security and cache headers on the production domain.
+5. In a worktree, verify `.vercel/repo.json` or `.vercel/project.json` targets
+   `fifa-wc-2026` (`prj_SEO8zTTItfowDPOdsS2FF8g9qCj8`). Relink explicitly if missing.
+6. Deploy with `npm run deploy`.
+7. Verify `/service-worker.js` reports the expected cache version.
+8. Verify `/api/data` returns HTTP 200, nonzero stats, and all matches older than four hours have `status: "FT"`.
+9. Verify `/api/data` reports `meta.scorerCompleteness: "verified"` and `meta.scorerIssueCount: 0`.
+10. Verify completed or mathematically settled groups expose the expected standings `status` labels, while open groups do not show speculative badges.
+11. Test Groups, Matches, Bracket, Stats, search, and theme controls in a fresh browser tab.
+12. In an installed PWA or simulated service-worker session, confirm reopening the app refreshes `/api/data` with a no-cache request and does not downgrade from a newer local payload to the bundled snapshot.
+13. Confirm response security and cache headers on the production domain.
 
 For a branch preview, run `npm run stamp-sw` and then `vercel --yes` without
 `--prod`. This gives the preview a distinct service-worker byte stamp while

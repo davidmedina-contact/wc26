@@ -8,7 +8,7 @@ A single-page web app for following the 2026 FIFA World Cup. Installable as a PW
 - **Matches** — Schedule browser by date with kickoff times, broadcast networks (FOX/FS1/Telemundo/etc.), and win/draw/loss probability.
 - **Bracket** — Interactive elimination bracket. Pick group stage finishers and knockout round winners through the Final.
 - **Stats** — Tournament stats: top scorers, goals by group, confederation breakdown, and records.
-- **Search** — Global search by team name or player name.
+- **Search** — Global team/player search from the navigation utility cluster.
 - **Dark/light/system appearance** control in the navigation rail (system by default, persisted to `localStorage`).
 - **ICS file** — `world-cup-2026-schedule.ics` for importing the full schedule into any calendar app.
 
@@ -51,6 +51,12 @@ The stamp is required for installed PWAs to detect a new app version and show
 the update confirmation on next launch/focus. Do not use bare `vercel --prod`
 or rely only on a GitHub push for visible app changes, including serverless
 changes that affect scores, standings, stats, or refresh behavior.
+
+Before deploying from a Git worktree, verify `.vercel/repo.json` (new CLI) or
+`.vercel/project.json` (legacy CLI) names `fifa-wc-2026` and project ID
+`prj_SEO8zTTItfowDPOdsS2FF8g9qCj8`. If neither file exists, run
+`vercel link --yes --project fifa-wc-2026` before `npm run deploy`; otherwise the
+CLI may create a new project from the worktree directory name.
 
 After deploying, commit and push the stamped `service-worker.js` so GitHub and
 the Vercel deployment stay at parity.

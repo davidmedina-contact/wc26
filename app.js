@@ -452,6 +452,9 @@ function renderMatchStrip() {
     html += '<span class="ms-time">' + pdt + ' ' + localTz + '</span>';
   }
   el.innerHTML = html;
+  el.setAttribute('aria-label', (liveMatch ? 'Live match: ' : 'Next match: ') + homeName + ' versus ' + awayName +
+    (liveMatch ? '' : ' at ' + pdt + ' ' + localTz));
+  el.title = el.getAttribute('aria-label');
 }
 
 function getMatchKickoffDate(m) {
@@ -1138,9 +1141,8 @@ function renderBracket() {
     (bracketViewMode === 'live'
       ? 'Confirmed teams and FT winners lead the bracket. Your saved picks remain as comparison data.'
       : 'Manual predictions lead the bracket. Confirmed teams fill empty slots, and original picks are preserved.');
-  var html = '<section class="bracket-info' + (bracketInfoExpanded ? ' expanded' : '') + '"><div class="bracket-info-copy"><div class="bracket-info-heading"><h3><span class="bracket-title-wide">Elimination Bracket</span><span class="bracket-title-narrow">Bracket</span></h3>' +
-    '<button type="button" class="bracket-info-expand" data-bracket-info-toggle aria-expanded="' + bracketInfoExpanded + '" aria-label="' + (bracketInfoExpanded ? 'Hide bracket details' : 'Show bracket details') + '">' +
-    icon(bracketInfoExpanded ? 'chevronUp' : 'chevronDown',{size:16}) + '</button></div>' +
+  var html = '<section class="bracket-info' + (bracketInfoExpanded ? ' expanded' : '') + '"><div class="bracket-info-copy"><button type="button" class="bracket-info-heading" data-bracket-info-toggle aria-expanded="' + bracketInfoExpanded + '" aria-label="' + (bracketInfoExpanded ? 'Hide bracket details' : 'Show bracket details') + '"><h3><span class="bracket-title-wide">Elimination Bracket</span><span class="bracket-title-narrow">Bracket</span></h3>' +
+    icon(bracketInfoExpanded ? 'chevronUp' : 'chevronDown',{size:16}) + '</button>' +
     '<p' + (bracketInfoExpanded ? '' : ' hidden') + '>' + bracketDescription + '</p></div>' +
     '<div class="bracket-actions"><div class="bracket-mode-toggle" role="tablist" aria-label="Bracket view">' +
     '<button class="' + (bracketViewMode === 'picks' ? 'active' : '') + '" data-bracket-mode="picks" role="tab" aria-selected="' + (bracketViewMode === 'picks') + '">My Picks</button>' +

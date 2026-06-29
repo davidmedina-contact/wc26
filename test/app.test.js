@@ -724,6 +724,7 @@ test('bracket uses connected desktop and dynamic two-column mobile maps', () => 
   assert.match(app, /data-mobile-stage=/);
   assert.match(app, /\[\['M97','M98'\],'M101'\]/);
   assert.match(app, /data-bracket-info-toggle/);
+  assert.match(app, /<button type="button" class="bracket-info-heading" data-bracket-info-toggle/);
   assert.match(app, /bracket-title-narrow/);
   assert.match(app, /data-bracket-seeds-toggle/);
   assert.match(app, /Original pick: /);
@@ -746,7 +747,7 @@ test('bracket uses connected desktop and dynamic two-column mobile maps', () => 
   assert.match(css, /--bracket-line:/);
   assert.match(css, /max-height: min\(64dvh, 620px\)/);
   assert.match(css, /\.bracket-mobile-visual \.bt-label-code/);
-  assert.match(html, /id="navTabs"[\s\S]*id="themeBtn"[\s\S]*<div class="top-actions">/);
+  assert.match(html, /id="navTabs"[\s\S]*class="nav-utilities"[\s\S]*id="searchToggle"[\s\S]*id="themeBtn"/);
 });
 
 test('official knockout graph defines every FIFA path through the final', () => {
@@ -788,6 +789,8 @@ test('next-match banner uses the same confirmed knockout team resolver', () => {
   const strip = app.slice(app.indexOf('function renderMatchStrip'), app.indexOf('function getMatchKickoffDate'));
   assert.match(strip, /liveKnockoutTeamsForMatch\(target\)/);
   assert.match(strip, /homeName \+ ' vs ' \+ awayName/);
+  assert.match(strip, /Next match: /);
+  assert.match(strip, /el\.title = el\.getAttribute\('aria-label'\)/);
 });
 
 test('service worker keeps a last-known-good API response', () => {

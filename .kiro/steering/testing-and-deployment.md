@@ -131,6 +131,10 @@ Rules from the June 2026 standings-order incident:
 
 - Before any production deploy, re-read this deployment section rather than
   deciding from memory whether a change is "backend-only."
+- Before deploying from a Git worktree, inspect `.vercel/repo.json` or the legacy
+  `.vercel/project.json`. It must target `fifa-wc-2026` with project ID
+  `prj_SEO8zTTItfowDPOdsS2FF8g9qCj8`. A missing link makes Vercel create a new
+  project named after the temporary worktree instead of updating production.
 - Use `npm run deploy` for every user-visible release. It stamps
   `service-worker.js` and deploys the matching source.
 - Do not rely on "push to main" or raw `vercel --prod` for user-visible changes;
@@ -280,6 +284,14 @@ Rules for bracket/live-results balance:
   On mobile, Bracket and Stats hide search; placing theme in the old action row
   wasted an entire 38px row. The nav control must retain a 44px touch target and
   an accessible label describing the current and next appearance.
+- Keep Search beside Appearance in a distinct nav-utility cluster, not in a
+  document-flow action row. Search is a transient action: its full field should
+  consume space only while open, focus immediately, and remain available across
+  tabs. Browser smoke must enforce both 44px utility targets.
+- The global live/next fixture is a compact mobile ticker, not a second header.
+  Keep it at 30px or less, preserve the full fixture in accessibility text, and
+  limit the handoff to the first content panel to 8px. Measure this gap in smoke;
+  empty fixed-nav wrappers can otherwise reintroduce invisible vertical space.
 - In the compact mobile tree, confirmed teams always use mapped three-letter
   codes. Unresolved sources such as `W M89` remain structural labels until a
   team is known. Keep the full team name in `aria-label`; desktop uses full

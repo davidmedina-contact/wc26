@@ -237,10 +237,19 @@ try {
     }),
     cardHeights: [...document.querySelectorAll('.bracket-mobile-visual .bracket-node')]
       .map(node => node.getBoundingClientRect().height),
-    themeParent: document.querySelector('#themeBtn')?.parentElement?.id || '',
+    utilityParent: document.querySelector('#themeBtn')?.parentElement?.className || '',
+    searchParent: document.querySelector('#searchToggle')?.parentElement?.className || '',
+    matchStripHeight: document.querySelector('#matchStrip')?.getBoundingClientRect().height || 0,
+    matchStripGap: (() => {
+      const strip = document.querySelector('#matchStrip')?.getBoundingClientRect();
+      const info = document.querySelector('.bracket-info')?.getBoundingClientRect();
+      return strip && info ? info.top - strip.bottom : null;
+    })(),
     topBarHeight: document.querySelector('.top-bar')?.getBoundingClientRect().height || 0,
     seedsContentParent: document.querySelector('#bracketSeedsContent')?.parentElement?.className || '',
     infoExpanded: document.querySelector('[data-bracket-info-toggle]')?.getAttribute('aria-expanded'),
+    infoToggleTag: document.querySelector('[data-bracket-info-toggle]')?.tagName,
+    infoToggleText: document.querySelector('[data-bracket-info-toggle]')?.textContent.trim(),
     infoHeight: Math.round(document.querySelector('.bracket-info')?.getBoundingClientRect().height || 0),
     seedsExpanded: document.querySelector('[data-bracket-seeds-toggle]')?.getAttribute('aria-expanded'),
     scroller: (() => {
@@ -262,13 +271,19 @@ try {
     alignment.sources.every((value, index) => Math.abs(value - alignment.expectedSources[index]) < 0.2) &&
     Math.abs(alignment.target - alignment.expectedTarget) < 0.2), 'Continuous connector corners should align with every card center', mobile);
   assert(mobile.cardHeights.length === 24 && mobile.cardHeights.every(height => height >= 70 && height <= 73), 'Mobile cards should use the compact readable height contract', mobile);
-  assert(mobile.themeParent === 'navTabs' && mobile.topBarHeight < 2, 'Appearance belongs in mobile navigation and should not consume bracket height', mobile);
+  assert(mobile.utilityParent === 'nav-utilities' && mobile.searchParent === 'nav-utilities' && mobile.topBarHeight < 2, 'Search and Appearance should share zero-height mobile nav utilities', mobile);
+  assert(mobile.matchStripHeight <= 31 && mobile.matchStripGap !== null && mobile.matchStripGap <= 9, 'Compact match ticker should hand off tightly to bracket content', mobile);
   assert(mobile.seedsContentParent === 'bracket-seeds', 'Group Seeds content should remain inside its disclosure panel', mobile);
   assert(mobile.infoExpanded === 'false' && mobile.infoHeight < 70, 'Mobile bracket details should start compact', mobile);
+  assert(mobile.infoToggleTag === 'BUTTON' && /Bracket/.test(mobile.infoToggleText), 'Bracket title and chevron should share one semantic disclosure button', mobile);
   assert(mobile.seedsExpanded === 'false', 'Group Seeds should start collapsed', mobile);
   assert(mobile.scroller && mobile.scroller.scrollWidth <= mobile.scroller.clientWidth + 2, 'Mobile bracket should not scroll horizontally', mobile);
   assert(mobile.scroller && mobile.scroller.scrollHeight > mobile.scroller.clientHeight, 'Tall mobile bracket should scroll inside its own viewport', mobile);
   assert(!mobile.desktopVisible && mobile.mobileVisible, 'Mobile should use the connected compact bracket instead of the desktop canvas', mobile);
+  await page.click('.bracket-title-wide');
+  assert(await page.getAttribute('[data-bracket-info-toggle]', 'aria-expanded') === 'true', 'Clicking bracket title text should expand its panel');
+  await page.click('.bracket-title-wide');
+  assert(await page.getAttribute('[data-bracket-info-toggle]', 'aria-expanded') === 'false', 'Clicking bracket title text again should collapse its panel');
   if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-r32.png'), fullPage: false });
 
   await page.setViewportSize({ width: 320, height: 700 });
@@ -281,7 +296,9 @@ try {
       bodyWidth: document.body.scrollWidth,
       viewport: window.innerWidth,
       theme: theme ? { width: theme.width, height: theme.height } : null,
-      headingOverflow: heading ? heading.width < document.querySelector('.bracket-info-heading').scrollWidth : true,
+      headingOverflow: heading ? document.querySelector('.bracket-info-heading').scrollWidth - heading.width > 1 : true,
+      headingWidth: heading?.width || 0,
+      headingScrollWidth: document.querySelector('.bracket-info-heading')?.scrollWidth || 0,
       narrowTitleVisible: narrowTitle ? getComputedStyle(narrowTitle).display !== 'none' : false,
       cardWidths: cards.map(card => card.getBoundingClientRect().width),
       footerOverflow: [...document.querySelectorAll('.bracket-mobile-visual .bracket-node-footer')]
@@ -293,6 +310,17 @@ try {
   assert(narrowMobile.narrowTitleVisible && !narrowMobile.headingOverflow, 'Narrow mobile header should use its compact readable title', narrowMobile);
   assert(narrowMobile.cardWidths.every(width => width >= 128) && !narrowMobile.footerOverflow, 'Narrow mobile cards should retain readable content without footer overflow', narrowMobile);
   if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-320.png'), fullPage: false });
+  await page.click('#searchToggle');
+  const searchUtility = await page.evaluate(() => {
+    const button = document.querySelector('#searchToggle')?.getBoundingClientRect();
+    return {
+      open: document.querySelector('#searchBox')?.classList.contains('open'),
+      focused: document.activeElement?.id,
+      button: button ? { width: button.width, height: button.height } : null,
+    };
+  });
+  assert(searchUtility.open && searchUtility.focused === 'searchInput' && searchUtility.button?.width >= 44 && searchUtility.button?.height >= 44, 'Bottom-nav Search should open and focus the existing search field', searchUtility);
+  await page.click('#searchToggle');
   const startingTheme = await page.evaluate(() => document.documentElement.getAttribute('data-theme-pref'));
   const themeCycle = [];
   for (let i = 0; i < 3; i++) {
