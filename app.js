@@ -29,6 +29,8 @@ let bracketState = {};
 let bracketOriginalState = {};
 let bracketViewMode = 'live';
 let bracketMobileSection = 'r32';
+let bracketInfoExpanded = false;
+let bracketSeedsExpanded = false;
 var selectedMatchDate = '2026-06-11';
 
 function saveBracketState() {
@@ -390,7 +392,9 @@ var ICONS = {
   history: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
   reset: '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
   x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
-  arrowLeft: '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>'
+  arrowLeft: '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+  chevronDown: '<polyline points="6 9 12 15 18 9"/>',
+  chevronUp: '<polyline points="18 15 12 9 6 15"/>'
 };
 
 // Returns an inline SVG string. opts: {size, cls, fill}
@@ -1070,79 +1074,86 @@ function renderBracket() {
   }
 
   var mobileRounds = [
-    {id:'r32', label:'R32', title:'Round of 32', col:1, focus:'M74'},
-    {id:'r16', label:'R16', title:'Round of 16', col:2, focus:'M89'},
-    {id:'qf', label:'QF', title:'Quarter-finals', col:3, focus:'M97'},
-    {id:'sf', label:'SF', title:'Semi-finals', col:4, focus:'M101'},
-    {id:'final', label:'Final', title:'Final', col:5, focus:'M104'}
+    {id:'r32', label:'R32', title:'Round of 32', nextTitle:'Round of 16', paths:[
+      [['M74','M77'],'M89'], [['M73','M75'],'M90'], [['M83','M84'],'M93'], [['M81','M82'],'M94'],
+      [['M76','M78'],'M91'], [['M79','M80'],'M92'], [['M86','M88'],'M95'], [['M85','M87'],'M96']
+    ]},
+    {id:'r16', label:'R16', title:'Round of 16', nextTitle:'Quarter-finals', paths:[
+      [['M89','M90'],'M97'], [['M93','M94'],'M98'], [['M91','M92'],'M99'], [['M95','M96'],'M100']
+    ]},
+    {id:'qf', label:'QF', title:'Quarter-finals', nextTitle:'Semi-finals', paths:[
+      [['M97','M98'],'M101'], [['M99','M100'],'M102']
+    ]},
+    {id:'sf', label:'SF', title:'Semi-finals', nextTitle:'Final', paths:[
+      [['M101','M102'],'M104']
+    ]},
+    {id:'final', label:'Final', title:'Final', nextTitle:'Champion', paths:[]}
   ];
 
-  function mobileVisualBracket() {
-    var out = '<div class="bracket-mobile-scroll" data-mobile-bracket-scroll><div class="bracket-mobile-visual" aria-label="World Cup knockout bracket">';
-    mobileRounds.forEach(function(round) {
-      out += '<div class="bracket-mobile-column-title" style="--bracket-col:' + round.col + '">' + round.title + '</div>' +
-        '<span class="bracket-mobile-round-anchor" data-mobile-round-anchor="' + round.id + '" style="--bracket-col:' + round.col + '" aria-hidden="true"></span>';
-    });
+  function mobileChampionCard() {
+    var champion = resolvedWinners.M104;
+    return '<div class="bracket-mobile-champion-card">' + icon('trophy',{size:22,cls:'champion-trophy'}) +
+      (champion && wcData.teams[champion]
+        ? '<strong>' + wcData.teams[champion].flag + ' ' + esc(bracketTeamCode(champion)) + '</strong>'
+        : '<strong>Champion</strong>') + '</div>';
+  }
 
-    var r32 = ['M74','M77','M73','M75','M83','M84','M81','M82','M76','M78','M79','M80','M86','M88','M85','M87'];
-    var r16 = ['M89','M90','M93','M94','M91','M92','M95','M96'];
-    var qf = ['M97','M98','M99','M100'];
-    var r32Rows = [2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32];
-    var r16Rows = [3,7,11,15,19,23,27,31];
-    var qfRows = [5,13,21,29];
-    var sfRows = [9,25];
+  function mobileStagePath(sourceIds, targetId) {
+    var out = '<div class="bracket-mobile-path"><div class="bracket-mobile-source-stack">';
+    sourceIds.forEach(function(id) { out += visualSlot(id, 1, 1, 'bracket-mobile-source', 0); });
+    return out + '</div><div class="bracket-mobile-path-junction" aria-hidden="true"></div>' +
+      '<div class="bracket-mobile-target">' + visualSlot(targetId, 1, 1, '', 0) + '</div></div>';
+  }
 
-    r32.forEach(function(id, i) { out += visualSlot(id, 1, r32Rows[i], 'connect-right', 0); });
-    r16.forEach(function(id, i) { out += visualSlot(id, 2, r16Rows[i], 'connect-left connect-right join-left', 2); });
-    qf.forEach(function(id, i) { out += visualSlot(id, 3, qfRows[i], 'connect-left connect-right join-left', 4); });
-    ['M101','M102'].forEach(function(id, i) { out += visualSlot(id, 4, sfRows[i], 'connect-left connect-right join-left', 8); });
-    out += visualSlot('M104', 5, 17, 'connect-left bracket-final-node', 0);
-    out += visualSlot('M103', 5, 25, 'bracket-bronze-node', 0);
-    out += '<div class="bracket-mobile-visual-champion">' + icon('trophy',{size:20,cls:'champion-trophy'}) +
-      (resolvedWinners.M104 && wcData.teams[resolvedWinners.M104] ? '<strong>' + wcData.teams[resolvedWinners.M104].flag + ' ' + esc(resolvedWinners.M104) + '</strong>' : '<strong>Champion</strong>') + '</div>' +
-      '<div class="bracket-mobile-third-label">Third place</div>';
+  function mobileVisualBracket(round) {
+    var out = '<div class="bracket-mobile-scroll" data-mobile-bracket-scroll><div class="bracket-mobile-visual" data-mobile-stage="' + round.id + '" aria-label="' + round.title + ' to ' + round.nextTitle + '">' +
+      '<div class="bracket-mobile-column-titles"><span>' + round.title + '</span><span>' + round.nextTitle + '</span></div>';
+
+    if (round.id === 'final') {
+      out += '<div class="bracket-mobile-final-path"><div>' + visualSlot('M104', 1, 1, 'bracket-final-node', 0) + '</div>' +
+        '<div class="bracket-mobile-final-connector" aria-hidden="true"></div>' + mobileChampionCard() + '</div>' +
+        '<div class="bracket-mobile-aux"><span>Third place</span>' + visualSlot('M103', 1, 1, 'bracket-bronze-node', 0) + '</div>';
+    } else {
+      round.paths.forEach(function(path) { out += mobileStagePath(path[0], path[1]); });
+      if (round.id === 'sf') {
+        out += '<div class="bracket-mobile-aux"><span>Third place</span>' + visualSlot('M103', 1, 1, 'bracket-bronze-node', 0) + '</div>';
+      }
+    }
     return out + '</div></div>';
   }
 
   function mobileBracketMap() {
+    var activeRound = mobileRounds.find(function(round) { return round.id === bracketMobileSection; }) || mobileRounds[0];
     var out = '<div class="bracket-mobile-map"><div class="bracket-section-tabs" role="tablist" aria-label="Bracket section">';
     mobileRounds.forEach(function(round) {
       out += '<button type="button" role="tab" data-bracket-section="' + round.id + '" aria-selected="' + (bracketMobileSection === round.id) + '" class="' + (bracketMobileSection === round.id ? 'active' : '') + '">' + round.label + '</button>';
     });
-    return out + '</div>' + mobileVisualBracket() + '</div>';
-  }
-
-  function scrollMobileBracketTo(roundId, behavior) {
-    var scroller = el.querySelector('[data-mobile-bracket-scroll]');
-    var anchor = el.querySelector('[data-mobile-round-anchor="' + roundId + '"]');
-    var round = mobileRounds.find(function(candidate) { return candidate.id === roundId; });
-    var focusNode = round && el.querySelector('.bracket-mobile-visual [data-match-id="' + round.focus + '"]');
-    var focus = focusNode && focusNode.closest('.bracket-visual-slot');
-    if (!scroller || !anchor || !scroller.clientWidth) return;
-    var targetLeft = anchor.offsetLeft - (scroller.clientWidth - anchor.offsetWidth) / 2;
-    var targetTop = roundId === 'r32' || !focus
-      ? 0
-      : focus.offsetTop - (scroller.clientHeight - focus.offsetHeight) / 2;
-    scroller.scrollTo({left:Math.max(0, targetLeft), top:Math.max(0, targetTop), behavior:behavior || 'smooth'});
+    return out + '</div>' + mobileVisualBracket(activeRound) + '</div>';
   }
 
   // Build HTML
-  var resetButton = bracketViewMode === 'picks' ? '<button id="resetBtn">' + icon('reset',{size:14}) + ' Reset Picks</button>' : '';
-  var html = '<div class="bracket-info"><div><h3>Elimination Bracket</h3><p>' +
+  var resetButton = bracketViewMode === 'picks' ? '<button id="resetBtn">' + icon('reset',{size:14}) + '<span>Reset Picks</span></button>' : '';
+  var bracketDescription =
     (bracketViewMode === 'live'
       ? 'Confirmed teams and FT winners lead the bracket. Your saved picks remain as comparison data.'
-      : 'Manual predictions lead the bracket. Confirmed teams fill empty slots, and original picks are preserved.') +
-    '</p></div><div class="bracket-actions"><div class="bracket-mode-toggle" role="tablist" aria-label="Bracket view">' +
+      : 'Manual predictions lead the bracket. Confirmed teams fill empty slots, and original picks are preserved.');
+  var html = '<section class="bracket-info' + (bracketInfoExpanded ? ' expanded' : '') + '"><div class="bracket-info-copy"><div class="bracket-info-heading"><h3>Elimination Bracket</h3>' +
+    '<button type="button" class="bracket-info-expand" data-bracket-info-toggle aria-expanded="' + bracketInfoExpanded + '" aria-label="' + (bracketInfoExpanded ? 'Hide bracket details' : 'Show bracket details') + '">' +
+    icon(bracketInfoExpanded ? 'chevronUp' : 'chevronDown',{size:16}) + '</button></div>' +
+    '<p' + (bracketInfoExpanded ? '' : ' hidden') + '>' + bracketDescription + '</p></div>' +
+    '<div class="bracket-actions"><div class="bracket-mode-toggle" role="tablist" aria-label="Bracket view">' +
     '<button class="' + (bracketViewMode === 'picks' ? 'active' : '') + '" data-bracket-mode="picks" role="tab" aria-selected="' + (bracketViewMode === 'picks') + '">My Picks</button>' +
     '<button class="' + (bracketViewMode === 'live' ? 'active' : '') + '" data-bracket-mode="live" role="tab" aria-selected="' + (bracketViewMode === 'live') + '">Live Bracket</button>' +
-    '</div>' + resetButton + '</div></div>';
+    '</div>' + resetButton + '</div></section>';
 
   html += '<div class="bracket-visual">' + desktopBracketMap() + mobileBracketMap() + '</div>';
 
   // === GROUP PICKS ===
   var groupTitle = bracketViewMode === 'live' ? 'Group Seeds' : 'Group Stage Picks';
-  html += '<div class="bracket-round-title">' + groupTitle + '</div>';
-  html += '<div class="bracket-grid" id="bracketGrid">';
+  html += '<section class="bracket-seeds"><button type="button" class="bracket-seeds-toggle" data-bracket-seeds-toggle aria-expanded="' + bracketSeedsExpanded + '" aria-controls="bracketSeedsContent">' +
+    '<span><strong>' + groupTitle + '</strong><small>12 groups</small></span>' + icon(bracketSeedsExpanded ? 'chevronUp' : 'chevronDown',{size:18}) + '</button>' +
+    '<div id="bracketSeedsContent" class="bracket-seeds-content"' + (bracketSeedsExpanded ? '' : ' hidden') + '>' +
+    '<div class="bracket-grid" id="bracketGrid">';
   var idx = 0;
   Object.keys(wcData.groups).forEach(function(letter) {
     var group = wcData.groups[letter];
@@ -1171,7 +1182,7 @@ function renderBracket() {
     });
     html += '</div>';
   });
-  html += '</div>';
+  html += '</div></div></section>';
 
   // Insert progress before the bracket map.
   var progressHtml = '';
@@ -1179,16 +1190,11 @@ function renderBracket() {
     var progressPct = totalKoPicks > 0 ? Math.round((madeKoPicks / totalKoPicks) * 100) : 0;
     progressHtml = '<div class="bracket-progress"><div class="bracket-progress-bar"><div class="bracket-progress-fill" style="width:' + progressPct + '%"></div></div><span class="bracket-progress-label">' + madeKoPicks + '/' + totalKoPicks + ' knockout picks made</span></div>';
   } else {
-    progressHtml = '<div class="bracket-progress bracket-progress-live"><span class="bracket-progress-label">Live bracket uses confirmed seeds and FT winners only</span></div>';
+    progressHtml = '';
   }
   html = html.replace('<div class="bracket-visual">', progressHtml + '<div class="bracket-visual">');
 
   el.innerHTML = html;
-
-  // A mode change rerenders the bracket. Restore the selected mobile stage.
-  window.requestAnimationFrame(function() {
-    scrollMobileBracketTo(bracketMobileSection, 'auto');
-  });
 
   // Event delegation (set once)
   if (!el._hasListener) {
@@ -1197,12 +1203,19 @@ function renderBracket() {
       var sectionBtn = e.target.closest('[data-bracket-section]');
       if (sectionBtn) {
         bracketMobileSection = sectionBtn.getAttribute('data-bracket-section');
-        el.querySelectorAll('[data-bracket-section]').forEach(function(button) {
-          var active = button.getAttribute('data-bracket-section') === bracketMobileSection;
-          button.classList.toggle('active', active);
-          button.setAttribute('aria-selected', active);
-        });
-        scrollMobileBracketTo(bracketMobileSection, 'smooth');
+        renderBracket();
+        return;
+      }
+      var infoToggle = e.target.closest('[data-bracket-info-toggle]');
+      if (infoToggle) {
+        bracketInfoExpanded = !bracketInfoExpanded;
+        renderBracket();
+        return;
+      }
+      var seedsToggle = e.target.closest('[data-bracket-seeds-toggle]');
+      if (seedsToggle) {
+        bracketSeedsExpanded = !bracketSeedsExpanded;
+        renderBracket();
         return;
       }
       var modeBtn = e.target.closest('[data-bracket-mode]');

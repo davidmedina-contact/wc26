@@ -61,15 +61,28 @@ serverless live-data computation.
 The Bracket tab renders that graph differently by viewport without changing its
 meaning. Desktop uses one mirrored tournament tree with the final in the
 center. Mobile uses standard round tabs: `R32`, `R16`, `QF`, `SF`, and `Final`.
-The tabs center the matching column and its first fixture inside one bounded,
-internally scrollable connected tree; the page itself must not overflow.
+Each tab renders a connected two-column stage window (`R32 -> R16`,
+`R16 -> QF`, `QF -> SF`, or `SF -> Final`) from the same official match graph.
+The first rounds scroll vertically, while later stages collapse to their content
+height so all remaining paths fit together without inherited empty rows. The
+Final view pairs Match 104 with the champion and keeps Match 103 visible below.
+The mobile page and bracket must not overflow horizontally.
 Official match IDs remain on the cards, where they identify individual fixtures
 without replacing fan-facing round names. Confirmed teams use consistent
 three-letter codes in the compact mobile tree, while unresolved structural
 slots remain `W M...` or `L M...` until a team is known. Full team names remain
-in accessibility labels and on desktop. Group seed controls remain below the
-bracket. Both layouts must be generated from the same resolved match models and
-official match IDs, never from separate progression data.
+in accessibility labels and on desktop. The bracket description is collapsed by
+default without hiding the Live/My Picks control. Group Seeds remain below the
+bracket in an independently expandable section. Disclosure state and the
+selected mobile stage survive Live/My Picks rerenders. Both layouts must be
+generated from the same resolved match models and official match IDs, never from
+separate progression data.
+
+The mobile interaction borrows two established patterns: ESPN has documented a
+vertical bracket with swipe navigation and explicit round jumps, while FotMob's
+World Cup knockout view makes the bracket the dominant surface and compacts
+later rounds. This app keeps the explicit round tabs but limits the viewport to
+two connected stages so cards remain readable and selectable.
 
 Original-pick comparisons use a compact history icon plus three-letter team
 code in the match header. Keep the full `Original pick: Team` value in the

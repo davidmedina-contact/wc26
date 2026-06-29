@@ -90,20 +90,20 @@ try {
     cityLabels: [...document.querySelectorAll('.bracket-desktop-map .bracket-node-city')]
       .map(node => node.textContent.trim()).slice(0, 4),
     desktopIds: [...document.querySelectorAll('.bracket-desktop-map [data-match-id]')].map(node => node.dataset.matchId),
-    mobileRoundAnchors: document.querySelectorAll('[data-mobile-round-anchor]').length,
+    mobileStageTabs: document.querySelectorAll('[data-bracket-section]').length,
     mobileIds: [...document.querySelectorAll('.bracket-mobile-visual [data-match-id]')].map(node => node.dataset.matchId),
     banner: document.querySelector('#matchStrip .ms-teams')?.textContent.trim() || '',
   }));
   assert(live.mode === 'Live Bracket', 'Live Bracket should be the default mode', live);
-  assert(live.progress === 'Live bracket uses confirmed seeds and FT winners only', 'Live mode should not show a picks-made counter', live);
+  assert(!live.progress, 'Live mode should not spend vertical space on a redundant status line', live);
   assert(live.resetVisible === false, 'Live mode should not show Reset Picks', live);
   assert(live.tapHints === 0, 'Live mode should be read-only and hide tap-to-pick hints', live);
   assert(live.confirmedNodes > 0, 'Live bracket should visibly mark confirmed matchups', live);
   assert(live.dateTimeLabels.some(label => /Jun|Jul/.test(label) && /\d:\d{2} (AM|PM)/.test(label)), 'Bracket cards should show date and local time labels', live);
   assert(live.cityLabels.includes('Boston'), 'Bracket cards should show canonical host cities', live);
   assert(live.desktopIds.length === 32 && new Set(live.desktopIds).size === 32, 'Desktop map should render every knockout match exactly once', live);
-  assert(live.mobileRoundAnchors === 5, 'Mobile map should expose an anchor for each knockout round', live);
-  assert(live.mobileIds.length === 32 && new Set(live.mobileIds).size === 32, 'Mobile map should render every knockout match exactly once', live);
+  assert(live.mobileStageTabs === 5, 'Mobile map should expose each knockout stage', live);
+  assert(live.mobileIds.length === 24 && new Set(live.mobileIds).size === 24, 'R32 mobile window should show 16 source and 8 target matches', live);
   assert(!/Group|TBD|W M|L M/.test(live.banner), 'Next-match banner should use confirmed teams when available', live);
   if (screenshotDir) {
     await mkdir(screenshotDir, { recursive: true });
@@ -179,7 +179,7 @@ try {
     savedPicks: JSON.parse(localStorage.getItem('wc2026bracket') || '{}'),
   }));
   assert(returnedLive.mode === 'Live Bracket', 'Switching modes should activate Live Bracket', returnedLive);
-  assert(returnedLive.progress === 'Live bracket uses confirmed seeds and FT winners only', 'Switching to Live should reset visible pick progress', returnedLive);
+  assert(!returnedLive.progress, 'Switching to Live should hide prediction progress', returnedLive);
   assert(returnedLive.resetVisible === false, 'Switching to Live should hide Reset Picks', returnedLive);
   assert(returnedLive.tapHints === 0, 'Switching to Live should hide pick hints', returnedLive);
   assert(count(liveR32, 'Uruguay') <= 1, 'Live Bracket must not display stale duplicate Uruguay picks', { liveR32 });
@@ -212,6 +212,9 @@ try {
     desktopVisible: getComputedStyle(document.querySelector('.bracket-desktop-shell')).display !== 'none',
     mobileVisible: getComputedStyle(document.querySelector('.bracket-mobile-map')).display !== 'none',
     activeSection: document.querySelector('[data-bracket-section].active')?.dataset.bracketSection,
+    infoExpanded: document.querySelector('[data-bracket-info-toggle]')?.getAttribute('aria-expanded'),
+    infoHeight: Math.round(document.querySelector('.bracket-info')?.getBoundingClientRect().height || 0),
+    seedsExpanded: document.querySelector('[data-bracket-seeds-toggle]')?.getAttribute('aria-expanded'),
     scroller: (() => {
       const node = document.querySelector('[data-mobile-bracket-scroll]');
       return node ? {
@@ -226,30 +229,60 @@ try {
   assert(mobile.buttons.every(button => button.width > 90), 'Mode buttons should remain usable on mobile', mobile);
   assert(mobile.sectionButtons.join(',') === 'R32,R16,QF,SF,Final', 'Mobile navigation should use standard tournament round names', mobile);
   assert(mobile.activeSection === 'r32', 'Mobile bracket should begin at the Round of 32', mobile);
-  assert(mobile.scroller && mobile.scroller.scrollWidth > mobile.scroller.clientWidth, 'Mobile bracket should scroll inside its own viewport', mobile);
+  assert(mobile.infoExpanded === 'false' && mobile.infoHeight < 70, 'Mobile bracket details should start compact', mobile);
+  assert(mobile.seedsExpanded === 'false', 'Group Seeds should start collapsed', mobile);
+  assert(mobile.scroller && mobile.scroller.scrollWidth <= mobile.scroller.clientWidth + 2, 'Mobile bracket should not scroll horizontally', mobile);
   assert(mobile.scroller && mobile.scroller.scrollHeight > mobile.scroller.clientHeight, 'Tall mobile bracket should scroll inside its own viewport', mobile);
   assert(!mobile.desktopVisible && mobile.mobileVisible, 'Mobile should use the connected compact bracket instead of the desktop canvas', mobile);
   if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-r32.png'), fullPage: false });
 
+  await page.click('[data-bracket-section="qf"]');
+  await page.waitForTimeout(100);
+  const qf = await page.evaluate(() => {
+    const node = document.querySelector('[data-mobile-bracket-scroll]');
+    return {
+      ids: [...document.querySelectorAll('.bracket-mobile-visual [data-match-id]')].map(match => match.dataset.matchId).sort(),
+      clientHeight: node?.clientHeight,
+      scrollHeight: node?.scrollHeight,
+    };
+  });
+  assert(qf.ids.join(',') === 'M100,M101,M102,M97,M98,M99', 'QF window should show four quarterfinals feeding two semifinals', qf);
+  assert(qf.clientHeight === qf.scrollHeight && qf.clientHeight < 450, 'QF window should collapse to show every path without scrolling', qf);
+  if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-qf.png'), fullPage: false });
+
+  await page.click('[data-bracket-section="sf"]');
+  await page.waitForTimeout(100);
+  const sf = await page.evaluate(() => {
+    const node = document.querySelector('[data-mobile-bracket-scroll]');
+    return {
+      ids: [...document.querySelectorAll('.bracket-mobile-visual [data-match-id]')].map(match => match.dataset.matchId).sort(),
+      clientHeight: node?.clientHeight,
+      scrollHeight: node?.scrollHeight,
+    };
+  });
+  assert(sf.ids.join(',') === 'M101,M102,M103,M104', 'SF window should show both semifinals, the final, and third place', sf);
+  assert(sf.clientHeight === sf.scrollHeight && sf.clientHeight < 360, 'SF window should collapse to its four match cards', sf);
+  if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-sf.png'), fullPage: false });
+
   await page.click('[data-bracket-section="final"]');
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(100);
   const finals = await page.evaluate(() => ({
     activeSection: document.querySelector('[data-bracket-section].active')?.dataset.bracketSection,
     ids: [...document.querySelectorAll('.bracket-mobile-visual [data-match-id]')]
       .filter(node => node.dataset.matchId === 'M103' || node.dataset.matchId === 'M104')
       .map(node => node.dataset.matchId).sort(),
+    champion: Boolean(document.querySelector('.bracket-mobile-champion-card')),
     scroller: (() => {
       const node = document.querySelector('[data-mobile-bracket-scroll]');
       return node ? {
-        scrollLeft: node.scrollLeft, maxScroll: node.scrollWidth - node.clientWidth,
-        scrollTop: node.scrollTop, maxScrollTop: node.scrollHeight - node.clientHeight,
+        clientHeight: node.clientHeight, scrollHeight: node.scrollHeight,
       } : null;
     })(),
   }));
   assert(finals.activeSection === 'final', 'Final tab should select the championship stage', finals);
   assert(finals.ids.join(',') === 'M103,M104', 'Connected mobile bracket should contain the final and third-place match', finals);
-  assert(finals.scroller && finals.scroller.scrollLeft > finals.scroller.maxScroll * 0.7, 'Final tab should scroll the connected bracket to its last stage', finals);
-  assert(finals.scroller && finals.scroller.scrollTop > finals.scroller.maxScrollTop * 0.35, 'Final tab should vertically center the championship match', finals);
+  assert(finals.champion, 'Final stage should include the champion destination', finals);
+  assert(finals.scroller && finals.scroller.clientHeight === finals.scroller.scrollHeight && finals.scroller.clientHeight < 280, 'Final stage should collapse to the final, champion, and third-place cards', finals);
   const localStaticTarget = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//.test(target);
   const actionableBrowserErrors = browserErrors.filter(error =>
     !(localStaticTarget && error.includes('/_vercel/insights/script.js'))
@@ -257,7 +290,7 @@ try {
   assert(actionableBrowserErrors.length === 0, 'Bracket preview should not emit browser errors', { browserErrors: actionableBrowserErrors });
   if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-final.png'), fullPage: false });
 
-  console.log(JSON.stringify({ target, live, picks, clickedPick, returnedLive, mobile, finals, browserErrors: actionableBrowserErrors }, null, 2));
+  console.log(JSON.stringify({ target, live, picks, clickedPick, returnedLive, mobile, qf, sf, finals, browserErrors: actionableBrowserErrors }, null, 2));
 } finally {
   await browser.close();
 }

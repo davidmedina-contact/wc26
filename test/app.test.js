@@ -686,7 +686,7 @@ test('bracket preserves original picks and supports live versus prediction modes
   assert.match(app, /liveThirdPlaceSeedForMatch/);
   assert.match(app, /function compactMatchNode/);
   assert.match(app, /var knockoutModels = \{\}/);
-  assert.match(app, /Live bracket uses confirmed seeds and FT winners only/);
+  assert.doesNotMatch(app, /Live bracket uses confirmed seeds and FT winners only/);
   assert.match(app, /knockout picks made/);
   assert.match(app, /if \(bracketViewMode === 'picks'\) totalKoPicks\+\+/);
   assert.match(app, /knockoutScoreOutcome\(homeTeam, awayTeam\)/);
@@ -708,7 +708,7 @@ test('bracket cards include knockout dates and local-time labels', () => {
   assert.match(app, /KnockoutBracket\.byId\[matchId\]\.v/);
 });
 
-test('bracket uses connected desktop and mobile maps with standard round tabs', () => {
+test('bracket uses connected desktop and dynamic two-column mobile maps', () => {
   const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   const css = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
   assert.match(app, /function desktopBracketMap\(\)/);
@@ -716,14 +716,16 @@ test('bracket uses connected desktop and mobile maps with standard round tabs', 
   assert.match(app, /data-bracket-section=/);
   assert.match(app, /\{id:'r32', label:'R32', title:'Round of 32'/);
   assert.match(app, /\{id:'sf', label:'SF', title:'Semi-finals'/);
-  assert.match(app, /function mobileVisualBracket\(\)/);
-  assert.match(app, /data-mobile-round-anchor=/);
-  assert.match(app, /scrollMobileBracketTo\(bracketMobileSection/);
-  assert.match(app, /focus:'M104'/);
+  assert.match(app, /function mobileVisualBracket\(round\)/);
+  assert.match(app, /function mobileStagePath\(sourceIds, targetId\)/);
+  assert.match(app, /data-mobile-stage=/);
+  assert.match(app, /\[\['M97','M98'\],'M101'\]/);
+  assert.match(app, /data-bracket-info-toggle/);
+  assert.match(app, /data-bracket-seeds-toggle/);
   assert.match(app, /Original pick: /);
   assert.match(app, /icon\('history',\{size:9\}\)/);
   assert.match(app, /visualSlot\('M104', 5, 8/);
-  assert.match(app, /visualSlot\('M103', 5, 25/);
+  assert.match(app, /visualSlot\('M103', 5, 12/);
   assert.match(app, /'South Africa':'RSA'/);
   assert.match(app, /aria-label="' \+ esc\(model\.home\)/);
   assert.match(app, /data-team="' \+ esc\(model\.home\)/);
@@ -731,8 +733,9 @@ test('bracket uses connected desktop and mobile maps with standard round tabs', 
   assert.match(css, /\.bracket-desktop-map/);
   assert.match(css, /\.bracket-mobile-scroll/);
   assert.match(css, /\.bracket-mobile-visual/);
-  assert.match(css, /grid-template-columns: repeat\(5, 156px\)/);
-  assert.match(css, /max-height: min\(58vh, 560px\)/);
+  assert.match(css, /\.bracket-mobile-path/);
+  assert.match(css, /grid-template-columns: minmax\(0, 1fr\) 18px minmax\(0, 1fr\)/);
+  assert.match(css, /max-height: min\(64dvh, 620px\)/);
   assert.match(css, /\.bracket-mobile-visual \.bt-label-code/);
 });
 

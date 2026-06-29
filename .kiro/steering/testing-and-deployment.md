@@ -257,11 +257,15 @@ Rules for bracket/live-results balance:
   confirmed-team resolution in the next-match banner.
 - Do not shrink the full 32-team tree into an unreadable mobile overview.
   Desktop should use a mirrored tree centered on the final. Mobile should use
-  standard round tabs (`R32`, `R16`, `QF`, `SF`, `Final`) that jump across one
-  bounded, internally scrollable connected tree and center a representative
-  fixture vertically. Keep official match IDs on cards, not as the primary
-  round-navigation labels. Generate the tree from the same official-ID match
-  models.
+  standard round tabs (`R32`, `R16`, `QF`, `SF`, `Final`) and a connected
+  two-column stage window. Early stages may scroll vertically; later stages
+  must collapse to their content height instead of retaining Round-of-32 gaps.
+  Keep official match IDs on cards, not as the primary round-navigation labels.
+  Generate every stage from the same official-ID match models.
+- Keep the mobile bracket header compact. Explanatory copy may collapse, but the
+  Live/My Picks switch must remain visible. Group Seeds belong in a separate,
+  collapsed-by-default disclosure below the bracket. Preserve both disclosure
+  states and the selected stage when the bracket rerenders.
 - In the compact mobile tree, confirmed teams always use mapped three-letter
   codes. Unresolved sources such as `W M89` remain structural labels until a
   team is known. Keep the full team name in `aria-label`; desktop uses full
@@ -276,12 +280,12 @@ Rules for bracket/live-results balance:
   Do not derive picks from rendered `textContent`: responsive nodes contain both
   full-name and compact-code spans, including CSS-hidden text. Browser smoke
   must click a knockout team and verify both localStorage and pick progress.
-- Browser smoke for bracket layout changes must assert 32 unique match nodes in
-  both renderings, five mobile stage anchors, internal two-axis scrolling,
-  mobile code/accessibility-label consistency, working stage jumps, Live/My
-  Picks state preservation, and no mobile body overflow. Capture desktop,
-  mobile R32, and mobile Final screenshots when visually reviewing a substantial
-  bracket change.
+- Browser smoke for bracket layout changes must assert 32 unique desktop match
+  nodes, exact match membership for every dynamic mobile stage, one-axis mobile
+  scrolling, later-stage height compression, mobile code/accessibility-label
+  consistency, disclosure behavior, Live/My Picks state preservation, and no
+  mobile body overflow. Capture desktop, mobile R32, QF, SF, and Final
+  screenshots when visually reviewing a substantial bracket change.
 - Vercel preview deployments may be protected by Vercel Authentication. Keep
   protection enabled. Pass the configured automation bypass to Playwright via
   `VERCEL_AUTOMATION_BYPASS_SECRET`; never print, persist, or commit the secret.
