@@ -30,7 +30,6 @@ let bracketOriginalState = {};
 let bracketViewMode = 'live';
 let bracketMobileSection = 'r32';
 let bracketInfoExpanded = false;
-let bracketSeedsExpanded = false;
 var selectedMatchDate = '2026-06-11';
 
 function saveBracketState() {
@@ -91,7 +90,8 @@ function ensureTabRendered(tab) {
 function switchTab(tab, btn) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  if (btn) btn.classList.add('active');
+  var activeButton = btn || document.querySelector('.nav-tab[data-tab="' + tab + '"]');
+  if (activeButton) activeButton.classList.add('active');
   document.getElementById('tab-' + tab).classList.add('active');
   document.body.setAttribute('data-active-tab', tab);
   ensureTabRendered(tab);
@@ -1135,28 +1135,10 @@ function renderBracket() {
     return out + '</div>' + mobileVisualBracket(activeRound) + '</div>';
   }
 
-  // Build HTML
-  var resetButton = bracketViewMode === 'picks' ? '<button id="resetBtn">' + icon('reset',{size:14}) + '<span>Reset Picks</span></button>' : '';
-  var bracketDescription =
-    (bracketViewMode === 'live'
-      ? 'Confirmed teams and FT winners lead the bracket. Your saved picks remain as comparison data.'
-      : 'Manual predictions lead the bracket. Confirmed teams fill empty slots, and original picks are preserved.');
-  var html = '<section class="bracket-info' + (bracketInfoExpanded ? ' expanded' : '') + '"><div class="bracket-info-copy"><button type="button" class="bracket-info-heading" data-bracket-info-toggle aria-expanded="' + bracketInfoExpanded + '" aria-label="' + (bracketInfoExpanded ? 'Hide bracket details' : 'Show bracket details') + '"><h3><span class="bracket-title-wide">Elimination Bracket</span><span class="bracket-title-narrow">Bracket</span></h3>' +
-    icon(bracketInfoExpanded ? 'chevronUp' : 'chevronDown',{size:16}) + '</button>' +
-    '<p' + (bracketInfoExpanded ? '' : ' hidden') + '>' + bracketDescription + '</p></div>' +
-    '<div class="bracket-actions"><div class="bracket-mode-toggle" role="tablist" aria-label="Bracket view">' +
-    '<button class="' + (bracketViewMode === 'picks' ? 'active' : '') + '" data-bracket-mode="picks" role="tab" aria-selected="' + (bracketViewMode === 'picks') + '">My Picks</button>' +
-    '<button class="' + (bracketViewMode === 'live' ? 'active' : '') + '" data-bracket-mode="live" role="tab" aria-selected="' + (bracketViewMode === 'live') + '">Live Bracket</button>' +
-    '</div>' + resetButton + '</div></section>';
-
-  html += '<div class="bracket-visual">' + desktopBracketMap() + mobileBracketMap() + '</div>';
-
   // === GROUP PICKS ===
   var groupTitle = bracketViewMode === 'live' ? 'Group Seeds' : 'Group Stage Picks';
-  html += '<section class="bracket-seeds"><button type="button" class="bracket-seeds-toggle" data-bracket-seeds-toggle aria-expanded="' + bracketSeedsExpanded + '" aria-controls="bracketSeedsContent">' +
-    '<span><strong>' + groupTitle + '</strong><small>12 groups</small></span>' + icon(bracketSeedsExpanded ? 'chevronUp' : 'chevronDown',{size:18}) + '</button>' +
-    '<div id="bracketSeedsContent" class="bracket-seeds-content"' + (bracketSeedsExpanded ? '' : ' hidden') + '>' +
-    '<div class="bracket-grid" id="bracketGrid">';
+  var seedsHtml = '<div class="bracket-seeds-embedded"><div class="bracket-seeds-heading"><strong>' + groupTitle + '</strong><small>12 groups</small></div>' +
+    '<div id="bracketSeedsContent" class="bracket-seeds-content"><div class="bracket-grid" id="bracketGrid">';
   var idx = 0;
   Object.keys(wcData.groups).forEach(function(letter) {
     var group = wcData.groups[letter];
@@ -1164,7 +1146,7 @@ function renderBracket() {
     var directLive3 = liveGroupSeed(letter, '3');
     var autoLive3 = directLive3 ? null : autoThirdSeed(letter);
     var live1 = liveGroupSeed(letter, '1'), live2 = liveGroupSeed(letter, '2'), live3 = directLive3 || autoLive3;
-    html += '<div class="bracket-match"><div class="bracket-match-lbl" style="color:' + groupColors[letter] + '">Group ' + letter + '</div>';
+    seedsHtml += '<div class="bracket-match"><div class="bracket-match-lbl" style="color:' + groupColors[letter] + '">Group ' + letter + '</div>';
     var k3 = 'g_' + letter + '_3';
     group.teams.forEach(function(team) {
       var liveRank = live1 === team ? '1st' : live2 === team ? '2nd' : live3 === team ? '3rd' : '';
@@ -1176,16 +1158,33 @@ function renderBracket() {
       var cls = liveRank === '1st' ? ' winner locked' : liveRank === '2nd' ? ' runner locked' : liveRank === '3rd' ? ' third locked' : eliminated ? ' eliminated locked' : is1 ? ' winner' : is2 ? ' runner' : is3 ? ' third' : '';
       var liveSuffix = autoLive3 === team ? ' auto' : ' confirmed';
       var rank = liveRank ? liveRank + liveSuffix : eliminated ? 'out' : is1 ? '1st pick' : is2 ? '2nd pick' : is3 ? '3rd pick' : '';
-      html += '<div class="bracket-team' + cls + '" data-idx="' + idx + '"' + ((liveRank || eliminated) ? ' data-locked="true"' : '') + '>' +
+      seedsHtml += '<div class="bracket-team' + cls + '" data-idx="' + idx + '"' + ((liveRank || eliminated) ? ' data-locked="true"' : '') + '>' +
         '<span class="bt-name">' + getFlag(team) + team + '</span>' +
         '<span class="bt-rank">' + rank + '</span></div>';
       window._bracketMap = window._bracketMap || [];
       window._bracketMap[idx] = {g: letter, t: team};
       idx++;
     });
-    html += '</div>';
+    seedsHtml += '</div>';
   });
-  html += '</div></div></section>';
+  seedsHtml += '</div></div></div>';
+
+  // Build HTML. Keep the primary mode switch visible; progressively disclose
+  // explanatory copy and group seed controls in the same panel.
+  var resetButton = bracketViewMode === 'picks' ? '<button id="resetBtn">' + icon('reset',{size:14}) + '<span>Reset Picks</span></button>' : '';
+  var bracketDescription =
+    (bracketViewMode === 'live'
+      ? 'Confirmed teams and FT winners lead the bracket. Your saved picks remain as comparison data.'
+      : 'Manual predictions lead the bracket. Confirmed teams fill empty slots, and original picks are preserved.');
+  var html = '<section class="bracket-info' + (bracketInfoExpanded ? ' expanded' : '') + '"><div class="bracket-info-summary"><div class="bracket-info-copy"><button type="button" class="bracket-info-heading" data-bracket-info-toggle aria-expanded="' + bracketInfoExpanded + '" aria-controls="bracketControlsContent" aria-label="' + (bracketInfoExpanded ? 'Hide bracket controls' : 'Show bracket controls') + '"><h3><span class="bracket-title-wide">Elimination Bracket</span><span class="bracket-title-narrow">Bracket</span></h3>' +
+    icon(bracketInfoExpanded ? 'chevronUp' : 'chevronDown',{size:16}) + '</button></div>' +
+    '<div class="bracket-actions"><div class="bracket-mode-toggle" role="tablist" aria-label="Bracket view">' +
+    '<button class="' + (bracketViewMode === 'picks' ? 'active' : '') + '" data-bracket-mode="picks" role="tab" aria-selected="' + (bracketViewMode === 'picks') + '">My Picks</button>' +
+    '<button class="' + (bracketViewMode === 'live' ? 'active' : '') + '" data-bracket-mode="live" role="tab" aria-selected="' + (bracketViewMode === 'live') + '">Live Bracket</button>' +
+    '</div>' + resetButton + '</div></div>' +
+    '<div id="bracketControlsContent" class="bracket-info-content"' + (bracketInfoExpanded ? '' : ' hidden') + '><p>' + bracketDescription + '</p>' + seedsHtml + '</div></section>';
+
+  html += '<div class="bracket-visual">' + desktopBracketMap() + mobileBracketMap() + '</div>';
 
   // Insert progress before the bracket map.
   var progressHtml = '';
@@ -1212,12 +1211,6 @@ function renderBracket() {
       var infoToggle = e.target.closest('[data-bracket-info-toggle]');
       if (infoToggle) {
         bracketInfoExpanded = !bracketInfoExpanded;
-        renderBracket();
-        return;
-      }
-      var seedsToggle = e.target.closest('[data-bracket-seeds-toggle]');
-      if (seedsToggle) {
-        bracketSeedsExpanded = !bracketSeedsExpanded;
         renderBracket();
         return;
       }
@@ -1971,11 +1964,10 @@ function renderActiveTab() {
   if (hash) {
     var parts = hash.split('/');
     var tab = parts[0];
-    var validTabs = ['groups', 'matches', 'bracket', 'stats'];
+    var validTabs = ['matches', 'bracket', 'groups', 'stats'];
     if (validTabs.indexOf(tab) >= 0) {
       var btns = document.querySelectorAll('.nav-tab');
-      var tabIndex = validTabs.indexOf(tab);
-      btns.forEach(function(b, i) { b.classList.toggle('active', i === tabIndex); });
+      btns.forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-tab') === tab); });
       document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
       document.getElementById('tab-' + tab).classList.add('active');
       document.body.setAttribute('data-active-tab', tab);
@@ -1991,8 +1983,7 @@ function renderActiveTab() {
       return;
     }
   }
-  renderedTabs['groups'] = true;
-  try { renderGroups(); } catch(e) { console.error('renderGroups error:', e); }
+  switchTab('matches');
   renderMatchStrip();
 }
 

@@ -631,9 +631,25 @@ test('app shell declares an existing browser icon', () => {
 
 test('client hash routing persists every primary tab across refreshes', () => {
   const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   assert.match(app, /var nextHash = tab === 'matches' \? '#matches\/' \+ selectedMatchDate : '#' \+ tab/);
   assert.match(app, /if \(tab === 'matches' && parts\[1\]\) selectedMatchDate = parts\[1\]/);
-  assert.match(app, /var validTabs = \['groups', 'matches', 'bracket', 'stats'\]/);
+  assert.match(app, /var validTabs = \['matches', 'bracket', 'groups', 'stats'\]/);
+  assert.match(app, /b\.getAttribute\('data-tab'\) === tab/);
+  assert.match(app, /switchTab\('matches'\);/);
+  assert.match(html, /<body data-active-tab="matches">/);
+  assert.match(html, /nav-tab active" data-tab="matches"/);
+  assert.ok(html.indexOf('data-tab="matches"') < html.indexOf('data-tab="bracket"'));
+  assert.ok(html.indexOf('data-tab="bracket"') < html.indexOf('data-tab="groups"'));
+  assert.ok(html.indexOf('data-tab="groups"') < html.indexOf('data-tab="stats"'));
+});
+
+test('match cards use moderately compact spacing without shrinking labels', () => {
+  const css = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  assert.match(css, /\.match-list \{[^}]*gap: 8px/);
+  assert.match(css, /\.match-card \{[\s\S]*?padding: 15px 20px/);
+  assert.match(css, /@media \(max-width: 768px\)[\s\S]*?\.match-card \{[\s\S]*?padding: 11px 14px;[\s\S]*?gap: 7px/);
+  assert.match(css, /\.mc-name \{ font-size: 0\.95rem/);
 });
 
 test('client renders compact standings status markers with an inline legend', () => {
@@ -726,7 +742,9 @@ test('bracket uses connected desktop and dynamic two-column mobile maps', () => 
   assert.match(app, /data-bracket-info-toggle/);
   assert.match(app, /<button type="button" class="bracket-info-heading" data-bracket-info-toggle/);
   assert.match(app, /bracket-title-narrow/);
-  assert.match(app, /data-bracket-seeds-toggle/);
+  assert.match(app, /id="bracketControlsContent" class="bracket-info-content"/);
+  assert.match(app, /class="bracket-seeds-embedded"/);
+  assert.doesNotMatch(app, /data-bracket-seeds-toggle/);
   assert.match(app, /Original pick: /);
   assert.match(app, /icon\('history',\{size:9\}\)/);
   assert.match(app, /visualSlot\('M104', 5, 8/);
@@ -743,9 +761,12 @@ test('bracket uses connected desktop and dynamic two-column mobile maps', () => 
   assert.match(css, /\.bracket-mobile-source-stack > \.bracket-visual-slot \{[\s\S]*?width: 100%/);
   assert.match(css, /--mobile-card-height: 72px/);
   assert.match(css, /\.bracket-mobile-path-junction path/);
-  assert.match(css, /\.bracket-seeds-content \{ padding: 12px; border-top: 1px solid var\(--border\); \}/);
+  assert.match(css, /\.bracket-info-content \{ margin-top: 10px; padding-top: 10px; border-top: 1px solid var\(--border\); \}/);
+  assert.match(css, /\.bracket-section-tabs button \{[\s\S]*?height: 32px/);
   assert.match(css, /--bracket-line:/);
-  assert.match(css, /max-height: min\(64dvh, 620px\)/);
+  assert.match(css, /body\[data-active-tab="bracket"\] #tab-bracket\.active \{[\s\S]*?min-height: calc\(100dvh/);
+  assert.match(css, /\.bracket-mobile-scroll \{[^}]*overflow: visible/);
+  assert.doesNotMatch(css, /\.bracket-mobile-scroll \{[^}]*max-height:/);
   assert.match(css, /\.bracket-mobile-visual \.bt-label-code/);
   assert.match(html, /id="navTabs"[\s\S]*class="nav-utilities"[\s\S]*id="searchToggle"[\s\S]*id="themeBtn"/);
 });

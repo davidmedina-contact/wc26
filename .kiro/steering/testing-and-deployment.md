@@ -267,10 +267,26 @@ Rules for bracket/live-results balance:
   Keep official match IDs on cards, not as the primary round-navigation labels.
   Generate every stage from the same official-ID match models.
 - Keep the mobile bracket header compact. Explanatory copy may collapse, but the
-  Live/My Picks switch must remain visible. Group Seeds belong in a
-  collapsed-by-default disclosure below the bracket, with the expanded content
-  inside the same bordered panel as its toggle. Preserve both disclosure states
-  and the selected stage when the bracket rerenders.
+  Live/My Picks switch must remain visible. Use exactly one disclosure for the
+  bracket controls: its expanded body contains explanatory copy and all 12 Group
+  Seeds. Do not add a second Group Seeds disclosure below the bracket. Preserve
+  that disclosure state and the selected stage when the bracket rerenders.
+- Keep the mobile round selector to a 36px outer track with 32px equal-width
+  segments. Browser smoke must enforce the height and all five standard labels;
+  saving space must not introduce scrolling, truncation, or hidden rounds.
+- The mobile bracket must have one vertical scroll owner: the document. Use a
+  dynamic-viewport flex floor so short rounds fill available space and long
+  rounds expand naturally. Distribute surplus height across the actual path
+  rows; do not leave all cards packed at the top of an otherwise empty panel.
+  Keep each two-source connector at the fixed 150px card-stack height and center
+  it within its expanded row. Never cap the bracket with `max-height` and
+  `overflow-y: auto`; browser smoke must assert `scrollHeight === clientHeight`
+  on the bracket wrapper while R32 makes the page itself scroll.
+- Keep primary navigation ordered `Matches`, `Bracket`, `Groups`, `Stats`, with
+  Matches as the clean-launch default and a date-specific `#matches/YYYY-MM-DD`
+  hash. Bind activation through `data-tab`; never infer a tab from button index.
+- Tighten match cards through gaps and padding, not smaller team names, flags,
+  scores, or status text. Browser smoke must verify the cards do not overflow.
 - Two-column path cards must stretch to the full width of their grid tracks.
   Shrink-wrapped cards leave a gap before fixed-width connector arms even when
   the junction math is correct. Browser smoke must compare both card edges to

@@ -71,13 +71,29 @@ Official match IDs remain on the cards, where they identify individual fixtures
 without replacing fan-facing round names. Confirmed teams use consistent
 three-letter codes in the compact mobile tree, while unresolved structural
 slots remain `W M...` or `L M...` until a team is known. Full team names remain
-in accessibility labels and on desktop. The bracket description is collapsed by
-default without hiding the Live/My Picks control. Group Seeds remain below the
-bracket in an independently expandable disclosure whose header and body share
-one border and background. Disclosure state and the
-selected mobile stage survive Live/My Picks rerenders. Both layouts must be
+in accessibility labels and on desktop. One bracket-controls disclosure keeps
+Live/My Picks visible in its collapsed summary and reveals the description plus
+all 12 Group Seeds in the same panel. Do not restore a separate Group Seeds row;
+the single disclosure removes redundant chrome and keeps the controls visibly
+related. Disclosure state and the selected mobile stage survive Live/My Picks
+rerenders. Both layouts must be
 generated from the same resolved match models and official match IDs, never from
 separate progression data.
+
+The mobile round selector is compact secondary navigation: a 36px outer track
+with 32px segments. Keep all five standard round labels visible and equal-width;
+do not reduce the text or introduce horizontal scrolling to save more height.
+
+Primary navigation is ordered `Matches`, `Bracket`, `Groups`, `Stats`. A clean
+launch opens Matches and replaces an empty URL fragment with the selected
+date-specific `#matches/YYYY-MM-DD` hash. Nav activation uses each button's
+`data-tab` value, not its DOM index, so future reordering cannot route to the
+wrong content.
+
+Match cards use moderately compact spacing (8px list gaps, 11px by 14px mobile
+card padding, and 8px by 7px team-row padding). Keep team names, flags, scores,
+and status type at their existing sizes; density improvements should come from
+spacing rather than reduced readability.
 
 Mobile match nodes use an explicit 72px height and 6px source gap. A single SVG
 path spans each 18px connector column at source-center positions 24% and 76%, so
@@ -85,6 +101,17 @@ the two arms, merge spine, and target arm are one continuous stroke. Do not
 reintroduce separately positioned border fragments; even a small gap changes the
 source-center percentages and creates visibly disconnected corners. The compact
 height retains both teams, scores, local kickoff, and city.
+
+The mobile bracket must not create a nested vertical scroller. The active
+Bracket tab uses a dynamic-viewport flex floor: short rounds fill the space
+between the compact ticker and fixed bottom navigation, while R32/R16 grow with
+their content. Path rows share surplus height so the actual bracket expands,
+rather than leaving an empty block below tightly packed cards. Connector
+junctions retain the fixed 150px two-card geometry and stay centered inside
+expanded rows, preserving exact card-center alignment. The document remains the
+only vertical scroll owner. Keep
+horizontal overflow clipped, but do not restore `max-height` plus
+`overflow-y: auto` on the bracket window.
 
 The appearance control lives in the navigation rail. On mobile this removes the
 otherwise empty action row from Bracket and Stats while retaining a 44px target.
