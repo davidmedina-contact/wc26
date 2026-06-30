@@ -46,11 +46,17 @@ releases:
 npm run deploy
 ```
 
-That script stamps `service-worker.js` and then runs `vercel --prod --yes`.
-The stamp is required for installed PWAs to detect a new app version and show
-the update confirmation on next launch/focus. Do not use bare `vercel --prod`
-or rely only on a GitHub push for visible app changes, including serverless
-changes that affect scores, standings, stats, or refresh behavior.
+That guarded script verifies `main`, the canonical Vercel project, and the
+verified Hobby-owner commit email; stamps `service-worker.js`; deploys with
+build logs; and polls the custom domain until the new stamp and a healthy API
+are live. The stamp is required for installed PWAs to detect a new app version
+and show the update confirmation on next launch/focus. Do not use bare
+`vercel --prod` or rely only on a GitHub push for visible app changes, including
+serverless changes that affect scores, standings, stats, or refresh behavior.
+
+For this private repository on Vercel Hobby, release commits must use
+`David Medina <david@medina.contact>`. Hobby blocks deployments when HEAD is
+attributed to an identity Vercel cannot verify as the team owner.
 
 Before deploying from a Git worktree, verify `.vercel/repo.json` (new CLI) or
 `.vercel/project.json` (legacy CLI) names `fifa-wc-2026` and project ID

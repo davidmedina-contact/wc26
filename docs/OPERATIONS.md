@@ -257,13 +257,21 @@ FIFA remains the manual cross-check for fixtures and published statistics:
 
 ## Release Checklist
 
+`npm run deploy` is the release boundary. Its `predeploy` lifecycle verifies
+that the worktree is on `main`, linked to `fifa-wc-2026`, and attributed to the
+verified Hobby owner (`David Medina <david@medina.contact>`). Vercel Hobby blocks
+private-repository deployments whose HEAD author is not that owner. The
+`postdeploy` lifecycle polls the custom domain until its `BUILD_TS` matches the
+local service worker, then sanity-checks `/api/data`; an uploaded deployment URL
+alone is not proof that production changed.
+
 1. Run `npm run check`.
 2. Run `BRACKET_SMOKE_API_URL=https://wc26.medina.contact/api/data npm run smoke:bracket -- http://127.0.0.1:4173/#bracket` when the Bracket tab changes.
 3. For Groups tab changes, verify normal standings rows and third-place rows both open the team modal.
 4. Run `vercel build` to validate the deployment configuration.
 5. In a worktree, verify `.vercel/repo.json` or `.vercel/project.json` targets
    `fifa-wc-2026` (`prj_SEO8zTTItfowDPOdsS2FF8g9qCj8`). Relink explicitly if missing.
-6. Deploy with `npm run deploy`.
+6. Deploy with `npm run deploy`; do not bypass its preflight or post-deploy verification.
 7. Verify `/service-worker.js` reports the expected cache version.
 8. Verify `/api/data` returns HTTP 200, nonzero stats, and all matches older than four hours have `status: "FT"`.
 9. Verify `/api/data` reports `meta.scorerCompleteness: "verified"` and `meta.scorerIssueCount: 0`.

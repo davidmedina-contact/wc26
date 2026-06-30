@@ -2,11 +2,13 @@
   "name": "wc26-guide",
   "private": true,
   "scripts": {
-    "check": "node --check knockout-bracket.js && node --check app.js && node --check service-worker.js && node --check api/data.js && node --test",
+    "check": "node --check knockout-bracket.js && node --check app.js && node --check service-worker.js && node --check api/data.js && node --check scripts/predeploy-check.js && node --check scripts/verify-production.js && node --test",
     "test": "node --test",
     "smoke:bracket": "node scripts/bracket-smoke.mjs",
     "stamp-sw": "node scripts/stamp-sw.js",
-    "deploy": "npm run stamp-sw && vercel --prod --yes"
+    "predeploy": "node scripts/predeploy-check.js",
+    "deploy": "npm run stamp-sw && vercel --prod --yes --logs",
+    "postdeploy": "node scripts/verify-production.js"
   },
   "packageManager": "pnpm@9.7.0+sha512.dc09430156b427f5ecfc79888899e1c39d2d690f004be70e05230b72cb173d96839587545d09429b55ac3c429c801b4dc3c0e002f653830a420fa2dd4e3cf9cf"
 }

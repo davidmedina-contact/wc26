@@ -4,6 +4,13 @@
 
 Before deploying ANY change to production:
 
+0. **Use the guarded release command** — Run only `npm run deploy`. Its npm
+   lifecycle validates the canonical Vercel project, `main`, and the verified
+   Hobby-owner commit email `david@medina.contact`, stamps the service worker,
+   deploys with build logs, then polls `wc26.medina.contact` until the exact
+   stamp and a healthy `/api/data` response are live. An upload URL or
+   `Building...` output is not proof of a successful release.
+
 1. **Sync with remote** — Always `git fetch` and verify your local branch matches what's actually in production. The deployed code may have diverged from your local state (other sessions, manual edits, Vercel auto-deploys from GitHub).
 
 2. **Run the test suite** — `npm run check` must pass with zero failures before committing. This runs syntax checks on all JS files AND the unit tests.
@@ -112,7 +119,10 @@ Rules for dynamic tournament data:
 npm run deploy
 ```
 
-This runs `stamp-sw` (stamps `BUILD_TS`) then `vercel --prod --yes`. The stamped SW file guarantees the browser detects a new version on the next `reg.update()` call.
+This runs an author/project preflight, `stamp-sw` (stamps `BUILD_TS`),
+`vercel --prod --yes --logs`, and a production poll that requires the custom
+domain to serve the exact stamp plus a healthy API. The stamped SW file
+guarantees the browser detects a new version on the next `reg.update()` call.
 
 - The SW cache name (e.g. `wc26-v19`) only needs manual bumping when you change caching *strategy* (precache list, SWR logic, network-first patterns). For normal code/UI deploys, the `BUILD_TS` stamp is sufficient.
 - Update the test assertion when you bump the cache name.
@@ -144,6 +154,13 @@ Rules from the June 2026 standings-order incident:
 - Keep README, operations docs, and steering docs aligned on the same deploy
   command. If one says `vercel --prod`, it is stale unless it explicitly means a
   non-visible backend-only hotfix.
+- On Hobby with a private repository, HEAD must be attributed to the verified
+  team owner. This project uses `David Medina <david@medina.contact>`; a
+  different local Git email produces `TEAM_ACCESS_REQUIRED` even when the CLI
+  is authenticated correctly.
+- Treat Vercel states `UNKNOWN`, `BLOCKED`, `ERROR`, or an unchanged production
+  `BUILD_TS` as failed releases. Do not report success from an upload URL or a
+  `Building...` line.
 
 ### Lessons learned: scorer strings are not event data
 
