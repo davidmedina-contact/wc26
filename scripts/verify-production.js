@@ -7,6 +7,19 @@ const timeoutMs = Number(process.env.DEPLOY_VERIFY_TIMEOUT_MS || 180000);
 const pollMs = 5000;
 const sw = fs.readFileSync(path.join(__dirname, '..', 'service-worker.js'), 'utf8');
 const expectedBuild = sw.match(/var BUILD_TS = '([^']+)'/)?.[1];
+const releaseManifestPath = path.join(__dirname, '..', '.vercel', 'release-scope.json');
+
+function verificationScope() {
+  if (process.env.PRODUCTION_VERIFY_SCOPE === 'shell' || process.env.PRODUCTION_VERIFY_SCOPE === 'full') {
+    return process.env.PRODUCTION_VERIFY_SCOPE;
+  }
+  try {
+    const manifest = JSON.parse(fs.readFileSync(releaseManifestPath, 'utf8'));
+    return manifest.scope === 'shell' ? 'shell' : 'full';
+  } catch (error) {
+    return 'full';
+  }
+}
 
 if (!expectedBuild) throw new Error('Unable to read local service-worker BUILD_TS');
 
@@ -32,6 +45,12 @@ async function main() {
     throw new Error(`production BUILD_TS stayed at ${observedBuild || 'unknown'}; expected ${expectedBuild}`);
   }
 
+  const scope = verificationScope();
+  if (scope === 'shell') {
+    console.log(`Production shell verified: BUILD_TS ${expectedBuild}; live API audit skipped for presentation-only release`);
+    return;
+  }
+
   const payload = JSON.parse(await getText('/api/data'));
   const data = payload.data || payload;
   const scoreCount = Object.keys(data.actualScores || {}).length;
@@ -39,7 +58,19 @@ async function main() {
   if (scoreCount === 0 || matchesPlayed === 0) {
     throw new Error(`production API failed sanity checks: ${scoreCount} scores, ${matchesPlayed} matches`);
   }
-  console.log(`Production verified: BUILD_TS ${expectedBuild}, ${scoreCount} scores, ${matchesPlayed} matches`);
+  if (scoreCount !== matchesPlayed) {
+    throw new Error(`production API count mismatch: ${scoreCount} scores, ${matchesPlayed} computed matches`);
+  }
+  if (Object.values(data.actualScores || {}).some(score => score.status !== 'FT')) {
+    throw new Error('production API contains a non-FT entry in actualScores');
+  }
+  if (payload.meta?.scorerCompleteness !== 'verified' || payload.meta?.scorerIssueCount !== 0) {
+    throw new Error(`production scorer data is not verified: ${payload.meta?.scorerCompleteness || 'unknown'}, ${payload.meta?.scorerIssueCount ?? 'unknown'} issues`);
+  }
+  if (!Array.isArray(data.statsData?.goalTiming?.buckets) || !data.statsData?.teamLeaders) {
+    throw new Error('production API is missing the current stats contract');
+  }
+  console.log(`Production fully verified: BUILD_TS ${expectedBuild}, ${scoreCount} FT scores, ${matchesPlayed} computed matches, scorer data verified`);
 }
 
 main().catch(error => {

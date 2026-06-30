@@ -119,10 +119,19 @@ Rules for dynamic tournament data:
 npm run deploy
 ```
 
-This runs an author/project preflight, `stamp-sw` (stamps `BUILD_TS`),
-`vercel --prod --yes --logs`, and a production poll that requires the custom
-domain to serve the exact stamp plus a healthy API. The stamped SW file
-guarantees the browser detects a new version on the next `reg.update()` call.
+This runs an author/project preflight, classifies the committed release diff,
+stamps `BUILD_TS`, deploys with `vercel --prod --yes --logs`, and polls the
+custom domain for the exact stamp. Presentation-only releases use that fast
+shell verification. Changes to `api/`, `data/`, `data.json`, or `vercel.json`
+also run the full live API validation. Missing scope metadata fails safe to the
+full audit. The stamped SW file guarantees the browser detects a new version on
+the next `reg.update()` call.
+
+Responsive UI and interaction checks belong before deploy against the local
+candidate. Do not repeat those checks against production when the release is
+presentation-only. A live-data or response-contract change must still prove in
+production that score and match counts agree, all accepted scores are FT,
+scorer completeness is verified, and the current stats contract is present.
 
 - The SW cache name (e.g. `wc26-v19`) only needs manual bumping when you change caching *strategy* (precache list, SWR logic, network-first patterns). For normal code/UI deploys, the `BUILD_TS` stamp is sufficient.
 - Update the test assertion when you bump the cache name.

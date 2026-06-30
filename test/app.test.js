@@ -10,6 +10,7 @@ const {
   buildScorerVerification,
   cachePolicyFor,
   computeStandings,
+  computeStats,
   dataVersionFor,
   expectedFinishedKeys,
   parseScore,
@@ -22,6 +23,7 @@ const {
 
 const root = path.join(__dirname, '..');
 const knockoutBracket = require('../knockout-bracket');
+const { classifyRelease } = require('../scripts/release-scope');
 
 function game(overrides) {
   return Object.assign({
@@ -70,6 +72,73 @@ test('scores must be finite non-negative integers', () => {
   assert.equal(parseScore(undefined), null);
   assert.equal(parseScore('-1'), null);
   assert.equal(parseScore('1.5'), null);
+});
+
+test('release verification only audits production live data for server contract changes', () => {
+  assert.deepEqual(classifyRelease(['app.js', 'style.css', 'README.md']), {
+    scope: 'shell',
+    files: ['app.js', 'style.css', 'README.md'],
+    liveApiFiles: [],
+  });
+  assert.deepEqual(classifyRelease(['app.js', 'api/data.js', 'data/scorer-overrides.json']), {
+    scope: 'full',
+    files: ['app.js', 'api/data.js', 'data/scorer-overrides.json'],
+    liveApiFiles: ['api/data.js', 'data/scorer-overrides.json'],
+  });
+  assert.equal(classifyRelease(['vercel.json']).scope, 'full');
+  assert.equal(classifyRelease(['service-worker.js']).scope, 'shell');
+});
+
+test('stats derive timing, scorer, team, match, and normalized trend data from finals', () => {
+  const stats = computeStats([
+    game({
+      home_score: '2',
+      away_score: '1',
+      home_scorers: '{"Raúl Jiménez 12\'","Raúl Jiménez 45\'+2\'"}',
+      away_scorers: '{"Teboho Mokoena 77\'"}',
+    }),
+    game({
+      home_team_name_en: 'South Korea',
+      away_team_name_en: 'Czech Republic',
+      home_score: '0',
+      away_score: '0',
+    }),
+  ]);
+
+  assert.deepEqual(stats.overview, {
+    matchesPlayed: 2,
+    goalsScored: 3,
+    goalsPerMatch: 1.5,
+    teams: 48,
+    uniqueScorers: 2,
+  });
+  assert.deepEqual(stats.goalTiming, {
+    buckets: [
+      { label: '1-15', goals: 1 },
+      { label: '16-30', goals: 0 },
+      { label: '31-45+', goals: 1 },
+      { label: '46-60', goals: 0 },
+      { label: '61-75', goals: 0 },
+      { label: '76-90+', goals: 1 },
+      { label: 'ET', goals: 0 },
+    ],
+    timedGoals: 3,
+    totalGoals: 3,
+    stoppageGoals: 1,
+  });
+  assert.deepEqual(stats.topScorers[0], {
+    n: 'Raúl Jiménez',
+    t: 'Mexico',
+    g: 2,
+    ms: 1,
+    multi: 1,
+    share: 100,
+  });
+  assert.deepEqual(stats.matchPatterns.map(row => row.value), [1, 1, 1, 0, 0]);
+  assert.equal(stats.teamLeaders.attack[0].t, 'Mexico');
+  assert.equal(stats.teamLeaders.cleanSheets.some(row => row.t === 'South Korea'), true);
+  assert.equal(stats.groupGoals[0].rate, 1.5);
+  assert.equal(stats.confStats.find(row => row.c === 'CONCACAF').rate, 2);
 });
 
 test('knockout scores preserve the winner when penalties decide a tie', () => {

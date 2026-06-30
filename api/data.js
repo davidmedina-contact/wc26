@@ -704,22 +704,69 @@ function computeStats(games, verifiedScorers) {
 
   const scorerTotals = {};
   const scorerTeams = {};
+  const scorerMatches = {};
+  const scorerMultiGoalMatches = {};
+  const teamStats = {};
   const conf = {};
+  const goalTiming = {
+    '1-15': 0,
+    '16-30': 0,
+    '31-45+': 0,
+    '46-60': 0,
+    '61-75': 0,
+    '76-90+': 0,
+    'ET': 0,
+  };
+  let timedGoals = 0;
+  let stoppageGoals = 0;
+  let draws = 0;
+  let goallessDraws = 0;
+  let oneGoalGames = 0;
+  let fourPlusGoalGames = 0;
+  let shootouts = 0;
 
-  function addConf(teamName, scored, conceded) {
-    const key = TEAM_CONFED[teamName];
-    if (!key) return;
-    if (!conf[key]) conf[key] = { c: key, s: 0, con: 0 };
-    conf[key].s += scored;
-    conf[key].con += conceded;
+  function teamRow(teamName) {
+    if (!teamStats[teamName]) {
+      teamStats[teamName] = { t: teamName, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, cs: 0, fts: 0 };
+    }
+    return teamStats[teamName];
   }
 
-  function addScorer(token, scoringTeam, opponentTeam) {
+  function addConf(teamName, scored, conceded, result) {
+    const key = TEAM_CONFED[teamName];
+    if (!key) return;
+    if (!conf[key]) conf[key] = { c: key, p: 0, w: 0, d: 0, l: 0, s: 0, con: 0 };
+    conf[key].p += 1;
+    conf[key].s += scored;
+    conf[key].con += conceded;
+    conf[key][result] += 1;
+  }
+
+  function addGoalTime(token) {
+    const minuteToken = scorerMinute(token);
+    const match = minuteToken.match(/(\d+)(?:\+(\d+))?/);
+    if (!match) return;
+    const minute = Number(match[1]);
+    if (match[2]) stoppageGoals += 1;
+    const bucket = minute <= 15 ? '1-15'
+      : minute <= 30 ? '16-30'
+        : minute <= 45 ? '31-45+'
+          : minute <= 60 ? '46-60'
+            : minute <= 75 ? '61-75'
+              : minute <= 90 ? '76-90+'
+                : 'ET';
+    goalTiming[bucket] += 1;
+    timedGoals += 1;
+  }
+
+  function addScorer(token, scoringTeam, opponentTeam, matchScorers) {
+    addGoalTime(token);
     const resolved = resolveScorerToken(token, scoringTeam, opponentTeam);
     if (!resolved || !resolved.name) return;
     if (resolved.team && resolved.team !== scoringTeam) return;
     scorerTotals[resolved.name] = (scorerTotals[resolved.name] || 0) + 1;
     scorerTeams[resolved.name] = resolved.team || scoringTeam;
+    matchScorers[resolved.name] = (matchScorers[resolved.name] || 0) + 1;
   }
 
   finishedGames.forEach(game => {
@@ -727,20 +774,67 @@ function computeStats(games, verifiedScorers) {
     const away = norm(game.away_team_name_en || '');
     const homeScore = parseScore(game.home_score);
     const awayScore = parseScore(game.away_score);
+    const homeRow = teamRow(home);
+    const awayRow = teamRow(away);
+    const matchScorers = {};
+    const isDraw = homeScore === awayScore;
+    const homeResult = isDraw ? 'd' : homeScore > awayScore ? 'w' : 'l';
+    const awayResult = isDraw ? 'd' : awayScore > homeScore ? 'w' : 'l';
 
-    addConf(home, homeScore, awayScore);
-    addConf(away, awayScore, homeScore);
+    homeRow.p += 1;
+    awayRow.p += 1;
+    homeRow[homeResult] += 1;
+    awayRow[awayResult] += 1;
+    homeRow.gf += homeScore;
+    homeRow.ga += awayScore;
+    awayRow.gf += awayScore;
+    awayRow.ga += homeScore;
+    if (awayScore === 0) homeRow.cs += 1;
+    if (homeScore === 0) awayRow.cs += 1;
+    if (homeScore === 0) homeRow.fts += 1;
+    if (awayScore === 0) awayRow.fts += 1;
+
+    addConf(home, homeScore, awayScore, homeResult);
+    addConf(away, awayScore, homeScore, awayResult);
 
     scorerTokensFor(game, 'home', verifiedScorers).forEach(token => {
-      addScorer(token, home, away);
+      addScorer(token, home, away, matchScorers);
     });
     scorerTokensFor(game, 'away', verifiedScorers).forEach(token => {
-      addScorer(token, away, home);
+      addScorer(token, away, home, matchScorers);
     });
+
+    Object.keys(matchScorers).forEach(name => {
+      scorerMatches[name] = (scorerMatches[name] || 0) + 1;
+      if (matchScorers[name] >= 2) scorerMultiGoalMatches[name] = (scorerMultiGoalMatches[name] || 0) + 1;
+    });
+
+    if (isDraw) {
+      draws += 1;
+      if (homeScore === 0) goallessDraws += 1;
+    }
+    if (Math.abs(homeScore - awayScore) === 1) oneGoalGames += 1;
+    if (homeScore + awayScore >= 4) fourPlusGoalGames += 1;
+    const homePens = parseScore(game.home_penalties ?? game.home_penalty_score ?? game.home_score_penalties);
+    const awayPens = parseScore(game.away_penalties ?? game.away_penalty_score ?? game.away_score_penalties);
+    if (homePens !== null && awayPens !== null) shootouts += 1;
   });
 
+  Object.values(teamStats).forEach(row => { row.gd = row.gf - row.ga; });
+
   const topScorers = Object.keys(scorerTotals)
-    .map(name => ({ n: name, t: scorerTeams[name] || '', g: scorerTotals[name] }))
+    .map(name => {
+      const team = scorerTeams[name] || '';
+      const teamGoals = teamStats[team]?.gf || 0;
+      return {
+        n: name,
+        t: team,
+        g: scorerTotals[name],
+        ms: scorerMatches[name] || 0,
+        multi: scorerMultiGoalMatches[name] || 0,
+        share: teamGoals ? Math.round((scorerTotals[name] / teamGoals) * 100) : 0,
+      };
+    })
     .sort((a, b) => b.g - a.g || a.n.localeCompare(b.n))
     .slice(0, 20);
 
@@ -754,7 +848,10 @@ function computeStats(games, verifiedScorers) {
 
   const groupGoals = Object.keys(groupTotals)
     .sort()
-    .map(letter => groupTotals[letter]);
+    .map(letter => {
+      const row = groupTotals[letter];
+      return { ...row, rate: row.m ? row.goals / row.m : 0 };
+    });
 
   const biggestWin = finishedGames.reduce((best, game) => {
     const homeScore = parseScore(game.home_score);
@@ -780,12 +877,20 @@ function computeStats(games, verifiedScorers) {
 
   const confStatsOrder = ['UEFA', 'CONMEBOL', 'AFC', 'CAF', 'CONCACAF', 'OFC'];
   const confStats = confStatsOrder.map(name => {
-    const row = conf[name] || { c: name, s: 0, con: 0 };
-    return { c: row.c, s: row.s, con: row.con };
+    const row = conf[name] || { c: name, p: 0, w: 0, d: 0, l: 0, s: 0, con: 0 };
+    return { ...row, gd: row.s - row.con, rate: row.p ? row.s / row.p : 0 };
   });
 
   const matchesPlayed = finishedGames.length;
   const goalsScored = finishedGames.reduce((sum, game) => sum + sumGoals(game), 0);
+  const teamRows = Object.values(teamStats);
+  const rankTeams = (compare) => teamRows.slice().sort(compare).slice(0, 8);
+  const teamLeaders = {
+    attack: rankTeams((a, b) => b.gf - a.gf || (b.gf / b.p) - (a.gf / a.p) || a.t.localeCompare(b.t)),
+    defense: rankTeams((a, b) => a.ga - b.ga || b.cs - a.cs || a.t.localeCompare(b.t)),
+    cleanSheets: rankTeams((a, b) => b.cs - a.cs || a.ga - b.ga || a.t.localeCompare(b.t)),
+    form: rankTeams((a, b) => (b.w * 3 + b.d) - (a.w * 3 + a.d) || b.gd - a.gd || a.t.localeCompare(b.t)),
+  };
 
   const leader = topScorers[0] || { n: 'N/A', t: '', g: 0 };
   const leaderFlag = (SNAPSHOT.teams[leader.t] && SNAPSHOT.teams[leader.t].flag) ? SNAPSHOT.teams[leader.t].flag : '';
@@ -797,8 +902,23 @@ function computeStats(games, verifiedScorers) {
       goalsScored,
       goalsPerMatch: matchesPlayed ? (goalsScored / matchesPlayed) : 0,
       teams: Object.keys(SNAPSHOT.teams || {}).length,
+      uniqueScorers: Object.keys(scorerTotals).length,
     },
     topScorers,
+    goalTiming: {
+      buckets: Object.keys(goalTiming).map(label => ({ label, goals: goalTiming[label] })),
+      timedGoals,
+      totalGoals: goalsScored,
+      stoppageGoals,
+    },
+    teamLeaders,
+    matchPatterns: [
+      { key: 'draws', label: 'Draws', value: draws },
+      { key: 'goalless', label: '0-0 draws', value: goallessDraws },
+      { key: 'oneGoal', label: 'One-goal games', value: oneGoalGames },
+      { key: 'fourPlus', label: '4+ goal games', value: fourPlusGoalGames },
+      { key: 'shootouts', label: 'Shootouts', value: shootouts },
+    ],
     groupGoals,
     confStats,
     records: [

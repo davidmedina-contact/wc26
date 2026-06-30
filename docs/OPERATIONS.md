@@ -170,7 +170,35 @@ Keep compact mobile copy intentional. Short subtitles such as the third-place
 race note should avoid awkward orphan phrases on narrow screens. Prefer shorter
 phrasing like "may decide ties" over long phrases that wrap as isolated words.
 
-The client only renders that payload. It does not call third-party APIs or infer whether a game is complete.
+The Stats tab follows the same boundary. `computeStats()` derives every displayed
+metric from accepted finished games and the verified scorer tokens already used
+by match cards. The payload includes:
+
+- `overview`, including completed matches, goals, goals per match, and unique
+  resolved scorers;
+- `goalTiming`, with fixed 15-minute buckets, extra time, stoppage-time count,
+  and explicit timed-goal coverage;
+- enriched `topScorers`, including matches scored in, multi-goal matches, and
+  share of the scorer's team goals;
+- `teamLeaders` for attack, defense, clean sheets, and points-form;
+- `matchPatterns` for draws, scoreless draws, one-goal games, high-scoring
+  games, and penalty shootouts;
+- goals per completed group match and confederation W-D-L plus goals per team
+  appearance.
+
+Keep these calculations server-side. The browser may select and format a
+category, but it must not recompute tournament statistics from match cards.
+Timing charts must expose coverage whenever fewer scorer events have a parsed
+minute than the accepted goal total. Team leaderboard rows reuse the team modal.
+
+Do not infer assists, player appearances or minutes, xG, possession, shots,
+passing, cards, player ratings, goalkeeper saves, or individual shootout kicks
+from the primary feed; those fields are not present. An optional enrichment
+source must be validated match-by-match, cached server-side, carry completeness
+metadata, and degrade without removing primary-feed statistics before any such
+metric reaches the UI.
+
+The client only renders the server payload. It does not call third-party APIs or infer whether a game is complete.
 
 ## Freshness And Failure Behavior
 
@@ -268,9 +296,13 @@ FIFA remains the manual cross-check for fixtures and published statistics:
 that the worktree is on `main`, linked to `fifa-wc-2026`, and attributed to the
 verified Hobby owner (`David Medina <david@medina.contact>`). Vercel Hobby blocks
 private-repository deployments whose HEAD author is not that owner. The
-`postdeploy` lifecycle polls the custom domain until its `BUILD_TS` matches the
-local service worker, then sanity-checks `/api/data`; an uploaded deployment URL
-alone is not proof that production changed.
+preflight also classifies the committed release diff in
+`.vercel/release-scope.json`. The `postdeploy` lifecycle always polls the custom
+domain until its `BUILD_TS` matches the local service worker. Presentation-only
+releases then stop; changes under `api/` or `data/`, plus `data.json` and
+`vercel.json`, run the full production API audit. Missing or invalid scope
+metadata defaults to the full audit. An uploaded deployment URL alone is not
+proof that production changed.
 
 1. Run `npm run check`.
 2. Run `BRACKET_SMOKE_API_URL=https://wc26.medina.contact/api/data npm run smoke:bracket -- http://127.0.0.1:4173/#bracket` when the Bracket tab changes.
@@ -279,9 +311,14 @@ alone is not proof that production changed.
 5. In a worktree, verify `.vercel/repo.json` or `.vercel/project.json` targets
    `fifa-wc-2026` (`prj_SEO8zTTItfowDPOdsS2FF8g9qCj8`). Relink explicitly if missing.
 6. Deploy with `npm run deploy`; do not bypass its preflight or post-deploy verification.
-7. Verify `/service-worker.js` reports the expected cache version.
-8. Verify `/api/data` returns HTTP 200, nonzero stats, and all matches older than four hours have `status: "FT"`.
-9. Verify `/api/data` reports `meta.scorerCompleteness: "verified"` and `meta.scorerIssueCount: 0`.
+7. Verify `/service-worker.js` reports the expected cache version. This is the
+   production boundary for a presentation-only release; responsive and
+   interaction validation happens locally before deploy.
+8. When preflight reports `full`, verify `/api/data` returns HTTP 200, score and
+   computed-match counts agree, every `actualScores` entry is FT, and the
+   current stats contract is present.
+9. For a `full` release, verify `/api/data` reports
+   `meta.scorerCompleteness: "verified"` and `meta.scorerIssueCount: 0`.
 10. Verify completed or mathematically settled groups expose the expected standings `status` labels, while open groups do not show speculative badges.
 11. Test Groups, Matches, Bracket, Stats, search, and theme controls in a fresh browser tab.
 12. In an installed PWA or simulated service-worker session, confirm reopening the app refreshes `/api/data` with a no-cache request and does not downgrade from a newer local payload to the bundled snapshot.

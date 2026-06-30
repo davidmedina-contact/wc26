@@ -5,6 +5,8 @@ var wcData, jerseyNumbers, matchesData, scorePredictions, teamStrength,
     eloRatings, injuryIntel, actualScores, standingsData, bracketVenues,
     groupColors, modelPredictions;
 var statsData, thirdPlaceData;
+var statsView = 'overview';
+var teamStatsView = 'attack';
 
 function isValidBootstrapData(data) {
   return Boolean(data && data.groups && data.teams && Array.isArray(data.matchesData));
@@ -1320,115 +1322,145 @@ function resetBracket() {
   renderBracket();
 }
 
+function setStatsView(view) {
+  statsView = view;
+  document.querySelectorAll('.stats-view').forEach(function(panel) {
+    panel.hidden = panel.getAttribute('data-stats-view') !== view;
+  });
+  document.querySelectorAll('.stats-tab').forEach(function(button) {
+    var active = button.getAttribute('data-stats-tab') === view;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+}
+
+function setTeamStatsView(view) {
+  teamStatsView = view;
+  document.querySelectorAll('.team-stats-view').forEach(function(panel) {
+    panel.hidden = panel.getAttribute('data-team-stats-view') !== view;
+  });
+  document.querySelectorAll('.team-stats-tab').forEach(function(button) {
+    var active = button.getAttribute('data-team-stats-tab') === view;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+}
+
 function renderStats() {
   var el = document.getElementById('tab-stats');
-  var html = '';
-  var live = (typeof statsData !== 'undefined' && statsData) ? statsData : null;
+  var live = (typeof statsData !== 'undefined' && statsData) ? statsData : {};
   var teamsIndex = getTeamsIndex();
-  var overview = live && live.overview ? live.overview : { matchesPlayed: 28, goalsScored: 84, goalsPerMatch: 3.0, teams: 48 };
-  var scorers = live && live.topScorers && live.topScorers.length ? live.topScorers : [
-    {n:"Lionel Messi",t:"Argentina",g:3},{n:"Jonathan David",t:"Canada",g:3},
-    {n:"Erling Haaland",t:"Norway",g:2},{n:"Kylian Mbappé",t:"France",g:2},
-    {n:"Harry Kane",t:"England",g:2},{n:"Folarin Balogun",t:"United States",g:2},
-    {n:"Kai Havertz",t:"Germany",g:2},{n:"Yasin Ayari",t:"Sweden",g:2},
-    {n:"Elijah Just",t:"New Zealand",g:2},{n:"Cyle Larin",t:"Canada",g:2},
-    {n:"Viktor Gyökeres",t:"Sweden",g:1},{n:"Alexander Isak",t:"Sweden",g:1},
-    {n:"Jamal Musiala",t:"Germany",g:1},{n:"Denis Undav",t:"Germany",g:1},
-    {n:"Amad Diallo",t:"Ivory Coast",g:1},{n:"Vinícius Júnior",t:"Brazil",g:1},
-    {n:"Omar Marmoush",t:"Egypt",g:1},{n:"Bradley Barcola",t:"France",g:1},
-    {n:"Teboho Mokoena",t:"South Africa",g:1},{n:"Granit Xhaka",t:"Switzerland",g:1}
-  ];
-  var groupGoals = live && live.groupGoals && live.groupGoals.length ? live.groupGoals : [{g:"A",m:4,goals:8},{g:"B",m:4,goals:15},{g:"C",m:2,goals:3},{g:"D",m:2,goals:8},{g:"E",m:2,goals:9},{g:"F",m:2,goals:10},{g:"G",m:2,goals:8},{g:"H",m:2,goals:2},{g:"I",m:2,goals:9},{g:"J",m:2,goals:7},{g:"K",m:1,goals:2},{g:"L",m:1,goals:6}];
-  var confStats = live && live.confStats && live.confStats.length ? live.confStats : [{c:"UEFA",s:36,con:17},{c:"CONMEBOL",s:6,con:7},{c:"AFC",s:13,con:23},{c:"CAF",s:7,con:17},{c:"CONCACAF",s:16,con:12},{c:"OFC",s:2,con:2}];
-  var records = live && live.records && live.records.length ? live.records : [
-    {label:'Messi hat-trick', detail:'First WC hat-trick of his career (vs Algeria). Now tied with Klose at 16 career WC goals.'},
-    {label:'David hat-trick', detail:'Jonathan David scores 3 as Canada crush Qatar 6-0 for their first-ever World Cup win.'},
-    {label:'Mbappé milestone', detail:'14 career WC goals. Third on all-time list behind Klose (16) and Messi (16).'},
-    {label:'Germany 7-1', detail:'Biggest win of the tournament so far (vs Curaçao). Havertz scored twice.'},
-    {label:'Canada 6-0', detail:'Second-biggest win (vs 9-man Qatar). David, Larin, Saliba, and an own goal.'},
-    {label:'Spain 0-0', detail:'Favorites held to a goalless draw by debutants Cape Verde.'},
-    {label:'Haaland arrives', detail:'Two goals in Norway debut (4-1 vs Iraq). First WC goals of his career.'},
-    {label:'Kane joins race', detail:'Two goals in England\'s 4-2 win over Croatia. 67 career international goals.'}
-  ];
-  
-  // Tournament overview
-  html += '<h2 style="margin-bottom:16px;font-size:1.1rem">Tournament Statistics</h2>';
+  var overview = live.overview || { matchesPlayed: 0, goalsScored: 0, goalsPerMatch: 0, teams: 48, uniqueScorers: 0 };
+  var scorers = live.topScorers || [];
+  var timing = live.goalTiming || { buckets: [], timedGoals: 0, totalGoals: overview.goalsScored || 0, stoppageGoals: 0 };
+  var teamLeaders = live.teamLeaders || { attack: [], defense: [], cleanSheets: [], form: [] };
+  var patterns = live.matchPatterns || [];
+  var groupGoals = live.groupGoals || [];
+  var confStats = live.confStats || [];
+  var records = live.records || [];
+  var html = '<div class="stats-heading"><div><h2>Tournament Statistics</h2><p>Updated from completed matches</p></div></div>';
+
+  html += '<div class="stats-tabs" role="tablist" aria-label="Statistics categories">';
+  ['overview', 'players', 'teams', 'trends'].forEach(function(view) {
+    var label = view.charAt(0).toUpperCase() + view.slice(1);
+    html += '<button class="stats-tab' + (statsView === view ? ' active' : '') + '" type="button" role="tab" data-stats-tab="' + view + '" aria-selected="' + (statsView === view ? 'true' : 'false') + '" onclick="setStatsView(\'' + view + '\')">' + label + '</button>';
+  });
+  html += '</div>';
+
+  html += '<section class="stats-view" data-stats-view="overview"' + (statsView === 'overview' ? '' : ' hidden') + '>';
   html += '<div class="stats-grid">';
-  html += '<div class="stat-card"><div class="stat-val stat-val-accent">' + overview.matchesPlayed + '</div><div class="stat-lbl">Matches Played</div></div>';
-  html += '<div class="stat-card"><div class="stat-val stat-val-green">' + overview.goalsScored + '</div><div class="stat-lbl">Goals Scored</div></div>';
-  html += '<div class="stat-card"><div class="stat-val stat-val-amber">' + overview.goalsPerMatch.toFixed(1) + '</div><div class="stat-lbl">Goals/Match</div></div>';
-  html += '<div class="stat-card"><div class="stat-val stat-val-pink">' + overview.teams + '</div><div class="stat-lbl">Teams</div></div>';
+  html += '<div class="stat-card"><div class="stat-val stat-val-accent">' + overview.matchesPlayed + '</div><div class="stat-lbl">Matches</div></div>';
+  html += '<div class="stat-card"><div class="stat-val stat-val-green">' + overview.goalsScored + '</div><div class="stat-lbl">Goals</div></div>';
+  html += '<div class="stat-card"><div class="stat-val stat-val-amber">' + Number(overview.goalsPerMatch || 0).toFixed(1) + '</div><div class="stat-lbl">Goals / match</div></div>';
+  html += '<div class="stat-card"><div class="stat-val stat-val-pink">' + (overview.uniqueScorers || 0) + '</div><div class="stat-lbl">Scorers</div></div>';
   html += '</div>';
-  
-  // Top Scorers
-  html += '<div class="modal-section"><h3 style="color:var(--accent)">' + icon('target') + ' Top Scorers</h3>';
-  var maxGoals = scorers[0].g;
-  // Golden leader card
-  var leader = scorers[0];
-  var leaderFlag = (teamsIndex[leader.t] && teamsIndex[leader.t].flag) ? teamsIndex[leader.t].flag : '';
-  html += '<div class="scorer-leader">';
-  html += '<div class="scorer-rank">' + icon('trophy',{size:22}) + '</div>';
-  html += '<div><div class="scorer-name">' + esc(leader.n) + '</div><div class="scorer-team">' + leaderFlag + ' ' + esc(leader.t) + '</div></div>';
-  html += '<div class="scorer-goals-badge">' + leader.g + '</div>';
+
+  html += '<div class="stats-section"><div class="stats-section-head"><h3>' + icon('barChart') + ' Tournament pulse</h3>';
+  if (timing.totalGoals && timing.timedGoals < timing.totalGoals) html += '<span>' + timing.timedGoals + '/' + timing.totalGoals + ' timed goals</span>';
+  html += '</div><div class="goal-timing" aria-label="Goals by match minute">';
+  var maxTiming = Math.max.apply(null, timing.buckets.map(function(row) { return row.goals; }).concat([1]));
+  timing.buckets.forEach(function(row) {
+    var height = Math.max(4, Math.round((row.goals / maxTiming) * 100));
+    html += '<div class="goal-time-col"><div class="goal-time-value">' + row.goals + '</div><div class="goal-time-track"><div class="goal-time-fill" style="height:' + height + '%"></div></div><div class="goal-time-label">' + esc(row.label) + '</div></div>';
+  });
   html += '</div>';
-  // Table for the rest
-  html += '<table class="scorers-table">';
-  for (var si = 1; si < scorers.length; si++) {
-    var s = scorers[si];
-    var flag = (teamsIndex[s.t] && teamsIndex[s.t].flag) ? teamsIndex[s.t].flag : '';
-    var barW = Math.round((s.g / maxGoals) * 100);
-    html += '<tr>';
-    html += '<td class="st-rank">' + (si + 1) + '</td>';
-    html += '<td><span class="st-name">' + esc(s.n) + '</span><br><span class="st-team">' + flag + ' ' + esc(s.t) + '</span></td>';
-    html += '<td class="st-bar-cell"><div class="st-bar" style="width:' + barW + '%"></div></td>';
-    html += '<td class="st-goals">' + s.g + '</td>';
-    html += '</tr>';
+  if (timing.buckets.length) html += '<p class="stats-insight">' + timing.stoppageGoals + ' goals have arrived in stoppage time.</p>';
+  html += '</div>';
+
+  html += '<div class="stats-section"><h3>' + icon('target') + ' Match patterns</h3><div class="pattern-grid">';
+  patterns.forEach(function(row) {
+    html += '<div class="pattern-item"><strong>' + row.value + '</strong><span>' + esc(row.label) + '</span></div>';
+  });
+  html += '</div></div>';
+
+  if (records.length) {
+    html += '<div class="stats-section"><h3>' + icon('award') + ' Records</h3><div class="record-list">';
+    records.forEach(function(record) {
+      html += '<div class="record-row"><strong>' + esc(record.label) + '</strong><span>' + esc(record.detail) + '</span></div>';
+    });
+    html += '</div></div>';
   }
-  html += '</table></div>';
-  
-  // Group Goals — horizontal bar chart
-  html += '<div class="modal-section"><h3 style="color:var(--accent)">' + icon('barChart') + ' Goals by Group</h3>';
-  var maxGroupGoals = Math.max.apply(null, groupGoals.map(function(gg) { return gg.goals; })) || 1;
-  html += '<div class="stat-bars">';
-  groupGoals.forEach(function(gg) {
-    var pct = Math.round((gg.goals / maxGroupGoals) * 100);
-    var gc = groupColors[gg.g] || 'var(--accent)';
-    html += '<div class="stat-bar-row">' +
-      '<span class="stat-bar-label" style="color:' + gc + '">Grp ' + gg.g + '</span>' +
-      '<div class="stat-bar-track"><div class="stat-bar-fill" style="width:' + pct + '%;background:' + gc + '"></div></div>' +
-      '<span class="stat-bar-val">' + gg.goals + '</span>' +
-    '</div>';
+  html += '</section>';
+
+  html += '<section class="stats-view" data-stats-view="players"' + (statsView === 'players' ? '' : ' hidden') + '>';
+  if (scorers.length) {
+    var leader = scorers[0];
+    var leaderFlag = teamsIndex[leader.t] && teamsIndex[leader.t].flag ? teamsIndex[leader.t].flag : '';
+    html += '<div class="stats-section"><h3>' + icon('target') + ' Golden Boot race</h3>';
+    html += '<div class="scorer-leader"><div class="scorer-rank">' + icon('trophy',{size:22}) + '</div><div><div class="scorer-name">' + esc(leader.n) + '</div><div class="scorer-team">' + leaderFlag + ' ' + esc(leader.t) + ' · scored in ' + (leader.ms || 0) + ' matches</div></div><div class="scorer-goals-badge">' + leader.g + '</div></div>';
+    html += '<table class="scorers-table"><thead><tr><th>#</th><th>Player</th><th>Scored in</th><th>Goals</th></tr></thead><tbody>';
+    scorers.slice(1).forEach(function(s, index) {
+      var flag = teamsIndex[s.t] && teamsIndex[s.t].flag ? teamsIndex[s.t].flag : '';
+      var detail = (s.multi || 0) ? s.multi + ' multi-goal' : (s.share || 0) + '% team goals';
+      html += '<tr><td class="st-rank">' + (index + 2) + '</td><td><span class="st-name">' + esc(s.n) + '</span><br><span class="st-team">' + flag + ' ' + esc(s.t) + ' · ' + detail + '</span></td><td class="st-matches">' + (s.ms || 0) + '</td><td class="st-goals">' + s.g + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  } else {
+    html += '<p class="stats-empty">Player statistics will appear after completed matches.</p>';
+  }
+  html += '</section>';
+
+  html += '<section class="stats-view" data-stats-view="teams"' + (statsView === 'teams' ? '' : ' hidden') + '>';
+  html += '<div class="stats-section"><div class="subtabs" role="tablist" aria-label="Team statistics">';
+  [['attack','Attack'],['defense','Defense'],['cleanSheets','Clean sheets'],['form','Form']].forEach(function(item) {
+    html += '<button type="button" class="team-stats-tab' + (teamStatsView === item[0] ? ' active' : '') + '" data-team-stats-tab="' + item[0] + '" aria-selected="' + (teamStatsView === item[0] ? 'true' : 'false') + '" onclick="setTeamStatsView(\'' + item[0] + '\')">' + item[1] + '</button>';
   });
-  html += '</div></div>';
-  
-  // Confederation stats — dual bar (scored vs conceded)
-  html += '<div class="modal-section"><h3 style="color:var(--accent)">' + icon('globe') + ' Goals by Confederation</h3>';
-  var maxConfGoals = Math.max.apply(null, confStats.map(function(cs) { return Math.max(cs.s, cs.con); })) || 1;
-  html += '<div class="stat-bars">';
-  confStats.forEach(function(cs) {
-    var diff = cs.s - cs.con;
-    var sPct = Math.round((cs.s / maxConfGoals) * 100);
-    var cPct = Math.round((cs.con / maxConfGoals) * 100);
-    html += '<div class="stat-bar-row stat-bar-dual">' +
-      '<span class="stat-bar-label">' + cs.c + '</span>' +
-      '<div class="stat-bar-dual-wrap">' +
-        '<div class="stat-bar-track"><div class="stat-bar-fill stat-bar-scored" style="width:' + sPct + '%"></div></div>' +
-        '<div class="stat-bar-track"><div class="stat-bar-fill stat-bar-conceded" style="width:' + cPct + '%"></div></div>' +
-      '</div>' +
-      '<span class="stat-bar-val stat-bar-diff ' + (diff >= 0 ? 'positive' : 'negative') + '">' + (diff >= 0 ? '+' : '') + diff + '</span>' +
-    '</div>';
+  html += '</div>';
+  [['attack','Goals'],['defense','Conceded'],['cleanSheets','Clean sheets'],['form','Record']].forEach(function(item) {
+    var rows = teamLeaders[item[0]] || [];
+    var maxValue = Math.max.apply(null, rows.map(function(row) { return item[0] === 'attack' ? row.gf : item[0] === 'defense' ? row.ga : item[0] === 'cleanSheets' ? row.cs : row.w * 3 + row.d; }).concat([1]));
+    html += '<div class="team-stats-view" data-team-stats-view="' + item[0] + '"' + (teamStatsView === item[0] ? '' : ' hidden') + '><div class="leader-list">';
+    rows.forEach(function(row, index) {
+      var flag = teamsIndex[row.t] && teamsIndex[row.t].flag ? teamsIndex[row.t].flag : '';
+      var value = item[0] === 'attack' ? row.gf : item[0] === 'defense' ? row.ga : item[0] === 'cleanSheets' ? row.cs : row.w * 3 + row.d;
+      var display = item[0] === 'form' ? row.w + '-' + row.d + '-' + row.l : value;
+      var width = item[0] === 'defense' ? Math.max(10, 100 - Math.round((value / maxValue) * 80)) : Math.round((value / maxValue) * 100);
+      html += '<button class="leader-row" type="button" data-team="' + esc(row.t) + '" onclick="openTeamModal(this.getAttribute(\'data-team\'))"><span class="leader-rank">' + (index + 1) + '</span><span class="leader-team">' + flag + ' ' + esc(row.t) + '<small>' + row.p + ' played · ' + row.gf + ':' + row.ga + '</small></span><span class="leader-bar"><i style="width:' + width + '%"></i></span><strong>' + display + '</strong></button>';
+    });
+    html += '</div></div>';
   });
-  html += '<div class="stat-bar-legend"><span class="stat-bar-legend-dot stat-bar-scored"></span> Scored <span class="stat-bar-legend-dot stat-bar-conceded"></span> Conceded</div>';
-  html += '</div></div>';
-  
-  // Key records
-  html += '<div class="modal-section"><h3 style="color:var(--accent)">' + icon('award') + ' Records &amp; Milestones</h3>';
-  html += '<table class="key-dates"><tbody>';
-  records.forEach(function(record) {
-    html += '<tr><td>' + esc(record.label) + '</td><td>' + esc(record.detail) + '</td></tr>';
-  });
-  html += '</tbody></table></div>';
-  
+  html += '</div></section>';
+
+  html += '<section class="stats-view" data-stats-view="trends"' + (statsView === 'trends' ? '' : ' hidden') + '>';
+  if (groupGoals.length) {
+    html += '<div class="stats-section"><h3>' + icon('barChart') + ' Group scoring rate</h3><div class="stat-bars">';
+    var maxGroupRate = Math.max.apply(null, groupGoals.map(function(row) { return row.rate || (row.m ? row.goals / row.m : 0); })) || 1;
+    groupGoals.forEach(function(row) {
+      var rate = row.rate || (row.m ? row.goals / row.m : 0);
+      var color = groupColors[row.g] || 'var(--accent)';
+      html += '<div class="stat-bar-row"><span class="stat-bar-label" style="color:' + color + '">Grp ' + row.g + '</span><div class="stat-bar-track"><div class="stat-bar-fill" style="width:' + Math.round((rate / maxGroupRate) * 100) + '%;background:' + color + '"></div></div><span class="stat-bar-val">' + rate.toFixed(1) + '</span></div>';
+    });
+    html += '</div><p class="stats-footnote">Goals per completed match</p></div>';
+  }
+  if (confStats.length) {
+    html += '<div class="stats-section"><h3>' + icon('globe') + ' Confederation performance</h3><div class="conf-table-wrap"><table class="conf-table"><thead><tr><th>Confed.</th><th>W-D-L</th><th>GF</th><th>GA</th><th>GF / match</th></tr></thead><tbody>';
+    confStats.forEach(function(row) {
+      html += '<tr><td>' + esc(row.c) + '</td><td>' + (row.w || 0) + '-' + (row.d || 0) + '-' + (row.l || 0) + '</td><td>' + row.s + '</td><td>' + row.con + '</td><td>' + Number(row.rate || 0).toFixed(2) + '</td></tr>';
+    });
+    html += '</tbody></table></div></div>';
+  }
+  html += '</section>';
+
   el.innerHTML = html;
 }
 

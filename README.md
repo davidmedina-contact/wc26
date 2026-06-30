@@ -7,7 +7,7 @@ A single-page web app for following the 2026 FIFA World Cup. Installable as a PW
 - **Groups** — Live standings table for all 12 groups. Click any team to open a squad modal with full roster, top 5 players, manager info, and squad analysis.
 - **Matches** — Schedule browser by date with kickoff times, broadcast networks (FOX/FS1/Telemundo/etc.), and win/draw/loss probability.
 - **Bracket** — Interactive elimination bracket. Pick group stage finishers and knockout round winners through the Final.
-- **Stats** — Tournament stats: top scorers, goals by group, confederation breakdown, and records.
+- **Stats** — Server-derived tournament pulse, scorer insights, team leaderboards, match patterns, normalized group and confederation trends, and records.
 - **Search** — Global team/player search from the navigation utility cluster.
 - **Dark/light/system appearance** control in the navigation rail (system by default, persisted to `localStorage`).
 - **ICS file** — `world-cup-2026-schedule.ics` for importing the full schedule into any calendar app.
@@ -48,8 +48,10 @@ npm run deploy
 
 That guarded script verifies `main`, the canonical Vercel project, and the
 verified Hobby-owner commit email; stamps `service-worker.js`; deploys with
-build logs; and polls the custom domain until the new stamp and a healthy API
-are live. The stamp is required for installed PWAs to detect a new app version
+build logs; and polls the custom domain until the new stamp is live. Preflight
+classifies the committed release diff: presentation-only changes stop after
+that fast shell check, while `api/`, `data/`, `data.json`, or `vercel.json`
+changes additionally run the full production live-data audit. The stamp is required for installed PWAs to detect a new app version
 and show the update confirmation on next launch/focus. Do not use bare
 `vercel --prod` or rely only on a GitHub push for visible app changes, including
 serverless changes that affect scores, standings, stats, or refresh behavior.

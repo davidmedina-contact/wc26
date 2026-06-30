@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const { writeReleaseScope } = require('./release-scope');
 
 const root = path.join(__dirname, '..');
 const expectedProjectId = 'prj_SEO8zTTItfowDPOdsS2FF8g9qCj8';
@@ -41,3 +42,4 @@ if (!project || project.name !== expectedProjectName) {
 }
 
 console.log(`Deploy preflight passed: ${branch}, ${authorEmail}, ${project.name}`);
+writeReleaseScope();
