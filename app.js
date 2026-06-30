@@ -1408,12 +1408,12 @@ function renderStats() {
     var leader = scorers[0];
     var leaderFlag = teamsIndex[leader.t] && teamsIndex[leader.t].flag ? teamsIndex[leader.t].flag : '';
     html += '<div class="stats-section"><h3>' + icon('target') + ' Golden Boot race</h3>';
-    html += '<div class="scorer-leader"><div class="scorer-rank">' + icon('trophy',{size:22}) + '</div><div><div class="scorer-name">' + esc(leader.n) + '</div><div class="scorer-team">' + leaderFlag + ' ' + esc(leader.t) + ' · scored in ' + (leader.ms || 0) + ' matches</div></div><div class="scorer-goals-badge">' + leader.g + '</div></div>';
-    html += '<table class="scorers-table"><thead><tr><th>#</th><th>Player</th><th>Scored in</th><th>Goals</th></tr></thead><tbody>';
+    html += '<div class="scorer-leader"><div class="scorer-rank">' + icon('trophy',{size:22}) + '</div><div><div class="scorer-name">' + esc(leader.n) + '</div><div class="scorer-team">' + leaderFlag + ' ' + esc(leader.t) + '</div><div class="scorer-leader-meta">Scored in ' + (leader.ms || 0) + ' matches</div></div><div class="scorer-goals-badge">' + leader.g + '</div></div>';
+    html += '<table class="scorers-table"><thead><tr><th>#</th><th>Player</th><th>Matches</th><th>Goals</th></tr></thead><tbody>';
     scorers.slice(1).forEach(function(s, index) {
       var flag = teamsIndex[s.t] && teamsIndex[s.t].flag ? teamsIndex[s.t].flag : '';
       var detail = (s.multi || 0) ? s.multi + ' multi-goal' : (s.share || 0) + '% team goals';
-      html += '<tr><td class="st-rank">' + (index + 2) + '</td><td><span class="st-name">' + esc(s.n) + '</span><br><span class="st-team">' + flag + ' ' + esc(s.t) + ' · ' + detail + '</span></td><td class="st-matches">' + (s.ms || 0) + '</td><td class="st-goals">' + s.g + '</td></tr>';
+      html += '<tr><td class="st-rank">' + (index + 2) + '</td><td><span class="st-name">' + esc(s.n) + '</span><br><span class="st-team">' + flag + ' ' + esc(s.t) + '<span class="st-insight"> · ' + detail + '</span></span></td><td class="st-matches">' + (s.ms || 0) + '</td><td class="st-goals">' + s.g + '</td></tr>';
     });
     html += '</tbody></table></div>';
   } else {
@@ -1423,8 +1423,9 @@ function renderStats() {
 
   html += '<section class="stats-view" data-stats-view="teams"' + (statsView === 'teams' ? '' : ' hidden') + '>';
   html += '<div class="stats-section"><div class="subtabs" role="tablist" aria-label="Team statistics">';
-  [['attack','Attack'],['defense','Defense'],['cleanSheets','Clean sheets'],['form','Form']].forEach(function(item) {
-    html += '<button type="button" class="team-stats-tab' + (teamStatsView === item[0] ? ' active' : '') + '" data-team-stats-tab="' + item[0] + '" aria-selected="' + (teamStatsView === item[0] ? 'true' : 'false') + '" onclick="setTeamStatsView(\'' + item[0] + '\')">' + item[1] + '</button>';
+  [['attack','Attack'],['defense','Defense'],['cleanSheets','Clean'],['form','Form']].forEach(function(item) {
+    var teamTabLabel = item[0] === 'cleanSheets' ? 'Clean sheets' : item[1];
+    html += '<button type="button" class="team-stats-tab' + (teamStatsView === item[0] ? ' active' : '') + '" data-team-stats-tab="' + item[0] + '" aria-label="' + teamTabLabel + '" aria-selected="' + (teamStatsView === item[0] ? 'true' : 'false') + '" onclick="setTeamStatsView(\'' + item[0] + '\')">' + item[1] + '</button>';
   });
   html += '</div>';
   [['attack','Goals'],['defense','Conceded'],['cleanSheets','Clean sheets'],['form','Record']].forEach(function(item) {

@@ -522,6 +522,7 @@
 .scorers-table th { padding: 5px 8px; font-weight: 600; }
 .scorers-table th:nth-last-child(-n+2) { text-align: center; }
 .scorers-table .st-matches { width: 64px; color: var(--text-sec); text-align: center; font-family: var(--mono); }
+.scorer-leader-meta { margin-top: 2px; color: var(--text-muted); font-size: 0.7rem; }
 .subtabs { margin-bottom: 8px; }
 .team-stats-tab { font-size: 0.72rem; }
 .leader-list { display: grid; }
@@ -1120,8 +1121,9 @@
   .pattern-item { padding: 8px 6px; }
   .record-row { grid-template-columns: 1fr; gap: 3px; }
   .scorers-table .st-matches { width: 50px; }
-  .subtabs { overflow-x: auto; display: flex; scrollbar-width: none; }
-  .team-stats-tab { flex: 1 0 auto; padding-right: 12px; padding-left: 12px; }
+  .subtabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: visible; }
+  .team-stats-tab { padding: 8px 2px; font-size: 0.68rem; }
+  .st-insight { display: none; }
   .leader-row { grid-template-columns: 24px minmax(120px, 1fr) 54px 38px; gap: 6px; padding-right: 2px; padding-left: 2px; }
   .leader-team small { margin-left: 0; }
 
@@ -1158,6 +1160,10 @@
   }
   .match-strip .ms-label { padding: 1px 5px; font-size: 0.55rem; letter-spacing: 0.04em; }
   .match-strip .ms-time { font-size: 0.64rem; }
+}
+
+@media (max-width: 360px) {
+  .pattern-item span { font-size: 0.62rem; white-space: nowrap; }
 }
 
 /* Extra small phones (< 380px) */

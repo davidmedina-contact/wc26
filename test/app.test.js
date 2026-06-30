@@ -749,6 +749,19 @@ test('Today navigation animates toward the nearest current match date', () => {
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
+test('Stats controls and scorer rows stay compact on narrow mobile screens', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  const css = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  assert.match(app, /<th>Matches<\/th><th>Goals<\/th>/);
+  assert.match(app, /class="scorer-leader-meta">Scored in/);
+  assert.match(app, /class="st-insight"> · /);
+  assert.match(app, /\['cleanSheets','Clean'\]/);
+  assert.match(app, /aria-label="' \+ teamTabLabel \+ '"/);
+  assert.match(css, /\.subtabs \{ display: grid; grid-template-columns: repeat\(4, minmax\(0, 1fr\)\); overflow: visible; \}/);
+  assert.match(css, /\.st-insight \{ display: none; \}/);
+  assert.match(css, /@media \(max-width: 360px\) \{[\s\S]*?\.pattern-item span \{ font-size: 0\.62rem; white-space: nowrap; \}/);
+});
+
 test('client renders compact standings status markers with an inline legend', () => {
   const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   assert.match(app, /function standingsStatusShort/);
