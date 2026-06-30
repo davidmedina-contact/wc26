@@ -95,6 +95,11 @@ card padding, and 8px by 7px team-row padding). Keep team names, flags, scores,
 and status type at their existing sizes; density improvements should come from
 spacing rather than reduced readability.
 
+For finished knockout matches decided by penalties, keep the regulation/extra-
+time result as the primary FT score and render the server-provided `hp`/`ap`
+totals beneath it as `Pens H - A`. Show the line only when both values are valid
+non-negative integers and differ; never infer a shootout score on the client.
+
 Mobile match nodes use an explicit 72px height and 6px source gap. A single SVG
 path spans each 18px connector column at source-center positions 24% and 76%, so
 the two arms, merge spine, and target arm are one continuous stroke. Do not

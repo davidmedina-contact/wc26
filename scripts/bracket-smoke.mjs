@@ -436,6 +436,15 @@ try {
   assert(cleanLaunch.navOrder.join(',') === 'Matches,Bracket,Groups,Stats', 'Primary navigation should use the requested task order', cleanLaunch);
   assert(cleanLaunch.cardCount > 0 && !cleanLaunch.cardOverflow, 'Compact match cards should render without horizontal overflow', cleanLaunch);
   assert(cleanLaunch.cardPadding.join(',') === '11px,14px' && cleanLaunch.teamPadding.join(',') === '8px,7px', 'Mobile match cards should use the moderate compact-spacing contract', cleanLaunch);
+
+  const penaltyDisplay = await page.evaluate(() => {
+    actualScores.Germany_Paraguay = { h: 1, a: 1, hp: 5, ap: 4, status: 'FT' };
+    selectedMatchDate = '2026-06-29';
+    renderMatches();
+    const label = document.querySelector('.mc-pen-score');
+    return label ? { text: label.textContent.trim(), ariaLabel: label.getAttribute('aria-label') } : null;
+  });
+  assert(penaltyDisplay?.text === 'Pens 5 - 4' && penaltyDisplay.ariaLabel === 'Penalty shootout: 5 to 4', 'Finished knockout cards should show available shootout totals accessibly', penaltyDisplay || {});
   const localStaticTarget = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//.test(target);
   const actionableBrowserErrors = browserErrors.filter(error =>
     !(localStaticTarget && error.includes('/_vercel/insights/script.js'))
@@ -443,7 +452,7 @@ try {
   assert(actionableBrowserErrors.length === 0, 'Bracket preview should not emit browser errors', { browserErrors: actionableBrowserErrors });
   if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-final.png'), fullPage: false });
 
-  console.log(JSON.stringify({ target, live, picks, clickedPick, returnedLive, mobile, qf, sf, finals, cleanLaunch, browserErrors: actionableBrowserErrors }, null, 2));
+  console.log(JSON.stringify({ target, live, picks, clickedPick, returnedLive, mobile, qf, sf, finals, cleanLaunch, penaltyDisplay, browserErrors: actionableBrowserErrors }, null, 2));
 } finally {
   await browser.close();
 }

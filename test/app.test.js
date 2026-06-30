@@ -645,11 +645,15 @@ test('client hash routing persists every primary tab across refreshes', () => {
 });
 
 test('match cards use moderately compact spacing without shrinking labels', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   const css = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
   assert.match(css, /\.match-list \{[^}]*gap: 8px/);
   assert.match(css, /\.match-card \{[\s\S]*?padding: 15px 20px/);
   assert.match(css, /@media \(max-width: 768px\)[\s\S]*?\.match-card \{[\s\S]*?padding: 11px 14px;[\s\S]*?gap: 7px/);
   assert.match(css, /\.mc-name \{ font-size: 0\.95rem/);
+  assert.match(app, /Number\.isInteger\(actual\.hp\)[\s\S]*?actual\.hp !== actual\.ap/);
+  assert.match(app, /class="mc-pen-score" aria-label="Penalty shootout:/);
+  assert.match(css, /\.mc-pen-score \{[^}]*font-size: 0\.62rem/);
 });
 
 test('client renders compact standings status markers with an inline legend', () => {

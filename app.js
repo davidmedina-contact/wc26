@@ -1685,9 +1685,14 @@ function renderMatches() {
       var actual = (typeof actualScores !== 'undefined' && actualScores[predKey]) ? actualScores[predKey] : null;
       if (actual) {
         // Completed match: show actual score prominently, prediction below
+        var hasPenaltyScore = Number.isInteger(actual.hp) && actual.hp >= 0 &&
+          Number.isInteger(actual.ap) && actual.ap >= 0 && actual.hp !== actual.ap;
         html += '<div class="mc-score"><div>';
         html += '<div class="mc-actual-score">' + actual.h + ' - ' + actual.a + '</div>';
         html += '<div class="mc-score-status">FT</div>';
+        if (hasPenaltyScore) {
+          html += '<div class="mc-pen-score" aria-label="Penalty shootout: ' + actual.hp + ' to ' + actual.ap + '">Pens ' + actual.hp + ' - ' + actual.ap + '</div>';
+        }
         if (scorePred) html += '<div class="mc-pred-small">Pred: ' + scorePred.h + '-' + scorePred.a + '</div>';
         html += '</div></div>';
       } else if (scorePred && !isKnockout) {
