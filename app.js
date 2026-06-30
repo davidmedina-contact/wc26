@@ -34,6 +34,7 @@ let bracketMobileSection = 'r32';
 let bracketInfoExpanded = false;
 var selectedMatchDate = '2026-06-11';
 var centerDateNavAfterRender = false;
+var matchDateTransitionDirection = '';
 
 function saveBracketState() {
   try { localStorage.setItem('wc2026bracket', JSON.stringify(bracketState)); } catch(e) {}
@@ -1681,6 +1682,8 @@ function renderMatches() {
     });
   var dateInfo = formatDatePill(selectedMatchDate);
 
+  var dateTransitionClass = matchDateTransitionDirection ? ' match-day-enter-' + matchDateTransitionDirection : '';
+  html += '<div class="match-day-content' + dateTransitionClass + '">';
   html += '<h2 style="font-size:1.1rem;margin-bottom:14px;color:var(--text-sec)">' + dateInfo.day + ', ' + dateInfo.date.split(' ')[0] + ' ' + dateInfo.date.split(' ')[1] + '</h2>';
 
   if (dayMatches.length === 0) {
@@ -1784,7 +1787,9 @@ function renderMatches() {
     html += '</div>';
   }
 
+  html += '</div>';
   el.innerHTML = html;
+  matchDateTransitionDirection = '';
 
   // Preserve the user's strip position during adjacent browsing. Only explicit
   // jumps center the selected date; initial deep links center without animation.
@@ -1796,7 +1801,13 @@ function renderMatches() {
       nav.scrollLeft = previousDateScroll;
     } else {
       var target = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
-      nav.scrollTo({ left: Math.max(0, target), behavior: centerDateNavAfterRender ? 'smooth' : 'auto' });
+      target = Math.max(0, Math.min(target, nav.scrollWidth - nav.clientWidth));
+      if (centerDateNavAfterRender && previousDateScroll !== null) {
+        nav.scrollLeft = previousDateScroll;
+        animateDateNavTo(nav, target);
+      } else {
+        nav.scrollLeft = target;
+      }
     }
     centerDateNavAfterRender = false;
   });
@@ -1819,14 +1830,43 @@ function selectMatchDate(dateStr) {
   history.replaceState(null, '', '#matches/' + dateStr);
 }
 
+function animateDateNavTo(nav, target) {
+  var start = nav.scrollLeft;
+  var distance = target - start;
+  if (Math.abs(distance) < 1 || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+    nav.scrollLeft = target;
+    return;
+  }
+  var startedAt = performance.now();
+  var duration = Math.min(480, Math.max(280, Math.abs(distance) * 0.7));
+  function frame(now) {
+    var progress = Math.min(1, (now - startedAt) / duration);
+    var eased = progress < 0.5
+      ? 4 * progress * progress * progress
+      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+    nav.scrollLeft = start + distance * eased;
+    if (progress < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
 function jumpToToday() {
   var now = new Date();
   var y = now.getFullYear();
   var mo = String(now.getMonth() + 1).padStart(2, '0');
   var d = String(now.getDate()).padStart(2, '0');
   var today = y + '-' + mo + '-' + d;
+  var dates = getMatchDates();
+  var target = today;
+  if (dates.indexOf(target) < 0) {
+    var upcoming = dates.filter(function(date) { return date > today; });
+    target = upcoming.length ? upcoming[0] : dates[dates.length - 1];
+  }
+  if (target > selectedMatchDate) matchDateTransitionDirection = 'forward';
+  else if (target < selectedMatchDate) matchDateTransitionDirection = 'backward';
+  else matchDateTransitionDirection = '';
   centerDateNavAfterRender = true;
-  selectMatchDate(today);
+  selectMatchDate(target);
 }
 
 

@@ -642,6 +642,21 @@
 .dp-date { font-size: 1rem; font-weight: 700; color: var(--text); margin-top: 2px; }
 .dp-count { font-size: 0.65rem; color: var(--text-muted); margin-top: 2px; }
 
+.match-day-content { will-change: transform, opacity; }
+.match-day-enter-forward { animation: match-day-enter-forward 380ms cubic-bezier(0.65, 0, 0.35, 1); }
+.match-day-enter-backward { animation: match-day-enter-backward 380ms cubic-bezier(0.65, 0, 0.35, 1); }
+@keyframes match-day-enter-forward {
+  from { opacity: 0.55; transform: translateX(18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes match-day-enter-backward {
+  from { opacity: 0.55; transform: translateX(-18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .match-day-enter-forward, .match-day-enter-backward { animation: none; }
+}
+
 .match-list { display: flex; flex-direction: column; gap: 8px; }
 .match-card {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-pill);

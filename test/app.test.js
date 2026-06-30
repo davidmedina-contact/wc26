@@ -737,6 +737,18 @@ test('match date navigation preserves position during adjacent browsing', () => 
   assert.doesNotMatch(app, /active\.scrollIntoView\(\{behavior:'smooth',block:'nearest',inline:'center'\}\)/);
 });
 
+test('Today navigation animates toward the nearest current match date', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  const css = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  assert.match(app, /if \(target > selectedMatchDate\) matchDateTransitionDirection = 'forward'/);
+  assert.match(app, /else if \(target < selectedMatchDate\) matchDateTransitionDirection = 'backward'/);
+  assert.match(app, /target = upcoming\.length \? upcoming\[0\] : dates\[dates\.length - 1\]/);
+  assert.match(app, /function animateDateNavTo\(nav, target\)/);
+  assert.match(app, /progress < 0\.5[\s\S]*?Math\.pow\(-2 \* progress \+ 2, 3\) \/ 2/);
+  assert.match(css, /\.match-day-enter-forward \{ animation: match-day-enter-forward 380ms cubic-bezier\(0\.65, 0, 0\.35, 1\)/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+});
+
 test('client renders compact standings status markers with an inline legend', () => {
   const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   assert.match(app, /function standingsStatusShort/);
