@@ -95,6 +95,13 @@ card padding, and 8px by 7px team-row padding). Keep team names, flags, scores,
 and status type at their existing sizes; density improvements should come from
 spacing rather than reduced readability.
 
+The match-date strip preserves its horizontal scroll position when a visible
+date is selected or match data rerenders. Do not center every newly selected
+date: rebuilding the strip at scroll position zero and animating back to the
+active item creates a distracting lateral jump. Initial deep links center once
+without animation; explicit navigation such as Today or a team fixture centers
+smoothly. Date cells are native buttons with full-date labels and pressed state.
+
 For finished knockout matches decided by penalties, keep the regulation/extra-
 time result as the primary FT score and render the server-provided `hp`/`ap`
 totals beneath it as `Pens H - A`. Show the line only when both values are valid

@@ -31,6 +31,7 @@ let bracketViewMode = 'live';
 let bracketMobileSection = 'r32';
 let bracketInfoExpanded = false;
 var selectedMatchDate = '2026-06-11';
+var centerDateNavAfterRender = false;
 
 function saveBracketState() {
   try { localStorage.setItem('wc2026bracket', JSON.stringify(bracketState)); } catch(e) {}
@@ -346,9 +347,10 @@ function goToMatch(dateStr) {
   closeModal();
   setTimeout(function() {
     selectedMatchDate = dateStr;
-    var matchTab = document.querySelectorAll('.nav-tab')[1];
+    centerDateNavAfterRender = true;
+    var matchTab = document.querySelector('.nav-tab[data-tab="matches"]');
+    renderedTabs.matches = false;
     switchTab('matches', matchTab);
-    renderMatches();
     setTimeout(function() {
       var activePill = document.querySelector('.date-pill.active');
       if (activePill) {
@@ -1601,6 +1603,8 @@ function liveKnockoutTeamsForMatch(m) {
 
 function renderMatches() {
   var el = document.getElementById('tab-matches');
+  var existingDateNav = document.getElementById('dateNav');
+  var previousDateScroll = existingDateNav ? existingDateNav.scrollLeft : null;
   var dates = getMatchDates();
   var now = new Date();
   var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
@@ -1617,17 +1621,18 @@ function renderMatches() {
 
   // Download calendar button + Date nav pills
   var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><button class="today-btn" onclick="jumpToToday()">Today</button><a href="world-cup-2026-schedule.ics" download class="cal-download-btn">' + icon('calendar',{size:15}) + ' Add All Matches to Calendar</a></div>';
-  html += '<div class="date-nav" id="dateNav">';
+  html += '<div class="date-nav" id="dateNav" role="group" aria-label="Match dates">';
   dates.forEach(function(dateStr) {
     var info = formatDatePill(dateStr);
     var matchCount = matchesData.filter(function(m){return getLocalDateForMatch(m)===dateStr;}).length;
     var isToday = dateStr === today;
     var isActive = dateStr === selectedMatchDate;
-    html += '<div class="date-pill' + (isActive?' active':'') + (isToday?' today':'') + '" onclick="selectMatchDate(\'' + dateStr + '\')">';
+    var dateLabel = info.day + ', ' + info.date + ', ' + matchCount + ' game' + (matchCount>1?'s':'');
+    html += '<button type="button" class="date-pill' + (isActive?' active':'') + (isToday?' today':'') + '" data-date="' + dateStr + '" aria-pressed="' + isActive + '" aria-label="' + dateLabel + '" onclick="selectMatchDate(\'' + dateStr + '\')">';
     html += '<div class="dp-day">' + info.day + '</div>';
     html += '<div class="dp-date">' + info.date.split(' ')[1] + '</div>';
     html += '<div class="dp-count">' + matchCount + ' game' + (matchCount>1?'s':'') + '</div>';
-    html += '</div>';
+    html += '</button>';
   });
   html += '</div>';
 
@@ -1749,11 +1754,20 @@ function renderMatches() {
 
   el.innerHTML = html;
 
-  // Scroll active pill into view
-  setTimeout(function() {
-    var active = document.querySelector('.date-pill.active');
-    if (active) active.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
-  }, 100);
+  // Preserve the user's strip position during adjacent browsing. Only explicit
+  // jumps center the selected date; initial deep links center without animation.
+  requestAnimationFrame(function() {
+    var nav = document.getElementById('dateNav');
+    var active = nav && nav.querySelector('.date-pill.active');
+    if (!nav || !active) return;
+    if (previousDateScroll !== null && !centerDateNavAfterRender) {
+      nav.scrollLeft = previousDateScroll;
+    } else {
+      var target = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
+      nav.scrollTo({ left: Math.max(0, target), behavior: centerDateNavAfterRender ? 'smooth' : 'auto' });
+    }
+    centerDateNavAfterRender = false;
+  });
 
   // Event delegation for match team clicks
   if (!el._hasMatchListener) {
@@ -1779,10 +1793,8 @@ function jumpToToday() {
   var mo = String(now.getMonth() + 1).padStart(2, '0');
   var d = String(now.getDate()).padStart(2, '0');
   var today = y + '-' + mo + '-' + d;
+  centerDateNavAfterRender = true;
   selectMatchDate(today);
-  // Scroll the today pill into view
-  var todayPill = document.querySelector('.date-pill.today');
-  if (todayPill) todayPill.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
 }
 
 

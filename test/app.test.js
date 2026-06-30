@@ -656,6 +656,18 @@ test('match cards use moderately compact spacing without shrinking labels', () =
   assert.match(css, /\.mc-pen-score \{[^}]*font-size: 0\.62rem/);
 });
 
+test('match date navigation preserves position during adjacent browsing', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  assert.match(app, /var previousDateScroll = existingDateNav \? existingDateNav\.scrollLeft : null/);
+  assert.match(app, /previousDateScroll !== null && !centerDateNavAfterRender/);
+  assert.match(app, /nav\.scrollLeft = previousDateScroll/);
+  assert.match(app, /data-date="' \+ dateStr/);
+  assert.match(app, /aria-pressed="' \+ isActive/);
+  assert.match(app, /document\.querySelector\('\.nav-tab\[data-tab="matches"\]'\)/);
+  assert.match(app, /renderedTabs\.matches = false/);
+  assert.doesNotMatch(app, /active\.scrollIntoView\(\{behavior:'smooth',block:'nearest',inline:'center'\}\)/);
+});
+
 test('client renders compact standings status markers with an inline legend', () => {
   const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   assert.match(app, /function standingsStatusShort/);

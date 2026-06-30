@@ -437,6 +437,34 @@ try {
   assert(cleanLaunch.cardCount > 0 && !cleanLaunch.cardOverflow, 'Compact match cards should render without horizontal overflow', cleanLaunch);
   assert(cleanLaunch.cardPadding.join(',') === '11px,14px' && cleanLaunch.teamPadding.join(',') === '8px,7px', 'Mobile match cards should use the moderate compact-spacing contract', cleanLaunch);
 
+  const dateSelection = await page.evaluate(() => {
+    const nav = document.querySelector('#dateNav');
+    if (!nav) return null;
+    nav.scrollLeft = Math.round((nav.scrollWidth - nav.clientWidth) * 0.55);
+    const navRect = nav.getBoundingClientRect();
+    const visible = [...nav.querySelectorAll('.date-pill:not(.active)')].filter(pill => {
+      const rect = pill.getBoundingClientRect();
+      return rect.left >= navRect.left && rect.right <= navRect.right;
+    });
+    const target = visible[visible.length - 1];
+    return target ? { date: target.dataset.date, before: nav.scrollLeft } : null;
+  });
+  assert(dateSelection?.date, 'Date strip fixture should expose a visible future date', dateSelection || {});
+  await page.click(`[data-date="${dateSelection.date}"]`);
+  await page.waitForTimeout(100);
+  const dateNavigation = await page.evaluate(expectedDate => {
+    const nav = document.querySelector('#dateNav');
+    return {
+      selected: document.querySelector('.date-pill.active')?.dataset.date,
+      scrollLeft: nav?.scrollLeft,
+      hash: window.location.hash,
+      buttons: [...document.querySelectorAll('.date-pill')].every(pill => pill.tagName === 'BUTTON' && pill.hasAttribute('aria-label') && pill.hasAttribute('aria-pressed')),
+    };
+  }, dateSelection.date);
+  assert(dateNavigation.selected === dateSelection.date && dateNavigation.hash === '#matches/' + dateSelection.date, 'Clicking a date should update content and the canonical hash', { dateSelection, dateNavigation });
+  assert(Math.abs(dateNavigation.scrollLeft - dateSelection.before) <= 1, 'Clicking an already-visible date should preserve the strip position', { dateSelection, dateNavigation });
+  assert(dateNavigation.buttons, 'Every match date should be an accessible stateful button', dateNavigation);
+
   const penaltyDisplay = await page.evaluate(() => {
     actualScores.Germany_Paraguay = { h: 1, a: 1, hp: 5, ap: 4, status: 'FT' };
     selectedMatchDate = '2026-06-29';
@@ -452,7 +480,7 @@ try {
   assert(actionableBrowserErrors.length === 0, 'Bracket preview should not emit browser errors', { browserErrors: actionableBrowserErrors });
   if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-final.png'), fullPage: false });
 
-  console.log(JSON.stringify({ target, live, picks, clickedPick, returnedLive, mobile, qf, sf, finals, cleanLaunch, penaltyDisplay, browserErrors: actionableBrowserErrors }, null, 2));
+  console.log(JSON.stringify({ target, live, picks, clickedPick, returnedLive, mobile, qf, sf, finals, cleanLaunch, dateNavigation, penaltyDisplay, browserErrors: actionableBrowserErrors }, null, 2));
 } finally {
   await browser.close();
 }

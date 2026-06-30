@@ -537,10 +537,11 @@
 .date-pill {
   flex-shrink: 0; padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer;
   background: var(--surface); border: 1px solid var(--border);
-  text-align: center; min-width: 64px; transition: all 0.15s;
+  color: inherit; font: inherit; text-align: center; min-width: 64px; transition: border-color 0.15s, background 0.15s, color 0.15s;
   box-shadow: var(--card-shadow);
 }
 .date-pill:hover { border-color: var(--accent); }
+.date-pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .date-pill.active { background: var(--accent-gradient); border-color: transparent; }
 .date-pill.active .dp-day, .date-pill.active .dp-date, .date-pill.active .dp-count { color: white; }
 .date-pill.today { border-color: var(--date-today-border); }

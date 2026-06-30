@@ -304,6 +304,10 @@ Rules for bracket/live-results balance:
   hash. Bind activation through `data-tab`; never infer a tab from button index.
 - Tighten match cards through gaps and padding, not smaller team names, flags,
   scores, or status text. Browser smoke must verify the cards do not overflow.
+- Preserve the Matches date strip's `scrollLeft` for ordinary date selection and
+  data rerenders. Center only initial deep links and explicit jumps such as
+  Today or team fixtures. Use native buttons with full-date accessible labels;
+  never restore unconditional smooth `scrollIntoView()` after every render.
 - When serverless data includes valid unequal knockout `hp`/`ap` totals, show a
   compact `Pens H - A` line below the primary FT score. The client must display,
   not derive, shootout totals; omit the line when either value is unavailable.
