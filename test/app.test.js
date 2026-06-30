@@ -759,6 +759,8 @@ test('Stats controls and scorer rows stay compact on narrow mobile screens', () 
   assert.match(app, /aria-label="' \+ teamTabLabel \+ '"/);
   assert.match(css, /\.subtabs \{ display: grid; grid-template-columns: repeat\(4, minmax\(0, 1fr\)\); overflow: visible; \}/);
   assert.match(css, /\.st-insight \{ display: none; \}/);
+  assert.match(css, /\.leader-row > strong \{[^}]*white-space: nowrap/);
+  assert.match(css, /\.leader-row \{ grid-template-columns: 24px minmax\(120px, 1fr\) 50px 46px/);
   assert.match(css, /@media \(max-width: 360px\) \{[\s\S]*?\.pattern-item span \{ font-size: 0\.62rem; white-space: nowrap; \}/);
 });
 
