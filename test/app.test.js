@@ -13,8 +13,10 @@ const {
   computeStats,
   dataVersionFor,
   expectedFinishedKeys,
+  espnDetailToScorerEvent,
   parseScore,
   scorerCompletenessIssues,
+  scorerVerificationCandidates,
   sourceEventsToTokens,
   sortGroupStandings,
   thirdPlaceDataForStandings,
@@ -628,6 +630,52 @@ test('serverless scorer verifier can replace incomplete feed scorer strings', as
   } finally {
     global.fetch = originalFetch;
   }
+});
+
+test('scorer verification prioritizes incomplete matches within the free-tier budget', () => {
+  const complete = Array.from({ length: 5 }, (_, index) => game({
+    home_team_name_en: index % 2 ? 'Mexico' : 'Brazil',
+    away_team_name_en: index % 2 ? 'South Africa' : 'Morocco',
+    home_score: '1',
+    away_score: '0',
+    home_scorers: index % 2 ? `{"Raúl Jiménez 10'"}` : `{"Vinícius Júnior 10'"}`,
+    local_date: `07/01/2026 0${index + 8}:00`,
+  }));
+  const incomplete = game({
+    type: 'knockout',
+    home_team_name_en: 'Belgium',
+    away_team_name_en: 'Senegal',
+    home_score: '3',
+    away_score: '2',
+    home_scorers: `{"Romelu Lukaku 86'","Youri Tielemans 89'"}`,
+    away_scorers: `{"Habib Diarra 25'","Ismaïla Sarr 51'"}`,
+    local_date: '07/01/2026 16:00',
+  });
+  const games = complete.concat(incomplete);
+  const candidates = scorerVerificationCandidates(games, buildScores(games), Date.parse('2026-07-02T00:00:00Z'));
+  assert.equal(`${candidates[0].home_team_name_en}_${candidates[0].away_team_name_en}`, 'Belgium_Senegal');
+  assert.ok(candidates.slice(0, 4).includes(incomplete));
+});
+
+test('ESPN scorer adapter preserves extra-time and stoppage-time display clocks', () => {
+  const event = espnDetailToScorerEvent({
+    team: { displayName: 'Belgium' },
+    participants: [{ athlete: { displayName: 'Youri Tielemans' } }],
+    clock: { value: 7200, displayValue: "120'+5'" },
+    addedClock: { value: 284, displayValue: '5' },
+  });
+  assert.deepEqual(event, {
+    source: 'espn',
+    team: 'Belgium',
+    player: 'Youri Tielemans',
+    minute: 120,
+    extra: 5,
+    ownGoal: false,
+  });
+  assert.deepEqual(sourceEventsToTokens([event], 'Belgium', 'Senegal', 1, 0), {
+    home: ["Youri Tielemans 120+5'"],
+    away: [],
+  });
 });
 
 test('source scorer events must match final score by side before acceptance', () => {

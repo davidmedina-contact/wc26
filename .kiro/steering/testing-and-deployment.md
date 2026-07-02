@@ -182,6 +182,12 @@ Rules from the June 2026 scorer-card incident:
 
 - The invariant is mandatory: for every finished match, displayed scorer labels
   must equal the final score total.
+- Apply the bounded source-call budget only after sorting candidates. Matches
+  that violate scorer completeness come before routine recent-match rechecks;
+  otherwise an old feed order can starve the match that actually needs repair.
+- Preserve the provider's displayed event clock. Elapsed seconds can be
+  fractional or represent the current minute, so flooring them corrupts normal
+  minutes and extra-time notation such as `120'+5'`.
 - Own goals count in match-card labels for the benefiting team but must not count
   toward top-scorer stats.
 - Known verified corrections belong in `data/scorer-overrides.json` with source

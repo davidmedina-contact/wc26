@@ -541,15 +541,25 @@ async function fetchEspnScorerEvents(game) {
   const details = summary.header?.competitions?.[0]?.details || event.competitions?.[0]?.details || [];
   return details
     .filter(detail => detail?.scoringPlay && !detail.shootout)
-    .map(detail => ({
-      source: 'espn',
-      team: detail.team?.displayName || detail.team?.name,
-      player: detail.participants?.[0]?.athlete?.displayName || detail.athletesInvolved?.[0]?.displayName,
-      minute: Math.floor((Number(detail.clock?.value) || 0) / 60) || Number(String(detail.clock?.displayValue || '').match(/\d+/)?.[0]),
-      extra: Number(detail.addedClock?.value) ? Math.floor(Number(detail.addedClock.value) / 60) : 0,
-      ownGoal: Boolean(detail.ownGoal),
-    }))
+    .map(espnDetailToScorerEvent)
     .filter(event => event.player && event.team);
+}
+
+function espnDetailToScorerEvent(detail) {
+  const display = String(detail.clock?.displayValue || '');
+  const displayParts = display.match(/(\d+)(?:['′]?\+(\d+))?/);
+  const elapsedSeconds = Number(detail.clock?.value) || 0;
+  const minute = Number(displayParts?.[1]) || Math.ceil(elapsedSeconds / 60);
+  const addedDisplay = String(detail.addedClock?.displayValue || '').match(/\d+/)?.[0];
+  const extra = Number(displayParts?.[2] || addedDisplay) || 0;
+  return {
+    source: 'espn',
+    team: detail.team?.displayName || detail.team?.name,
+    player: detail.participants?.[0]?.athlete?.displayName || detail.athletesInvolved?.[0]?.displayName,
+    minute,
+    extra,
+    ownGoal: Boolean(detail.ownGoal),
+  };
 }
 
 async function fetchApiFootballScorerEvents(game) {
@@ -622,14 +632,17 @@ function scorerVerificationCandidates(games, scores, now) {
   const cutoff = Number(now || Date.now());
   const issueMatches = new Set(scorerCompletenessIssues(games, scores).map(issue => issue.match));
   const recentMs = Number(process.env.SCORER_VERIFIER_RECENT_HOURS || 36) * 60 * 60 * 1000;
-  return validFinishedGames(games).filter(game => {
+  return validFinishedGames(games).map((game, index) => {
     const key = matchKey(game);
-    if (issueMatches.has(key)) return true;
+    if (issueMatches.has(key)) return { game, index, priority: 0 };
     const date = gameDateIso(game);
-    if (!date) return false;
+    if (!date) return null;
     const local = Date.parse(`${date}T${String(game.local_date || '').slice(11, 16) || '12:00'}:00-04:00`);
-    return Number.isFinite(local) && cutoff >= local && cutoff - local <= recentMs;
-  });
+    if (!Number.isFinite(local) || cutoff < local || cutoff - local > recentMs) return null;
+    return { game, index, priority: 1, local };
+  }).filter(Boolean).sort((a, b) =>
+    a.priority - b.priority || (b.local || 0) - (a.local || 0) || a.index - b.index
+  ).map(candidate => candidate.game);
 }
 
 async function buildScorerVerification(games, now) {
@@ -1495,10 +1508,12 @@ module.exports._test = {
   computeStats,
   dataVersionFor,
   expectedFinishedKeys,
+  espnDetailToScorerEvent,
   thirdPlaceDataForStandings,
   parseScore,
   readOfficialStandings,
   scorerCompletenessIssues,
+  scorerVerificationCandidates,
   sourceEventsToTokens,
   sortGroupStandings,
   validFinishedGames,

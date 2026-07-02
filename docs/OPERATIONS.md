@@ -263,6 +263,12 @@ tokens, and unusual stoppage-time formats. Known verified corrections live in
 function validates that each finished match has scorer labels equal to the final
 score total and reports `meta.scorerCompleteness`.
 
+Incomplete matches take priority over routine recent-match rechecks before the
+Hobby-tier verifier budget is applied. Source adapters must use the provider's
+display clock when available so regulation, extra time, and added time survive
+normalization exactly (for example, `120'+5'` becomes `120+5'`). Never derive
+the displayed minute by flooring elapsed seconds.
+
 When scorer labels are incomplete, or when a match has recently finished, the
 serverless function can attempt bounded scorer verification from free sources.
 API-Football is supported only when `API_FOOTBALL_SCORERS=1` and an
