@@ -102,7 +102,7 @@ try {
   assert(live.dateTimeLabels.some(label => /Jun|Jul/.test(label) && /\d:\d{2} (AM|PM)/.test(label)), 'Bracket cards should show date and local time labels', live);
   assert(live.cityLabels.includes('Boston'), 'Bracket cards should show canonical host cities', live);
   assert(live.desktopIds.length === 32 && new Set(live.desktopIds).size === 32, 'Desktop map should render every knockout match exactly once', live);
-  assert(live.mobileStageTabs === 5, 'Mobile map should expose each knockout stage', live);
+  assert(live.mobileStageTabs === 4, 'Mobile map should expose the four compact knockout stage views', live);
   assert(live.mobileIds.length === 24 && new Set(live.mobileIds).size === 24, 'R32 mobile window should show 16 source and 8 target matches', live);
   assert(!/Group|TBD|W M|L M/.test(live.banner), 'Next-match banner should use confirmed teams when available', live);
   if (screenshotDir) {
@@ -213,6 +213,7 @@ try {
     desktopVisible: getComputedStyle(document.querySelector('.bracket-desktop-shell')).display !== 'none',
     mobileVisible: getComputedStyle(document.querySelector('.bracket-mobile-map')).display !== 'none',
     activeSection: document.querySelector('[data-bracket-section].active')?.dataset.bracketSection,
+    sideDividers: document.querySelectorAll('.bracket-mobile-side-divider').length,
     connectorGaps: [...document.querySelectorAll('.bracket-mobile-path')].map(path => {
       const junction = path.querySelector('.bracket-mobile-path-junction')?.getBoundingClientRect();
       const target = path.querySelector('.bracket-mobile-target .bracket-node')?.getBoundingClientRect();
@@ -272,8 +273,9 @@ try {
   assert(mobile.citySample === 'Boston', 'Mobile R32 cards should retain canonical host-city labels', mobile);
   assert(mobile.teamCodeSample?.code === 'GER' && mobile.teamCodeSample.label === 'Germany' && mobile.teamCodeSample.visible, 'Known mobile teams should use consistent three-letter codes with full accessible labels', mobile);
   assert(mobile.buttons.every(button => button.width > 90), 'Mode buttons should remain usable on mobile', mobile);
-  assert(mobile.sectionButtons.join(',') === 'R32,R16,QF,SF,Final', 'Mobile navigation should use standard tournament round names', mobile);
+  assert(mobile.sectionButtons.join(',') === 'R32,R16,QF,SF', 'Mobile navigation should use the four compact tournament stage names', mobile);
   assert(mobile.activeSection === 'r32', 'Mobile bracket should begin at the Round of 32', mobile);
+  assert(mobile.sideDividers === 1, 'R32 should visibly separate the Side A and Side B paths', mobile);
   assert(mobile.connectorGaps.length === 8 && mobile.connectorGaps.every(gap => gap.target === 9 && gap.sources.length === 2 && gap.sources.every(value => value === 9)), 'Every mobile source and target card should meet its 9px connector arm', mobile);
   assert(mobile.connectorAlignment.length === 8 && mobile.connectorAlignment.every(alignment => alignment &&
     alignment.sources.every((value, index) => Math.abs(value - alignment.expectedSources[index]) < 0.2) &&
@@ -367,12 +369,14 @@ try {
       scrollHeight: node?.scrollHeight,
       pathHeights: [...document.querySelectorAll('.bracket-mobile-path')].map(path => Math.round(path.getBoundingClientRect().height)),
       junctionHeights: [...document.querySelectorAll('.bracket-mobile-path-junction')].map(path => Math.round(path.getBoundingClientRect().height)),
+      sideDividers: document.querySelectorAll('.bracket-mobile-side-divider').length,
     };
   });
   assert(qf.ids.join(',') === 'M100,M101,M102,M97,M98,M99', 'QF window should show four quarterfinals feeding two semifinals', qf);
   assert(qf.clientHeight === qf.scrollHeight && qf.clientHeight >= 350, 'QF window should fill available viewport space without its own scroll', qf);
   assert(qf.pathHeights.length === 2 && qf.pathHeights.every(height => height > 250), 'QF paths should expand to share the available bracket height', qf);
   assert(qf.junctionHeights.every(height => height === 150), 'Expanded path spacing must not stretch connector geometry away from card centers', qf);
+  assert(qf.sideDividers === 1, 'QF should retain the Side A and Side B midpoint', qf);
   if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-qf.png'), fullPage: false });
 
   await page.click('[data-bracket-section="sf"]');
@@ -384,32 +388,15 @@ try {
       clientHeight: node?.clientHeight,
       scrollHeight: node?.scrollHeight,
       pathHeights: [...document.querySelectorAll('.bracket-mobile-path')].map(path => Math.round(path.getBoundingClientRect().height)),
+      champion: Boolean(document.querySelector('.bracket-mobile-champion-card')),
+      sideLabels: [...document.querySelectorAll('.bracket-mobile-side-source > span')].map(label => label.textContent.trim()),
     };
   });
   assert(sf.ids.join(',') === 'M101,M102,M103,M104', 'SF window should show both semifinals, the final, and third place', sf);
-  assert(sf.clientHeight === sf.scrollHeight && sf.clientHeight >= 290, 'SF window should fill available viewport space without its own scroll', sf);
-  assert(sf.pathHeights.length === 1 && sf.pathHeights[0] > 400, 'The semifinal path should expand while the third-place card remains available', sf);
+  assert(sf.clientHeight === sf.scrollHeight && sf.clientHeight <= 330, 'SF window should collapse to its compact content without its own scroll', sf);
+  assert(sf.pathHeights.length === 1 && sf.pathHeights[0] === 180, 'The combined semifinal path should use its compact fixed geometry', sf);
+  assert(sf.champion && sf.sideLabels.join(',') === 'Side A · SF1,Side B · SF2', 'SF should identify both sides and include the champion destination', sf);
   if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-sf.png'), fullPage: false });
-
-  await page.click('[data-bracket-section="final"]');
-  await page.waitForTimeout(100);
-  const finals = await page.evaluate(() => ({
-    activeSection: document.querySelector('[data-bracket-section].active')?.dataset.bracketSection,
-    ids: [...document.querySelectorAll('.bracket-mobile-visual [data-match-id]')]
-      .filter(node => node.dataset.matchId === 'M103' || node.dataset.matchId === 'M104')
-      .map(node => node.dataset.matchId).sort(),
-    champion: Boolean(document.querySelector('.bracket-mobile-champion-card')),
-    scroller: (() => {
-      const node = document.querySelector('[data-mobile-bracket-scroll]');
-      return node ? {
-        clientHeight: node.clientHeight, scrollHeight: node.scrollHeight,
-      } : null;
-    })(),
-  }));
-  assert(finals.activeSection === 'final', 'Final tab should select the championship stage', finals);
-  assert(finals.ids.join(',') === 'M103,M104', 'Connected mobile bracket should contain the final and third-place match', finals);
-  assert(finals.champion, 'Final stage should include the champion destination', finals);
-  assert(finals.scroller && finals.scroller.clientHeight === finals.scroller.scrollHeight, 'Final stage should use the page as its only vertical scroll container', finals);
 
   await page.goto(target.split('#')[0], { waitUntil: 'networkidle' });
   await page.waitForSelector('#tab-matches.active .match-card', { timeout: 15000 });
@@ -478,9 +465,9 @@ try {
     !(localStaticTarget && error.includes('/_vercel/insights/script.js'))
   );
   assert(actionableBrowserErrors.length === 0, 'Bracket preview should not emit browser errors', { browserErrors: actionableBrowserErrors });
-  if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-final.png'), fullPage: false });
+  if (screenshotDir) await page.screenshot({ path: path.join(screenshotDir, 'bracket-mobile-complete.png'), fullPage: false });
 
-  console.log(JSON.stringify({ target, live, picks, clickedPick, returnedLive, mobile, qf, sf, finals, cleanLaunch, dateNavigation, penaltyDisplay, browserErrors: actionableBrowserErrors }, null, 2));
+  console.log(JSON.stringify({ target, live, picks, clickedPick, returnedLive, mobile, qf, sf, cleanLaunch, dateNavigation, penaltyDisplay, browserErrors: actionableBrowserErrors }, null, 2));
 } finally {
   await browser.close();
 }

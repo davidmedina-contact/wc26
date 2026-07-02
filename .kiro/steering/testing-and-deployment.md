@@ -287,9 +287,12 @@ Rules for bracket/live-results balance:
   confirmed-team resolution in the next-match banner.
 - Do not shrink the full 32-team tree into an unreadable mobile overview.
   Desktop should use a mirrored tree centered on the final. Mobile should use
-  standard round tabs (`R32`, `R16`, `QF`, `SF`, `Final`) and a connected
-  two-column stage window. Early stages may scroll vertically; later stages
-  must collapse to their content height instead of retaining Round-of-32 gaps.
+  four standard round tabs (`R32`, `R16`, `QF`, `SF`) and a connected
+  two-column stage window. R32, R16, and QF must label the midpoint between the
+  Side A / SF1 and Side B / SF2 paths. SF owns the complete finish: both
+  semifinals connect to the final and compact champion strip, with the bronze
+  match below. Early stages may scroll vertically; later stages must collapse
+  to their content height instead of retaining Round-of-32 gaps.
   Keep official match IDs on cards, not as the primary round-navigation labels.
   Generate every stage from the same official-ID match models.
 - Keep the mobile bracket header compact. Explanatory copy may collapse, but the
@@ -359,8 +362,10 @@ Rules for bracket/live-results balance:
   nodes, exact match membership for every dynamic mobile stage, one-axis mobile
   scrolling, later-stage height compression, mobile code/accessibility-label
   consistency, disclosure behavior, Live/My Picks state preservation, and no
-  mobile body overflow. Capture desktop, mobile R32, QF, SF, and Final
-  screenshots when visually reviewing a substantial bracket change.
+  mobile body overflow. Capture desktop plus mobile R32, QF, and SF screenshots
+  when visually reviewing a substantial bracket change. The SF capture must
+  show Matches 101 and 102 feeding Match 104 exactly once, the compact champion
+  strip, and Match 103 below.
 - Vercel preview deployments may be protected by Vercel Authentication. Keep
   protection enabled. Pass the configured automation bypass to Playwright via
   `VERCEL_AUTOMATION_BYPASS_SECRET`; never print, persist, or commit the secret.

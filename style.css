@@ -934,7 +934,7 @@
   .bracket-mobile-map { display: flex; flex: 1 0 auto; flex-direction: column; }
   .bracket-section-tabs {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 3px;
     margin-bottom: 4px;
     padding: 1px;
@@ -1014,8 +1014,7 @@
     text-align: center;
     text-transform: uppercase;
   }
-  .bracket-mobile-path,
-  .bracket-mobile-final-path {
+  .bracket-mobile-path {
     flex: 1 0 158px;
     min-height: 158px;
     display: grid;
@@ -1029,6 +1028,7 @@
     flex: 0 0 auto;
     align-self: stretch;
   }
+  .bracket-mobile-side-source > .bracket-visual-slot { width: 100%; }
   .bracket-mobile-target > .bracket-visual-slot { width: 100%; }
   .bracket-mobile-path-junction {
     position: relative;
@@ -1053,19 +1053,58 @@
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
   }
-  .bracket-mobile-final-path > div:first-child .bracket-node::after,
-  .bracket-mobile-final-connector::after {
+  .bracket-mobile-side-divider {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    align-items: center;
+    min-height: 24px;
+    margin: 4px 0;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 0.48rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+  .bracket-mobile-side-divider::before {
     content: '';
     position: absolute;
-    z-index: 3;
-    top: 50%;
-    width: 9px;
-    border-top: 1px solid var(--bracket-line);
-    pointer-events: none;
+    right: 8px;
+    left: 8px;
+    border-top: 1px solid color-mix(in srgb, var(--text-muted) 48%, var(--border));
   }
-  .bracket-mobile-final-path > div:first-child .bracket-node::after { left: 100%; }
-  .bracket-mobile-final-connector { position: relative; align-self: stretch; }
-  .bracket-mobile-final-connector::after { left: 0; width: 100%; }
+  .bracket-mobile-side-divider { position: relative; }
+  .bracket-mobile-side-divider span {
+    position: relative;
+    z-index: 1;
+    width: max-content;
+    max-width: 100%;
+    padding: 0 4px;
+    background: color-mix(in srgb, var(--surface) 72%, var(--bg));
+    white-space: nowrap;
+  }
+  .bracket-mobile-side-divider span:first-child { justify-self: start; }
+  .bracket-mobile-side-divider span:last-child { justify-self: end; }
+  .bracket-mobile-finish-path { flex-basis: 180px; min-height: 180px; }
+  .bracket-mobile-scroll[data-mobile-stage-shell="sf"] { flex: 0 0 auto; }
+  .bracket-mobile-visual[data-mobile-stage="sf"] { flex: 0 0 auto; min-height: 0; }
+  .bracket-mobile-visual[data-mobile-stage="sf"] .bracket-mobile-finish-path { flex: 0 0 180px; }
+  .bracket-mobile-side-source { display: flex; flex-direction: column; min-width: 0; }
+  .bracket-mobile-side-source > span {
+    height: 12px;
+    padding-left: 3px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 0.46rem;
+    font-weight: 800;
+    line-height: 12px;
+    text-transform: uppercase;
+  }
+  .bracket-mobile-finish-sources { gap: 6px; }
+  .bracket-mobile-finish-junction {
+    height: calc(var(--mobile-card-height) * 2 + var(--mobile-source-gap) + 24px);
+  }
+  .bracket-mobile-finish-target { display: flex; flex-direction: column; gap: 5px; }
   .bracket-mobile-visual .bracket-node-footer {
     min-height: 0;
     height: auto;
@@ -1079,12 +1118,12 @@
   .bracket-mobile-visual .bracket-node-time,
   .bracket-mobile-visual .bracket-node-city { font-size: 0.44rem; }
   .bracket-mobile-champion-card {
-    min-height: 72px;
+    min-height: 36px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 5px;
+    gap: 6px;
     border: 1px solid color-mix(in srgb, var(--accent) 50%, var(--border));
     border-radius: 6px;
     background: var(--surface);
@@ -1093,6 +1132,8 @@
     font-weight: 800;
     text-align: center;
   }
+  .bracket-mobile-champion-card .champion-trophy { color: var(--color-amber, #f59e0b); }
+  .bracket-mobile-champion-card span { color: var(--text-muted); font-size: 0.46rem; text-transform: uppercase; }
   .bracket-mobile-aux {
     width: calc(50% - 9px);
     margin: 14px 0 2px auto;

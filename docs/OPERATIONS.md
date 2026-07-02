@@ -60,12 +60,17 @@ serverless live-data computation.
 
 The Bracket tab renders that graph differently by viewport without changing its
 meaning. Desktop uses one mirrored tournament tree with the final in the
-center. Mobile uses standard round tabs: `R32`, `R16`, `QF`, `SF`, and `Final`.
+center. Mobile uses four standard round tabs: `R32`, `R16`, `QF`, and `SF`.
 Each tab renders a connected two-column stage window (`R32 -> R16`,
-`R16 -> QF`, `QF -> SF`, or `SF -> Final`) from the same official match graph.
+`R16 -> QF`, `QF -> SF`, or the complete `SF -> Final` finish) from the same
+official match graph. R32, R16, and QF place a labeled midpoint divider between
+the Side A / SF1 path and Side B / SF2 path so the two halves remain legible in
+the vertical mobile presentation.
 The first rounds scroll vertically, while later stages collapse to their content
 height so all remaining paths fit together without inherited empty rows. The
-Final view pairs Match 104 with the champion and keeps Match 103 visible below.
+The SF view connects Matches 101 and 102 to Match 104, shows the champion in a
+compact strip, and keeps Match 103 visible below. A saved legacy `Final` tab
+selection migrates to `SF`; Match 104 and the champion must not be duplicated.
 The mobile page and bracket must not overflow horizontally.
 Official match IDs remain on the cards, where they identify individual fixtures
 without replacing fan-facing round names. Confirmed teams use consistent

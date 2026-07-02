@@ -1094,16 +1094,25 @@ function renderBracket() {
     ]},
     {id:'sf', label:'SF', title:'Semi-finals', nextTitle:'Final', paths:[
       [['M101','M102'],'M104']
-    ]},
-    {id:'final', label:'Final', title:'Final', nextTitle:'Champion', paths:[]}
+    ]}
   ];
 
   function mobileChampionCard() {
     var champion = resolvedWinners.M104;
+    var finalIsComplete = knockoutModels.M104 && knockoutModels.M104.liveWinner;
+    var championLabel = finalIsComplete
+      ? 'Confirmed champion'
+      : champion && bracketViewMode === 'picks'
+        ? 'Your champion pick'
+        : 'Champion';
     return '<div class="bracket-mobile-champion-card">' + icon('trophy',{size:22,cls:'champion-trophy'}) +
       (champion && wcData.teams[champion]
-        ? '<strong>' + wcData.teams[champion].flag + ' ' + esc(bracketTeamCode(champion)) + '</strong>'
-        : '<strong>Champion</strong>') + '</div>';
+        ? '<span>' + championLabel + '</span><strong>' + wcData.teams[champion].flag + ' ' + esc(bracketTeamCode(champion)) + '</strong>'
+        : '<strong>' + championLabel + '</strong>') + '</div>';
+  }
+
+  function mobileSideDivider() {
+    return '<div class="bracket-mobile-side-divider" aria-label="Bracket side boundary"><span>&uarr; Side A · SF1 path</span><span>Side B · SF2 path &darr;</span></div>';
   }
 
   function mobileStagePath(sourceIds, targetId) {
@@ -1114,24 +1123,35 @@ function renderBracket() {
       '<div class="bracket-mobile-target">' + visualSlot(targetId, 1, 1, '', 0) + '</div></div>';
   }
 
+  function mobileFinishPath() {
+    return '<div class="bracket-mobile-path bracket-mobile-finish-path">' +
+      '<div class="bracket-mobile-source-stack bracket-mobile-finish-sources">' +
+        '<div class="bracket-mobile-side-source"><span>Side A · SF1</span>' + visualSlot('M101', 1, 1, 'bracket-mobile-source', 0) + '</div>' +
+        '<div class="bracket-mobile-side-source"><span>Side B · SF2</span>' + visualSlot('M102', 1, 1, 'bracket-mobile-source', 0) + '</div>' +
+      '</div><div class="bracket-mobile-path-junction bracket-mobile-finish-junction" aria-hidden="true">' +
+        '<svg viewBox="0 0 18 100" preserveAspectRatio="none" focusable="false"><path d="M0 28H9V79H0M9 53.5H18"></path></svg></div>' +
+      '<div class="bracket-mobile-target bracket-mobile-finish-target">' + visualSlot('M104', 1, 1, 'bracket-final-node', 0) + mobileChampionCard() + '</div></div>';
+  }
+
   function mobileVisualBracket(round) {
-    var out = '<div class="bracket-mobile-scroll" data-mobile-bracket-scroll><div class="bracket-mobile-visual" data-mobile-stage="' + round.id + '" aria-label="' + round.title + ' to ' + round.nextTitle + '">' +
+    var out = '<div class="bracket-mobile-scroll" data-mobile-bracket-scroll data-mobile-stage-shell="' + round.id + '"><div class="bracket-mobile-visual" data-mobile-stage="' + round.id + '" aria-label="' + round.title + ' to ' + round.nextTitle + '">' +
       '<div class="bracket-mobile-column-titles"><span>' + round.title + '</span><span>' + round.nextTitle + '</span></div>';
 
-    if (round.id === 'final') {
-      out += '<div class="bracket-mobile-final-path"><div>' + visualSlot('M104', 1, 1, 'bracket-final-node', 0) + '</div>' +
-        '<div class="bracket-mobile-final-connector" aria-hidden="true"></div>' + mobileChampionCard() + '</div>' +
+    if (round.id === 'sf') {
+      out += mobileFinishPath() +
         '<div class="bracket-mobile-aux"><span>Third place</span>' + visualSlot('M103', 1, 1, 'bracket-bronze-node', 0) + '</div>';
     } else {
-      round.paths.forEach(function(path) { out += mobileStagePath(path[0], path[1]); });
-      if (round.id === 'sf') {
-        out += '<div class="bracket-mobile-aux"><span>Third place</span>' + visualSlot('M103', 1, 1, 'bracket-bronze-node', 0) + '</div>';
-      }
+      var sideBoundary = round.paths.length / 2;
+      round.paths.forEach(function(path, index) {
+        out += mobileStagePath(path[0], path[1]);
+        if (index === sideBoundary - 1) out += mobileSideDivider();
+      });
     }
     return out + '</div></div>';
   }
 
   function mobileBracketMap() {
+    if (bracketMobileSection === 'final') bracketMobileSection = 'sf';
     var activeRound = mobileRounds.find(function(round) { return round.id === bracketMobileSection; }) || mobileRounds[0];
     var out = '<div class="bracket-mobile-map"><div class="bracket-section-tabs" role="tablist" aria-label="Bracket section">';
     mobileRounds.forEach(function(round) {
