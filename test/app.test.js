@@ -17,7 +17,8 @@ const {
   parseScore,
   scorerCompletenessIssues,
   scorerVerificationCandidates,
-  sourceEventsToTokens,
+  selectScorerVerificationCandidates,
+  sourceEventsToScorers,
   sortGroupStandings,
   thirdPlaceDataForStandings,
   validFinishedGames,
@@ -632,7 +633,7 @@ test('serverless scorer verifier can replace incomplete feed scorer strings', as
   }
 });
 
-test('scorer verification prioritizes incomplete matches within the free-tier budget', () => {
+test('scorer verification prioritizes incomplete matches before proactive checks', () => {
   const complete = Array.from({ length: 5 }, (_, index) => game({
     home_team_name_en: index % 2 ? 'Mexico' : 'Brazil',
     away_team_name_en: index % 2 ? 'South Africa' : 'Morocco',
@@ -657,6 +658,25 @@ test('scorer verification prioritizes incomplete matches within the free-tier bu
   assert.ok(candidates.slice(0, 4).includes(incomplete));
 });
 
+test('scorer verification budget never excludes a known incomplete match', () => {
+  const broken = Array.from({ length: 6 }, (_, index) => game({
+    home_team_name_en: index % 2 ? 'Mexico' : 'Brazil',
+    away_team_name_en: index % 2 ? 'South Africa' : 'Morocco',
+    local_date: `07/0${index + 1}/2026 12:00`,
+  }));
+  const proactive = game({
+    home_team_name_en: 'France',
+    away_team_name_en: 'Senegal',
+    local_date: '07/05/2026 12:00',
+  });
+  const issueMatches = new Set(broken.map(match => `${match.home_team_name_en}_${match.away_team_name_en}`));
+  const selection = selectScorerVerificationCandidates(broken.concat(proactive), issueMatches, 4);
+  assert.equal(selection.required.length, 6);
+  assert.equal(selection.proactive.length, 1);
+  assert.equal(selection.selected.length, 7);
+  broken.forEach(match => assert.ok(selection.selected.includes(match)));
+});
+
 test('ESPN scorer adapter preserves extra-time and stoppage-time display clocks', () => {
   const event = espnDetailToScorerEvent({
     team: { displayName: 'Belgium' },
@@ -672,19 +692,63 @@ test('ESPN scorer adapter preserves extra-time and stoppage-time display clocks'
     extra: 5,
     ownGoal: false,
   });
-  assert.deepEqual(sourceEventsToTokens([event], 'Belgium', 'Senegal', 1, 0), {
-    home: ["Youri Tielemans 120+5'"],
+  assert.deepEqual(sourceEventsToScorers([event], 'Belgium', 'Senegal', 1, 0), {
+    home: [{ player: 'Youri Tielemans', minute: 120, extra: 5, ownGoal: false, verified: true, source: 'espn' }],
     away: [],
   });
 });
 
 test('source scorer events must match final score by side before acceptance', () => {
-  const tokens = sourceEventsToTokens([
+  const tokens = sourceEventsToScorers([
     { team: 'Mexico', player: 'Raúl Jiménez', minute: 10 },
     { team: 'South Africa', player: 'Teboho Mokoena', minute: 80 },
   ], 'Mexico', 'South Africa', 2, 0);
 
   assert.equal(tokens, null);
+});
+
+test('scorer completeness requires exact totals for each side', () => {
+  const match = game({
+    home_score: '1',
+    away_score: '1',
+    home_scorers: `{"Raúl Jiménez 10'","Teboho Mokoena 20'"}`,
+    away_scorers: 'null',
+  });
+  const issues = scorerCompletenessIssues([match], buildScores([match]));
+  assert.deepEqual(issues, [{
+    match: 'Mexico_South Africa',
+    expected: { home: 1, away: 1 },
+    actual: { home: 2, away: 0 },
+  }]);
+});
+
+test('verified scorers survive stale squads and own goals stay out of player totals', () => {
+  const match = game({
+    type: 'r32',
+    home_team_name_en: 'Argentina',
+    away_team_name_en: 'Cape Verde',
+    home_score: '3',
+    away_score: '2',
+    home_scorers: `{"Lionel Messi 29'","Lisandro Martínez 92'"}`,
+    away_scorers: `{"Deroy Duarte 59'","Sidny Lopes Cabral 103'"}`,
+  });
+  const verification = { tokensByMatch: {
+    'Argentina_Cape Verde': {
+      home: [
+        { player: 'Lionel Messi', minute: 29, extra: 0, ownGoal: false, verified: true, source: 'espn' },
+        { player: 'Lisandro Martínez', minute: 92, extra: 0, ownGoal: false, verified: true, source: 'espn' },
+        { player: 'Diney Borges', minute: 111, extra: 0, ownGoal: true, verified: true, source: 'espn' },
+      ],
+      away: [
+        { player: 'Deroy Duarte', minute: 59, extra: 0, ownGoal: false, verified: true, source: 'espn' },
+        { player: 'Sidny Lopes Cabral', minute: 103, extra: 0, ownGoal: false, verified: true, source: 'espn' },
+      ],
+    },
+  } };
+  const result = buildData([match], Date.parse('2026-07-04T04:00:00Z'), null, verification);
+  assert.deepEqual(result.scorerIssues, []);
+  assert.deepEqual(result.data.actualScores['Argentina_Cape Verde'].hs, ["Messi 29'", "Martínez 92'", "Borges 111' (OG)"]);
+  assert.equal(result.data.statsData.topScorers.some(row => row.n === 'Diney Borges'), false);
 });
 
 test('scorer matching accepts reversed first-last name order from the live feed', () => {
@@ -1081,6 +1145,45 @@ test('serverless endpoint rejects an incomplete live feed', async () => {
     assert.equal(res.statusCode, 502);
     assert.equal(res.headers['Cache-Control'], 'no-store');
     assert.ok(res.body.missingFinals.includes('Spain_Saudi Arabia'));
+  } finally {
+    global.fetch = originalFetch;
+    Date.now = originalNow;
+  }
+});
+
+test('serverless endpoint fails closed when scorer repair remains incomplete', async () => {
+  const originalFetch = global.fetch;
+  const originalNow = Date.now;
+  const gamesPayload = { games: [game({
+    local_date: '06/11/2026 13:00',
+    home_score: '2',
+    away_score: '0',
+    home_scorers: `{"Raúl Jiménez 10'"}`,
+  })] };
+  global.fetch = async url => {
+    const value = String(url);
+    const body = value.includes('/get/groups') ? { groups: [] }
+      : value.includes('/get/games') ? gamesPayload
+        : value.includes('thesportsdb') ? { event: [], timeline: [] }
+          : { events: [] };
+    return {
+      ok: true,
+      text: async () => JSON.stringify(body),
+      json: async () => body,
+    };
+  };
+  Date.now = () => Date.parse('2026-06-11T16:00:00Z');
+  try {
+    const res = responseRecorder();
+    await handler({ method: 'GET', headers: {} }, res);
+    assert.equal(res.statusCode, 502);
+    assert.equal(res.headers['Cache-Control'], 'no-store');
+    assert.equal(res.body.error, 'Live scorer data is incomplete');
+    assert.deepEqual(res.body.scorerIssues, [{
+      match: 'Mexico_South Africa',
+      expected: { home: 2, away: 0 },
+      actual: { home: 1, away: 0 },
+    }]);
   } finally {
     global.fetch = originalFetch;
     Date.now = originalNow;

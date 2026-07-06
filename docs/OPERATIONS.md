@@ -263,28 +263,40 @@ tokens, and unusual stoppage-time formats. Known verified corrections live in
 function validates that each finished match has scorer labels equal to the final
 score total and reports `meta.scorerCompleteness`.
 
-Incomplete matches take priority over routine recent-match rechecks before the
-Hobby-tier verifier budget is applied. Source adapters must use the provider's
+Every incomplete match is mandatory verification work and is never subject to
+the proactive recheck cap. `SCORER_VERIFIER_MAX_MATCHES` limits only otherwise
+complete recent matches. Source adapters must use the provider's
 display clock when available so regulation, extra time, and added time survive
 normalization exactly (for example, `120'+5'` becomes `120+5'`). Never derive
 the displayed minute by flooring elapsed seconds.
 
 When scorer labels are incomplete, or when a match has recently finished, the
-serverless function can attempt bounded scorer verification from free sources.
+serverless function attempts scorer verification from free sources.
 API-Football is supported only when `API_FOOTBALL_SCORERS=1` and an
 `API_FOOTBALL_KEY` or `APIFOOTBALL_KEY` is configured. ESPN's public World Cup
 endpoint and TheSportsDB's free v1 API are attempted without secrets. These
 sources run server-side only; the PWA never calls them directly. A source is
-accepted only when its scoring events match the final score total by side. The
-response includes `meta.scorerResolution` so operators can see which matches
-were checked, which source was accepted, and which matches fell back to the
-feed/parser path.
+accepted only when its scoring events match the final score total by side.
+Verified events remain structured through match-card and stats generation; do
+not serialize them back into feed-like strings or require the static squad to
+contain a provider-verified player. That lossy round trip previously discarded
+valid own goals from players missing in the snapshot. Own goals remain visible
+for the benefiting side but never count toward player goal totals. The response
+includes `meta.scorerResolution`, including required versus proactive counts,
+the accepted source, and fallback attempts.
 
 Because free API quotas are fragile and Vercel Functions have no durable local
-disk cache, the verifier is intentionally bounded per invocation. Tune
-`SCORER_VERIFIER_MAX_MATCHES` and `SCORER_VERIFIER_RECENT_HOURS` conservatively,
-and rely on Vercel CDN caching to keep repeated PWA launches from re-querying
-external providers on every request.
+disk cache, proactive checks are bounded per invocation. Required repairs run
+concurrently, and ESPN scoreboards are memoized by match date within the
+invocation so several matches do not repeat the same schedule request. Tune
+`SCORER_VERIFIER_MAX_MATCHES` and `SCORER_VERIFIER_RECENT_HOURS` for proactive
+coverage, and rely on Vercel CDN caching between invocations.
+
+Scorer completeness is a response precondition, not advisory metadata. If any
+finished match remains incomplete after verification, `/api/data` returns `502`
+with `Cache-Control: no-store` instead of publishing a known-bad payload. The
+service worker keeps the last-known-good API response until a later request can
+produce exact per-side scorer counts.
 
 The parser should fix recurring feed patterns at the resolver layer, not with
 one-off display patches. For example, the feed often writes vowels as `v` or

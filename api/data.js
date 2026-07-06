@@ -333,11 +333,13 @@ function scorerTokensFor(game, side, verifiedScorers) {
 }
 
 function isOwnGoalToken(token) {
+  if (token && typeof token === 'object') return Boolean(token.ownGoal);
   return /\(\s*OG\s*\)|\bown goal\b/i.test(String(token || ''));
 }
 
 function scorerName(token) {
   if (!token) return null;
+  if (typeof token === 'object') return String(token.player || '').trim() || null;
   const name = token
     .replace(/\(\s*OG\s*\)|\bown goal\b/ig, '')
     .replace(/\s+\d.*$/, '')
@@ -346,6 +348,7 @@ function scorerName(token) {
 }
 
 function scorerMinute(token) {
+  if (token && typeof token === 'object') return eventMinute(token);
   const stoppageAfterQuote = String(token || '').match(/(\d+)['′]\+(\d+)['′]?/);
   if (stoppageAfterQuote) return `${stoppageAfterQuote[1]}+${stoppageAfterQuote[2]}'`;
   const match = String(token || '').match(/(\d+(?:\+\d+)?['′])/);
@@ -455,6 +458,13 @@ function sumGoals(game) {
 }
 
 function formatScorerToken(token, scoringTeam, opponentTeam) {
+  if (token && typeof token === 'object' && token.verified) {
+    const name = scorerName(token);
+    if (!name) return null;
+    const surname = name.split(/\s+/).slice(-1)[0];
+    const minute = scorerMinute(token);
+    return surname + (minute ? ' ' + minute : '') + (token.ownGoal ? ' (OG)' : '');
+  }
   const resolved = resolveScorerToken(token, scoringTeam, opponentTeam);
   if (!resolved || !resolved.name) return null;
   const minute = scorerMinute(token);
@@ -500,34 +510,45 @@ function eventMinute(event) {
   return Number.isInteger(extra) && extra > 0 ? `${minute}+${extra}'` : `${minute}'`;
 }
 
-function scorerEventToToken(event) {
+function verifiedScorerRecord(event) {
   const name = String(event.player || '').trim();
   if (!name) return null;
-  const minute = eventMinute(event);
-  return name + (minute ? ' ' + minute : '') + (event.ownGoal ? ' (OG)' : '');
+  return {
+    player: name,
+    minute: Number(event.minute),
+    extra: Number(event.extra) || 0,
+    ownGoal: Boolean(event.ownGoal),
+    verified: true,
+    source: event.source || null,
+  };
 }
 
-function sourceEventsToTokens(events, home, away, homeScore, awayScore) {
+function sourceEventsToScorers(events, home, away, homeScore, awayScore) {
   const out = { home: [], away: [] };
   (Array.isArray(events) ? events : []).forEach(event => {
-    const token = scorerEventToToken(event);
-    if (!token) return;
-    if (teamNameMatches(event.team, home)) out.home.push(token);
-    else if (teamNameMatches(event.team, away)) out.away.push(token);
+    const scorer = verifiedScorerRecord(event);
+    if (!scorer) return;
+    const scoringTeam = event.scoringTeam || event.team;
+    if (teamNameMatches(scoringTeam, home)) out.home.push(scorer);
+    else if (teamNameMatches(scoringTeam, away)) out.away.push(scorer);
   });
   if (out.home.length !== homeScore || out.away.length !== awayScore) return null;
   return out;
 }
 
-async function fetchEspnScorerEvents(game) {
+async function fetchEspnScorerEvents(game, context) {
   const date = gameDateCompact(game);
   if (!date) return null;
   const home = norm(game.home_team_name_en);
   const away = norm(game.away_team_name_en);
-  const scoreboard = await fetchJsonDirect(
-    `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${date}`,
-    { timeoutMs: 5000 }
-  );
+  const scoreboards = context?.espnScoreboards || new Map();
+  if (!scoreboards.has(date)) {
+    scoreboards.set(date, fetchJsonDirect(
+      `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${date}`,
+      { timeoutMs: 5000 }
+    ));
+  }
+  const scoreboard = await scoreboards.get(date);
   const event = (scoreboard.events || []).find(item => {
     const competitors = item.competitions?.[0]?.competitors || [];
     const names = competitors.map(c => c.team?.displayName || c.team?.name || '');
@@ -645,16 +666,25 @@ function scorerVerificationCandidates(games, scores, now) {
   ).map(candidate => candidate.game);
 }
 
+function selectScorerVerificationCandidates(candidates, issueMatches, proactiveLimit) {
+  const required = candidates.filter(game => issueMatches.has(matchKey(game)));
+  const proactive = candidates
+    .filter(game => !issueMatches.has(matchKey(game)))
+    .slice(0, Math.max(0, proactiveLimit));
+  return { required, proactive, selected: required.concat(proactive) };
+}
+
 async function buildScorerVerification(games, now) {
   const initial = buildScores(games, null);
   const candidates = scorerVerificationCandidates(games, initial, now);
+  const issueMatches = new Set(scorerCompletenessIssues(games, initial).map(issue => issue.match));
   const maxMatches = Math.max(0, Number(process.env.SCORER_VERIFIER_MAX_MATCHES || 4));
-  const selected = candidates.slice(0, maxMatches);
+  const selection = selectScorerVerificationCandidates(candidates, issueMatches, maxMatches);
+  const { required, proactive, selected } = selection;
   const tokensByMatch = {};
-  const matches = [];
-  let sourceCalls = 0;
+  const context = { espnScoreboards: new Map() };
 
-  for (const game of selected) {
+  async function verifyGame(game) {
     const home = norm(game.home_team_name_en);
     const away = norm(game.away_team_name_en);
     const homeScore = parseScore(game.home_score);
@@ -667,12 +697,11 @@ async function buildScorerVerification(games, now) {
     const attempts = [];
     for (const [source, fetcher] of sources) {
       try {
-        const events = await fetcher(game);
-        if (events) sourceCalls += 1;
-        const tokens = sourceEventsToTokens(events, home, away, homeScore, awayScore);
-        attempts.push({ source, status: tokens ? 'complete' : (events && events.length ? 'incomplete' : 'unavailable'), events: events?.length || 0 });
-        if (tokens) {
-          tokensByMatch[matchKey(game)] = tokens;
+        const events = await fetcher(game, context);
+        const scorers = sourceEventsToScorers(events, home, away, homeScore, awayScore);
+        attempts.push({ source, status: scorers ? 'complete' : (events && events.length ? 'incomplete' : 'unavailable'), events: events?.length || 0 });
+        if (scorers) {
+          tokensByMatch[matchKey(game)] = scorers;
           break;
         }
       } catch (error) {
@@ -680,13 +709,18 @@ async function buildScorerVerification(games, now) {
       }
     }
     const accepted = attempts.find(attempt => attempt.status === 'complete');
-    matches.push({ match: matchKey(game), status: accepted ? 'verified' : 'fallback', source: accepted?.source || null, attempts });
+    return { match: matchKey(game), status: accepted ? 'verified' : 'fallback', source: accepted?.source || null, attempts };
   }
+
+  const matches = await Promise.all(selected.map(verifyGame));
+  const sourceCalls = matches.reduce((total, match) => total + match.attempts.filter(attempt => attempt.status !== 'unavailable').length, 0);
 
   return {
     tokensByMatch,
     report: {
       checkedMatches: selected.length,
+      requiredMatches: required.length,
+      proactiveMatches: proactive.length,
       eligibleMatches: candidates.length,
       sourceCalls,
       sources: {
@@ -704,9 +738,17 @@ function scorerCompletenessIssues(games, scores) {
     const key = matchKey(game);
     const score = scores[key];
     if (!score) return issues;
-    const expected = (parseScore(game.home_score) || 0) + (parseScore(game.away_score) || 0);
-    const actual = (Array.isArray(score.hs) ? score.hs.length : 0) + (Array.isArray(score.as) ? score.as.length : 0);
-    if (expected !== actual) issues.push({ match: key, expected, actual });
+    const expectedHome = parseScore(game.home_score) || 0;
+    const expectedAway = parseScore(game.away_score) || 0;
+    const actualHome = Array.isArray(score.hs) ? score.hs.length : 0;
+    const actualAway = Array.isArray(score.as) ? score.as.length : 0;
+    if (expectedHome !== actualHome || expectedAway !== actualAway) {
+      issues.push({
+        match: key,
+        expected: { home: expectedHome, away: expectedAway },
+        actual: { home: actualHome, away: actualAway },
+      });
+    }
     return issues;
   }, []);
 }
@@ -774,6 +816,13 @@ function computeStats(games, verifiedScorers) {
 
   function addScorer(token, scoringTeam, opponentTeam, matchScorers) {
     addGoalTime(token);
+    if (token && typeof token === 'object' && token.verified) {
+      if (token.ownGoal || !token.player) return;
+      scorerTotals[token.player] = (scorerTotals[token.player] || 0) + 1;
+      scorerTeams[token.player] = scoringTeam;
+      matchScorers[token.player] = (matchScorers[token.player] || 0) + 1;
+      return;
+    }
     const resolved = resolveScorerToken(token, scoringTeam, opponentTeam);
     if (!resolved || !resolved.name) return;
     if (resolved.team && resolved.team !== scoringTeam) return;
@@ -1467,13 +1516,22 @@ module.exports = async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     return res.json({ error: 'Live match data is incomplete', missingFinals: result.missingFinals });
   }
+  if (result.scorerIssues.length > 0) {
+    res.statusCode = 502;
+    res.setHeader('Cache-Control', 'no-store');
+    return res.json({
+      error: 'Live scorer data is incomplete',
+      scorerIssues: result.scorerIssues,
+      scorerResolution: result.scorerResolution,
+    });
+  }
 
   const policy = cachePolicyFor(Date.now());
   const meta = {
     source: 'worldcup26.ir',
     finishedMatches: result.finishedMatches,
-    scorerCompleteness: result.scorerIssues.length === 0 ? 'verified' : 'needs-review',
-    scorerIssueCount: result.scorerIssues.length,
+    scorerCompleteness: 'verified',
+    scorerIssueCount: 0,
     scorerResolution: result.scorerResolution,
     standingsSource: result.standingsSource,
     cacheMode: policy.cacheMode,
@@ -1514,7 +1572,8 @@ module.exports._test = {
   readOfficialStandings,
   scorerCompletenessIssues,
   scorerVerificationCandidates,
-  sourceEventsToTokens,
+  selectScorerVerificationCandidates,
+  sourceEventsToScorers,
   sortGroupStandings,
   validFinishedGames,
 };
