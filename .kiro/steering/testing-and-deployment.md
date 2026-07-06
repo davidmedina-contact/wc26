@@ -308,6 +308,10 @@ Rules for bracket/live-results balance:
   to their content height instead of retaining Round-of-32 gaps.
   Keep official match IDs on cards, not as the primary round-navigation labels.
   Generate every stage from the same official-ID match models.
+- Derive the initial mobile round from confirmed live winners: select the first
+  unfinished stage, advancing R32 to R16 to QF to SF only when every match in
+  the prior stage has a winner. Never auto-advance from predictions, and stop
+  applying the recommendation after the user explicitly selects a round tab.
 - Keep the mobile bracket header compact. Explanatory copy may collapse, but the
   Live/My Picks switch must remain visible. Use exactly one disclosure for the
   bracket controls: its expanded body contains explanatory copy and all 12 Group

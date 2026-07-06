@@ -46,10 +46,27 @@
     bySchedule[[match.d, match.t, match.v].join('|')] = match;
   });
 
+  function recommendedMobileStage(completedMatchIds) {
+    var completed = {};
+    if (completedMatchIds && typeof completedMatchIds.forEach === 'function') {
+      completedMatchIds.forEach(function(id) { completed[id] = true; });
+    }
+    var stages = ['r32', 'r16', 'qf'];
+    for (var i = 0; i < stages.length; i++) {
+      var stage = stages[i];
+      var stageComplete = matches
+        .filter(function(match) { return match.stage === stage; })
+        .every(function(match) { return completed[match.id]; });
+      if (!stageComplete) return stage;
+    }
+    return 'sf';
+  }
+
   return {
     matches: matches,
     byId: byId,
     bySchedule: bySchedule,
+    recommendedMobileStage: recommendedMobileStage,
     forStage: function(stage) {
       return matches.filter(function(match) { return match.stage === stage; });
     }

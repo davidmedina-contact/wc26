@@ -959,6 +959,8 @@ test('bracket uses connected desktop and dynamic two-column mobile maps', () => 
   assert.match(app, /\{id:'sf', label:'SF', title:'Semi-finals'/);
   assert.doesNotMatch(app, /\{id:'final', label:'Final'/);
   assert.match(app, /if \(bracketMobileSection === 'final'\) bracketMobileSection = 'sf'/);
+  assert.match(app, /if \(!bracketMobileSectionChosen && KnockoutBracket\.recommendedMobileStage\)/);
+  assert.match(app, /bracketMobileSectionChosen = true/);
   assert.match(app, /function mobileVisualBracket\(round\)/);
   assert.match(app, /data-mobile-stage-shell="' \+ round\.id/);
   assert.match(app, /function mobileStagePath\(sourceIds, targetId\)/);
@@ -1030,6 +1032,18 @@ test('official knockout graph defines every FIFA path through the final', () => 
   });
   assert.equal(new Set(knockoutBracket.matches.map(match => match.id)).size, 32);
   assert.equal(Object.keys(knockoutBracket.bySchedule).length, 32);
+});
+
+test('mobile bracket recommends the first unfinished knockout round', () => {
+  const idsFor = stage => knockoutBracket.forStage(stage).map(match => match.id);
+  const r32 = idsFor('r32');
+  const r16 = idsFor('r16');
+  const qf = idsFor('qf');
+  assert.equal(knockoutBracket.recommendedMobileStage([]), 'r32');
+  assert.equal(knockoutBracket.recommendedMobileStage(r32.slice(0, -1)), 'r32');
+  assert.equal(knockoutBracket.recommendedMobileStage(r32), 'r16');
+  assert.equal(knockoutBracket.recommendedMobileStage(r32.concat(r16)), 'qf');
+  assert.equal(knockoutBracket.recommendedMobileStage(r32.concat(r16, qf)), 'sf');
 });
 
 test('matches tab resolves knockout teams from live standings data', () => {

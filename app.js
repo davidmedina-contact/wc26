@@ -31,6 +31,7 @@ let bracketState = {};
 let bracketOriginalState = {};
 let bracketViewMode = 'live';
 let bracketMobileSection = 'r32';
+let bracketMobileSectionChosen = false;
 let bracketInfoExpanded = false;
 var selectedMatchDate = '2026-06-11';
 var centerDateNavAfterRender = false;
@@ -1005,6 +1006,13 @@ function renderBracket() {
     };
   });
 
+  if (!bracketMobileSectionChosen && KnockoutBracket.recommendedMobileStage) {
+    var completedKnockoutIds = Object.keys(knockoutModels).filter(function(matchId) {
+      return Boolean(knockoutModels[matchId].liveWinner);
+    });
+    bracketMobileSection = KnockoutBracket.recommendedMobileStage(completedKnockoutIds);
+  }
+
   function compactDateTime(matchId) {
     var match = KnockoutBracket.byId[matchId];
     var info = formatDatePill(match.d);
@@ -1230,6 +1238,7 @@ function renderBracket() {
       var sectionBtn = e.target.closest('[data-bracket-section]');
       if (sectionBtn) {
         bracketMobileSection = sectionBtn.getAttribute('data-bracket-section');
+        bracketMobileSectionChosen = true;
         renderBracket();
         return;
       }

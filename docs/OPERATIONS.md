@@ -71,6 +71,11 @@ height so all remaining paths fit together without inherited empty rows. The
 The SF view connects Matches 101 and 102 to Match 104, shows the champion in a
 compact strip, and keeps Match 103 visible below. A saved legacy `Final` tab
 selection migrates to `SF`; Match 104 and the champion must not be duplicated.
+On a clean app session, mobile selects the first knockout round that is not
+fully decided by confirmed live winners. Finishing R32 therefore opens R16;
+finishing R16 opens QF; finishing QF opens SF. Once a user selects a round tab,
+that explicit choice wins for the rest of the session so data refreshes do not
+move the viewport unexpectedly.
 The mobile page and bracket must not overflow horizontally.
 Official match IDs remain on the cards, where they identify individual fixtures
 without replacing fan-facing round names. Confirmed teams use consistent
