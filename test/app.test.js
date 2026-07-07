@@ -1091,6 +1091,7 @@ test('PWA foreground refresh avoids background and duplicate wake-ups', () => {
   assert.match(app, /if \(document\.hidden && !options\.allowHidden\) return \{ skipped: true \}/);
   assert.match(app, /if \(!lifecycleReady \|\| document\.hidden\) return/);
   assert.match(app, /window\.addEventListener\('pageshow', function\(\) \{ resumeForegroundWork\('pageshow'\); \}\)/);
+  assert.match(app, /if \('serviceWorker' in navigator && navigator\.serviceWorker\)/);
   assert.match(html, /SW_UPDATE_MIN_MS = 30 \* 60 \* 1000/);
   assert.match(html, /wc2026-sw-update-check/);
   assert.match(html, /animation: msPulse 1\.5s ease-in-out 3/);

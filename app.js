@@ -2370,7 +2370,7 @@ document.addEventListener('visibilitychange', function() {
 window.addEventListener('pageshow', function() { resumeForegroundWork('pageshow'); });
 
 // === STALE-WHILE-REVALIDATE: Listen for fresh data from service worker ===
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && navigator.serviceWorker) {
   navigator.serviceWorker.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'DATA_UPDATED') {
       refreshFreshData('service-worker', { force: true, showIndicator: false, toast: true }).catch(function() {});
