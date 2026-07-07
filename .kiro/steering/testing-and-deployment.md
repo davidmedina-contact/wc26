@@ -105,12 +105,24 @@ Rules for dynamic tournament data:
   old cached payloads before first render and forces a fresh `/api/data` merge.
 - The service worker compares `meta.dataVersion` before posting `DATA_UPDATED`;
   full-body comparison creates false updates because `updatedAt` changes.
-- The app should pull on startup, `focus`, and `visibilitychange`, with a
-  cooldown from `meta.nextRefreshSeconds`.
+- The app should pull on startup and visible `visibilitychange`, with a cooldown
+  from `meta.nextRefreshSeconds`. Do not add a parallel `focus` listener; it
+  duplicates mobile lifecycle wake-ups.
+- On background, clear refresh timers and abort the active data request without
+  falling through to another network fallback. On foreground, schedule or run
+  exactly one deduplicated check. Gate `pageshow` until initialization ends.
+- Keep manual `reg.update()` foreground checks for iOS, but throttle them across
+  rapid app switches. Thirty minutes balances PWA update discovery with battery
+  and radio use; app data freshness remains independent through `/api/data`.
 - Only foreground/open PWAs can be refreshed immediately. Closed PWAs refresh on
-  the next launch or focus.
+  the next launch or visible transition.
 - Vercel Hobby cron is not a fit for match-by-match refresh. Use adaptive CDN
   `s-maxage` plus foreground pulls.
+- Do not use live-score polling cadence for this post-match product. Include TBD
+  knockout fixtures when calculating schedule windows, start settlement 2.5
+  hours after kickoff, use a 10-minute visible-client interval during the
+  2.5-4.5 hour window, and use 30 minutes outside it. The shorter five-minute
+  CDN TTL is shared across clients and does not require every device to wake.
 
 ### Deployment workflow (mandatory)
 

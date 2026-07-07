@@ -1081,6 +1081,22 @@ test('service worker keeps a last-known-good API response', () => {
   assert.match(worker, /includeUncontrolled: true/);
 });
 
+test('PWA foreground refresh avoids background and duplicate wake-ups', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const css = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  assert.doesNotMatch(app, /window\.addEventListener\('focus'/);
+  assert.match(app, /if \(document\.hidden\) suspendBackgroundWork\(\)/);
+  assert.match(app, /freshDataAbortController\.abort\(\)/);
+  assert.match(app, /if \(document\.hidden && !options\.allowHidden\) return \{ skipped: true \}/);
+  assert.match(app, /if \(!lifecycleReady \|\| document\.hidden\) return/);
+  assert.match(app, /window\.addEventListener\('pageshow', function\(\) \{ resumeForegroundWork\('pageshow'\); \}\)/);
+  assert.match(html, /SW_UPDATE_MIN_MS = 30 \* 60 \* 1000/);
+  assert.match(html, /wc2026-sw-update-check/);
+  assert.match(html, /animation: msPulse 1\.5s ease-in-out 3/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.shell-loading \.std-num/);
+});
+
 test('Vercel config stays within legacy and current Hobby limits', () => {
   const config = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
   assert.equal(config.crons, undefined);
@@ -1095,7 +1111,12 @@ test('serverless cache policy adapts around post-match settlement windows', () =
 
   const settlement = cachePolicyFor(Date.parse('2026-06-23T22:30:00Z'));
   assert.equal(settlement.cacheMode, 'settlement');
-  assert.match(settlement.cacheControl, /s-maxage=120/);
+  assert.match(settlement.cacheControl, /s-maxage=300/);
+  assert.equal(settlement.nextRefreshSeconds, 600);
+
+  const knockoutSettlement = cachePolicyFor(Date.parse('2026-07-05T22:45:00Z'));
+  assert.equal(knockoutSettlement.cacheMode, 'settlement');
+  assert.equal(knockoutSettlement.nextRefreshSeconds, 600);
 });
 
 test('serverless endpoint rejects unsupported methods', async () => {

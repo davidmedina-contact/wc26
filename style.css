@@ -1412,3 +1412,13 @@
   animation: mmSpin 0.8s linear infinite;
 }
 @keyframes mmSpin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ms-label-live,
+  .skeleton-shimmer,
+  .shell-loading .std-num,
+  .modal-spinner,
+  .bracket-team.just-picked {
+    animation: none !important;
+  }
+}

@@ -509,7 +509,7 @@ body {
 }
 .match-strip:empty { display: none; }
 .ms-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 8px; border-radius: 4px; flex-shrink: 0; }
-.ms-label-live { background: #ef4444; color: #fff; animation: msPulse 1.5s ease-in-out infinite; }
+.ms-label-live { background: #ef4444; color: #fff; animation: msPulse 1.5s ease-in-out 3; }
 .ms-label-next { background: var(--badge-bg); color: var(--badge-text); }
 .ms-teams { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ms-score { font-family: var(--mono); font-weight: 800; }
@@ -713,8 +713,21 @@ body {
   try {
     if (!('serviceWorker' in navigator) || !navigator.serviceWorker) return;
     navigator.serviceWorker.register('/service-worker.js').then(function(reg) {
-      // Check for updates when app returns from background (critical for iOS PWA)
-      document.addEventListener('visibilitychange', function() { if (!document.hidden) reg.update(); });
+      // iOS PWAs need foreground update checks, but checking on every app switch
+      // creates needless radio wake-ups. Registration itself checks on launch.
+      var SW_UPDATE_MIN_MS = 30 * 60 * 1000;
+      var lastSwUpdateCheck = 0;
+      try { lastSwUpdateCheck = Number(localStorage.getItem('wc2026-sw-update-check')) || 0; } catch(e) {}
+      function checkForServiceWorkerUpdate() {
+        if (document.hidden || Date.now() - lastSwUpdateCheck < SW_UPDATE_MIN_MS) return;
+        lastSwUpdateCheck = Date.now();
+        try { localStorage.setItem('wc2026-sw-update-check', String(lastSwUpdateCheck)); } catch(e) {}
+        reg.update().catch(function() {});
+      }
+      document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) checkForServiceWorkerUpdate();
+      });
+      window.addEventListener('pageshow', checkForServiceWorkerUpdate);
 
       // Version-mismatch detection for iOS standalone:
       // If the SW updated but controllerchange didn't trigger a proper reload,

@@ -1983,6 +1983,8 @@ var currentDataMeta = null;
 var lastFreshCheckAt = 0;
 var foregroundRefreshTimer = null;
 var refreshInFlight = null;
+var freshDataAbortController = null;
+var lifecycleReady = false;
 
 function dynamicMatchCount(data) {
   if (!data) return 0;
@@ -2121,7 +2123,10 @@ function refreshActiveTab() {
 
 async function fetchFreshData(options) {
   options = options || {};
+  if (document.hidden && !options.allowHidden) return { skipped: true };
   var data = null, meta = null, notModified = false;
+  var controller = typeof AbortController === 'function' ? new AbortController() : null;
+  freshDataAbortController = controller;
   try {
     var headers = {
       'Accept': 'application/json',
@@ -2131,7 +2136,8 @@ async function fetchFreshData(options) {
     if (currentDataVersion) headers['If-None-Match'] = '"' + currentDataVersion + '"';
     var resp = await fetch('/api/data', {
       cache: 'reload',
-      headers: headers
+      headers: headers,
+      signal: controller ? controller.signal : undefined
     });
     if (resp.status === 304) {
       lastFreshCheckAt = Date.now();
@@ -2143,7 +2149,12 @@ async function fetchFreshData(options) {
       data = livePayload && livePayload.data ? livePayload.data : livePayload;
       if (!isValidBootstrapData(data)) data = null;
     }
-  } catch (e) {}
+  } catch (e) {
+    if (e && e.name === 'AbortError') return { aborted: true };
+  } finally {
+    if (freshDataAbortController === controller) freshDataAbortController = null;
+  }
+  if (document.hidden && !options.allowHidden) return { skipped: true };
   if (!data) {
     var fallbackResp = await fetch('data.json');
     if (fallbackResp.ok) {
@@ -2191,11 +2202,34 @@ async function refreshFreshData(reason, options) {
 }
 
 function scheduleForegroundRefresh() {
-  if (foregroundRefreshTimer) clearTimeout(foregroundRefreshTimer);
+  if (foregroundRefreshTimer) {
+    clearTimeout(foregroundRefreshTimer);
+    foregroundRefreshTimer = null;
+  }
   if (document.hidden) return;
   foregroundRefreshTimer = setTimeout(function() {
     refreshFreshData('timer', { showIndicator: false, toast: true });
   }, foregroundRefreshIntervalMs());
+}
+
+function resumeForegroundWork(reason) {
+  if (!lifecycleReady || document.hidden) return;
+  if (shouldCheckFreshData(false)) {
+    refreshFreshData(reason, { showIndicator: false, toast: true });
+  } else {
+    scheduleForegroundRefresh();
+  }
+}
+
+function suspendBackgroundWork() {
+  if (foregroundRefreshTimer) {
+    clearTimeout(foregroundRefreshTimer);
+    foregroundRefreshTimer = null;
+  }
+  if (freshDataAbortController) {
+    freshDataAbortController.abort();
+    freshDataAbortController = null;
+  }
 }
 
 async function init() {
@@ -2327,15 +2361,13 @@ async function init() {
   }
 })();
 
-init();
+init().then(function() { lifecycleReady = true; }).catch(function() { lifecycleReady = true; });
 
-window.addEventListener('focus', function() {
-  refreshFreshData('focus', { showIndicator: false, toast: true });
-});
 document.addEventListener('visibilitychange', function() {
-  if (!document.hidden) refreshFreshData('visible', { showIndicator: false, toast: true });
-  else if (foregroundRefreshTimer) clearTimeout(foregroundRefreshTimer);
+  if (document.hidden) suspendBackgroundWork();
+  else resumeForegroundWork('visible');
 });
+window.addEventListener('pageshow', function() { resumeForegroundWork('pageshow'); });
 
 // === STALE-WHILE-REVALIDATE: Listen for fresh data from service worker ===
 if ('serviceWorker' in navigator) {

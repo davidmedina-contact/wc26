@@ -52,18 +52,18 @@ function kickoffTime(match) {
 
 function cachePolicyFor(now) {
   const current = Number(now || Date.now());
-  const matches = (SNAPSHOT.matchesData || []).filter(match => match.d && match.t && isKnownTeam(match.h) && isKnownTeam(match.a));
+  const matches = (SNAPSHOT.matchesData || []).filter(match => match.d && match.t);
   const inSettlementWindow = matches.some(match => {
     const kickoff = kickoffTime(match);
-    const start = kickoff + (2 * 60 * 60 * 1000);
-    const end = kickoff + (6 * 60 * 60 * 1000);
+    const start = kickoff + (150 * 60 * 1000);
+    const end = kickoff + (270 * 60 * 1000);
     return current >= start && current <= end;
   });
   if (inSettlementWindow) {
     return {
-      cacheControl: 'public, s-maxage=120, stale-while-revalidate=60',
+      cacheControl: 'public, s-maxage=300, stale-while-revalidate=300',
       cacheMode: 'settlement',
-      nextRefreshSeconds: 120,
+      nextRefreshSeconds: 600,
     };
   }
 
@@ -72,14 +72,14 @@ function cachePolicyFor(now) {
     return {
       cacheControl: 'public, s-maxage=900, stale-while-revalidate=300',
       cacheMode: 'matchday',
-      nextRefreshSeconds: 300,
+      nextRefreshSeconds: 1800,
     };
   }
 
   return {
     cacheControl: 'public, s-maxage=1800, stale-while-revalidate=600',
     cacheMode: 'quiet',
-    nextRefreshSeconds: 900,
+    nextRefreshSeconds: 1800,
   };
 }
 

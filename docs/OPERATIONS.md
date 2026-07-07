@@ -213,10 +213,14 @@ The client only renders the server payload. It does not call third-party APIs or
 ## Freshness And Failure Behavior
 
 - Successful `/api/data` responses use adaptive CDN caching:
-  `settlement` windows use `s-maxage=120`, normal match windows use
+  `settlement` windows use `s-maxage=300`, normal match windows use
   `s-maxage=900`, and quiet windows use `s-maxage=1800`.
 - Vercel's CDN absorbs repeat traffic and refreshes data after the current
-  response's `s-maxage` expires.
+  response's `s-maxage` expires. Settlement begins 2.5 hours after kickoff and
+  ends 4.5 hours after kickoff, including unresolved knockout schedule rows.
+  The CDN may revalidate every five minutes in that window, but each visible PWA
+  checks at most every ten minutes. Matchday and quiet clients check every 30
+  minutes because this app intentionally does not provide live scores.
 - The installed PWA has its own Cache API and `localStorage`; it does not automatically inherit a fresher payload just because Vercel's CDN has one.
 - Normal `/api/data` service-worker reads are stale-while-revalidate for fast startup, but app startup sends `cache: "reload"` with `Cache-Control: no-cache` so iOS Home Screen launches perform a deterministic network refresh.
 - `/api/data` includes `meta.dataVersion` and an `ETag` based on the football
@@ -231,9 +235,17 @@ The client only renders the server payload. It does not call third-party APIs or
 - Add a schema guard for cached dynamic data whenever a new required dynamic
   field is introduced. Stale cached objects should be discarded before the
   initial render, then replaced by a forced fresh `/api/data` fetch.
-- The app pulls fresh data on startup, focus, and `visibilitychange`, then
-  schedules foreground-only refreshes from `meta.nextRefreshSeconds`. Closed or
-  backgrounded PWAs update on the next foreground launch/focus.
+- The app pulls fresh data on startup and on a visible `visibilitychange`, then
+  schedules one foreground-only timeout from `meta.nextRefreshSeconds`. Do not
+  add a parallel `focus` listener: mobile app switching commonly emits both and
+  focus is not proof that the page is visible. Backgrounding clears the timeout
+  and aborts any in-flight pull; returning foreground resumes one deduplicated
+  check. A `pageshow` hook covers restored pages after initialization.
+- Manual service-worker `reg.update()` checks are throttled to once per 30
+  minutes in a running PWA. Registration still checks on launch, while the
+  throttle prevents rapid app switching from repeatedly waking the radio.
+- Decorative LIVE animation stops after three cycles, and recurring loading
+  animations honor `prefers-reduced-motion`.
 - A non-2xx API response or network failure falls back to that cached response.
 - Dynamic data is only allowed to move forward by completed-match count, so an older bundled snapshot cannot overwrite newer FT scores, standings, or stats already seen by the PWA.
 - A first-time offline visitor falls back to `data.json`, which may be older and should be treated as a bundled snapshot.

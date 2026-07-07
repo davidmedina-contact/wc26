@@ -33,7 +33,12 @@ The browser makes one same-origin request to `/api/data`. The Vercel Function fe
 
 Successful responses are cached at Vercel's CDN with adaptive TTLs: shorter during post-match settlement windows and longer during quiet periods. The service worker also retains the last successful `/api/data` response, so a temporary upstream error does not replace known finals with predictions. If there is no cached response, the bundled `data.json` snapshot remains the offline fallback.
 
-`/api/data` emits a stable `meta.dataVersion` and matching `ETag`. The installed PWA pulls fresh data on startup, focus, and visibility changes, but only re-renders or shows an update toast when the data version changes.
+`/api/data` emits a stable `meta.dataVersion` and matching `ETag`. The installed
+PWA pulls fresh data on startup and when it returns to the foreground, but only
+when the server-directed interval has elapsed. Backgrounding cancels timers and
+in-flight pulls. Service-worker update checks are limited to once per 30 minutes
+during a running session. The app only re-renders or shows an update toast when
+the data version changes.
 
 See [Operations](docs/OPERATIONS.md) for failure behavior, Vercel Hobby constraints, and the release checklist.
 
