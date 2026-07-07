@@ -713,6 +713,7 @@ body {
   try {
     if (!('serviceWorker' in navigator) || !navigator.serviceWorker) return;
     navigator.serviceWorker.register('/service-worker.js').then(function(reg) {
+      if (!reg || typeof reg.update !== 'function') return;
       // iOS PWAs need foreground update checks, but checking on every app switch
       // creates needless radio wake-ups. Registration itself checks on launch.
       var SW_UPDATE_MIN_MS = 30 * 60 * 1000;
