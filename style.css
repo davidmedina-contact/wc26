@@ -1,9 +1,5 @@
 /* --- Search --- */
-/* Search bar: only visible on groups and matches tabs */
-[data-active-tab="bracket"] .search-toggle,
-[data-active-tab="stats"] .search-toggle { display: none; }
-[data-active-tab="bracket"] .search-box,
-[data-active-tab="stats"] .search-box { display: none !important; }
+/* Search expands only when requested; its entry point lives in nav utilities. */
 .search-results {
   position: absolute; top: calc(100% + 4px); left: 0; right: 0;
   background: var(--surface); border: 1px solid var(--border);
@@ -819,7 +815,31 @@
   .tab-icon { width: 20px; height: 20px; }
   .tab-label { font-size: 0.62rem; }
 
-  .top-actions { margin-left: auto; }
+  .nav-utilities {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    padding-left: 2px;
+    border-left: 1px solid var(--border);
+  }
+  .nav-tabs .theme-btn,
+  .nav-tabs .search-toggle {
+    width: auto;
+    height: auto;
+    min-width: 44px;
+    padding: 8px 4px 6px;
+    flex: 0 0 44px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .nav-tabs .theme-btn:hover,
+  .nav-tabs .search-toggle:hover {
+    border-color: transparent;
+    color: var(--accent);
+    background: transparent;
+  }
 
   .bracket-venue-lbl {
     align-items: flex-start;
