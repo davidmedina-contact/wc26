@@ -277,6 +277,39 @@ function openTeamModal(teamName) {
     return Array.isArray(source) ? source : [];
   }
 
+  function modalScorerGroups(scoreInfo, side) {
+    var groups = [];
+    modalScorers(scoreInfo, side).forEach(function(token) {
+      var raw = String(token || '').trim();
+      if (!raw) return;
+      var match = raw.match(/^(.*?)(\d+(?:\+\d+)?['’]?)(?:\s*(.*))$/);
+      var name = match ? match[1].trim() : raw;
+      var minute = match ? match[2].replace(/[’]/g, "'") : '';
+      var note = match ? match[3].trim() : '';
+      var key = name.toLowerCase() + '|' + note.toLowerCase();
+      var existing = groups.find(function(group) { return group.key === key; });
+      if (!existing) {
+        existing = {key:key, name:name, note:note, minutes:[]};
+        groups.push(existing);
+      }
+      if (minute) existing.minutes.push(minute);
+    });
+    return groups;
+  }
+
+  function renderScorerLane(scoreInfo, side, teamNameForLane, flag) {
+    var groups = modalScorerGroups(scoreInfo, side);
+    var items = groups.map(function(group) {
+      var minuteText = group.minutes.join(', ');
+      var note = group.note ? '<span class="mmr-scorer-note">' + esc(group.note) + '</span>' : '';
+      return '<div class="mmr-scorer-item"><span class="mmr-scorer-name">' + esc(group.name) + '</span><span class="mmr-scorer-minutes">' + esc(minuteText) + '</span>' + note + '</div>';
+    }).join('');
+    return '<div class="mmr-scorer-side mmr-scorer-' + side + (groups.length ? '' : ' mmr-scorer-empty') + '">' +
+      '<div class="mmr-scorer-team">' + flag + ' ' + esc(teamNameForLane) + '</div>' +
+      (items || '<div class="mmr-scorer-none">No goals</div>') +
+      '</div>';
+  }
+
   function resultForTeam(scoreInfo, home, away) {
     if (!scoreInfo || !scoreInfo.score || scoreInfo.score.status !== 'FT') return '';
     var score = scoreInfo.score;
@@ -304,7 +337,10 @@ function openTeamModal(teamName) {
     var result = resultForTeam(scoreInfo, teams.h, teams.a);
     var status = scoreInfo ? resultLabel(result) : 'Upcoming';
     var scorers = scoreInfo
-      ? '<div class="mmr-scorers"><span>' + modalScorers(scoreInfo, 'home').map(esc).join(', ') + '</span><span>' + modalScorers(scoreInfo, 'away').map(esc).join(', ') + '</span></div>'
+      ? '<div class="mmr-scorers" aria-label="Goal scorers">' +
+        renderScorerLane(scoreInfo, 'home', teams.h, hFlag) +
+        renderScorerLane(scoreInfo, 'away', teams.a, aFlag) +
+        '</div>'
       : '';
     var round = opts.round ? '<span class="mmr-round">' + esc(opts.round) + '</span>' : '';
     var venue = m.v ? '<div class="mmr-venue">' + esc(m.v) + '</div>' : '';

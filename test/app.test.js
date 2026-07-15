@@ -745,9 +745,13 @@ test('bracket team identities open team modals and team modal splits group and k
   assert.match(app, /Knockout Journey/);
   assert.match(app, /resolvedMatchTeams\(m\)/);
   assert.match(app, /scoreForModalTeams\(home, away\)/);
-  assert.match(app, /modalScorers\(scoreInfo, 'home'\)/);
+  assert.match(app, /modalScorers\(scoreInfo, side\)/);
+  assert.match(app, /function modalScorerGroups\(scoreInfo, side\)/);
+  assert.match(app, /renderScorerLane\(scoreInfo, 'away'/);
   assert.match(css, /\.team-journey-summary/);
   assert.match(css, /\.team-journey \.mmr-journey-row::before/);
+  assert.match(css, /\.mmr-scorer-minutes/);
+  assert.match(css, /\.mmr-scorer-note/);
   assert.match(css, /\.bracket-node \[data-team-open\]:focus-visible/);
 });
 

@@ -651,14 +651,55 @@
   grid-column: 2 / 5;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 12px;
-  padding-top: 4px;
+  gap: 8px;
+  padding-top: 7px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
   color: var(--text-muted);
   font-size: 0.68rem;
-  line-height: 1.35;
+  line-height: 1.25;
 }
-.mmr-scorers span:first-child { text-align: right; }
-.mmr-scorers span:last-child { text-align: left; }
+.mmr-scorer-side { min-width: 0; }
+.mmr-scorer-home { text-align: right; }
+.mmr-scorer-away { text-align: left; }
+.mmr-scorer-team {
+  overflow: hidden;
+  color: var(--text-sec);
+  font-size: 0.59rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.mmr-scorer-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 5px;
+  min-width: 0;
+  margin-top: 4px;
+}
+.mmr-scorer-away .mmr-scorer-item { justify-content: flex-start; }
+.mmr-scorer-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-sec); }
+.mmr-scorer-minutes {
+  flex: 0 0 auto;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.61rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.mmr-scorer-note {
+  flex: 0 0 auto;
+  color: var(--color-warning, #fbbf24);
+  font-size: 0.56rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.mmr-scorer-none { margin-top: 4px; color: var(--text-muted); font-size: 0.62rem; }
 .team-journey-summary {
   display: flex;
   align-items: center;
