@@ -636,6 +636,20 @@ test('client hash routing persists every primary tab across refreshes', () => {
   assert.match(app, /var validTabs = \['groups', 'matches', 'bracket', 'stats'\]/);
 });
 
+test('shell keeps Matches first with Bracket, Groups, Stats and utility controls', () => {
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  const nav = html.match(/<div class="nav-tabs"[\s\S]*?<\/div>\s*<div class="top-actions">/)[0];
+  assert.deepEqual([...nav.matchAll(/switchTab\('([^']+)'/g)].map(match => match[1]), ['matches', 'bracket', 'groups', 'stats']);
+  assert.match(html, /id="searchToggle"/);
+  assert.match(html, /id="themeBtn"/);
+  assert.match(html, /<body data-active-tab="matches">/);
+  assert.match(html, /<div class="tab-content active" id="tab-matches">/);
+  assert.match(app, /var tabOrder = \['matches', 'bracket', 'groups', 'stats'\]/);
+  assert.match(app, /document\.querySelector\("\.nav-tab\[onclick\*=/);
+  assert.match(app, /switchTab\('matches'/);
+});
+
 test('client renders compact standings status markers with an inline legend', () => {
   const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   assert.match(app, /function standingsStatusShort/);

@@ -442,7 +442,7 @@ function goToMatch(dateStr) {
   closeModal();
   setTimeout(function() {
     selectedMatchDate = dateStr;
-    var matchTab = document.querySelectorAll('.nav-tab')[1];
+    var matchTab = document.querySelector(".nav-tab[onclick*=\"switchTab('matches'\"]");
     switchTab('matches', matchTab);
     renderMatches();
     setTimeout(function() {
@@ -2081,13 +2081,14 @@ function hideUpdatingIndicator(changed) {
 
 function renderActiveTab() {
   var hash = window.location.hash.replace('#', '');
+  var tabOrder = ['matches', 'bracket', 'groups', 'stats'];
   if (hash) {
     var parts = hash.split('/');
     var tab = parts[0];
     var validTabs = ['groups', 'matches', 'bracket', 'stats'];
     if (validTabs.indexOf(tab) >= 0) {
       var btns = document.querySelectorAll('.nav-tab');
-      var tabIndex = validTabs.indexOf(tab);
+      var tabIndex = tabOrder.indexOf(tab);
       btns.forEach(function(b, i) { b.classList.toggle('active', i === tabIndex); });
       document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
       document.getElementById('tab-' + tab).classList.add('active');
@@ -2104,8 +2105,8 @@ function renderActiveTab() {
       return;
     }
   }
-  renderedTabs['groups'] = true;
-  try { renderGroups(); } catch(e) { console.error('renderGroups error:', e); }
+  renderedTabs['matches'] = true;
+  try { renderMatches(); } catch(e) { console.error('renderMatches error:', e); }
   renderMatchStrip();
 }
 
