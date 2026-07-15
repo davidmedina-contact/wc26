@@ -686,7 +686,7 @@ test('bracket preserves original picks and supports live versus prediction modes
   assert.match(app, /liveThirdPlaceSeedForMatch/);
   assert.match(app, /function compactMatchNode/);
   assert.match(app, /var knockoutModels = \{\}/);
-  assert.match(app, /Live bracket uses confirmed seeds and FT winners only/);
+  assert.match(app, /Confirmed teams and FT winners lead the bracket/);
   assert.match(app, /knockout picks made/);
   assert.match(app, /if \(bracketViewMode === 'picks'\) totalKoPicks\+\+/);
   assert.match(app, /knockoutScoreOutcome\(homeTeam, awayTeam\)/);
@@ -716,14 +716,14 @@ test('bracket uses connected desktop and mobile maps with standard round tabs', 
   assert.match(app, /data-bracket-section=/);
   assert.match(app, /\{id:'r32', label:'R32', title:'Round of 32'/);
   assert.match(app, /\{id:'sf', label:'SF', title:'Semi-finals'/);
-  assert.match(app, /function mobileVisualBracket\(\)/);
-  assert.match(app, /data-mobile-round-anchor=/);
-  assert.match(app, /scrollMobileBracketTo\(bracketMobileSection/);
-  assert.match(app, /focus:'M104'/);
+  assert.match(app, /function mobileVisualBracket\(round\)/);
+  assert.match(app, /function mobileStagePath\(sourceIds, targetId\)/);
+  assert.match(app, /bracket-mobile-path/);
+  assert.match(app, /data-mobile-stage=/);
   assert.match(app, /Original pick: /);
   assert.match(app, /icon\('history',\{size:9\}\)/);
   assert.match(app, /visualSlot\('M104', 5, 8/);
-  assert.match(app, /visualSlot\('M103', 5, 25/);
+  assert.match(app, /visualSlot\('M103', 5, 12/);
   assert.match(app, /'South Africa':'RSA'/);
   assert.match(app, /aria-label="' \+ esc\(model\.home\)/);
   assert.match(app, /data-team="' \+ esc\(model\.home\)/);
@@ -731,9 +731,24 @@ test('bracket uses connected desktop and mobile maps with standard round tabs', 
   assert.match(css, /\.bracket-desktop-map/);
   assert.match(css, /\.bracket-mobile-scroll/);
   assert.match(css, /\.bracket-mobile-visual/);
-  assert.match(css, /grid-template-columns: repeat\(5, 136px\)/);
-  assert.match(css, /max-height: min\(60vh, 620px\)/);
+  assert.match(css, /\.bracket-mobile-path/);
+  assert.match(css, /max-height: min\(64dvh, 620px\)/);
   assert.match(css, /\.bracket-mobile-visual \.bt-label-code/);
+});
+
+test('bracket team identities open team modals and team modal splits group and knockout fixtures', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  const css = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  assert.match(app, /data-team-open=/);
+  assert.match(app, /openTeamModal\(openName\)/);
+  assert.match(app, /Group Stage Fixtures/);
+  assert.match(app, /Knockout Journey/);
+  assert.match(app, /resolvedMatchTeams\(m\)/);
+  assert.match(app, /scoreForModalTeams\(home, away\)/);
+  assert.match(app, /modalScorers\(scoreInfo, 'home'\)/);
+  assert.match(css, /\.team-journey-summary/);
+  assert.match(css, /\.team-journey \.mmr-journey-row::before/);
+  assert.match(css, /\.bracket-node \[data-team-open\]:focus-visible/);
 });
 
 test('official knockout graph defines every FIFA path through the final', () => {
