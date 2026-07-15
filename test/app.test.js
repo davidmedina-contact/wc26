@@ -935,6 +935,21 @@ test('bracket preserves original picks and supports live versus prediction modes
   assert.match(app, /Original pick: /);
 });
 
+test('bracket team identities open the restored team journey modal', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  const css = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  assert.match(app, /data-team-open=/);
+  assert.match(app, /openTeamModal\(openName\)/);
+  assert.match(app, /Group Stage Fixtures/);
+  assert.match(app, /Knockout Journey/);
+  assert.match(app, /resolvedMatchTeams\(m\)/);
+  assert.match(app, /function modalScorerGroups\(scoreInfo, side\)/);
+  assert.match(app, /renderScorerLane\(scoreInfo, 'away'/);
+  assert.match(css, /\.team-journey-summary/);
+  assert.match(css, /\.mmr-scorer-minutes/);
+  assert.match(css, /\.bracket-node \[data-team-open\]:focus-visible/);
+});
+
 test('bracket cards include knockout dates and local-time labels', () => {
   const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   assert.equal(knockoutBracket.byId.M73.d, '2026-06-28');

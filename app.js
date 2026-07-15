@@ -236,6 +236,119 @@ function openTeamModal(teamName) {
 
   var analysis = parseAnalysis(team.analysis);
 
+  function resolvedMatchTeams(m) {
+    return m.stage ? liveKnockoutTeamsForMatch(m) : {h: m.h, a: m.a};
+  }
+
+  function scoreForModalTeams(home, away) {
+    var score = actualScores && actualScores[home + '_' + away];
+    var reverse = false;
+    if (!score) {
+      score = actualScores && actualScores[away + '_' + home];
+      reverse = Boolean(score);
+    }
+    return score ? {score: score, reverse: reverse} : null;
+  }
+
+  function modalScoreLine(scoreInfo) {
+    if (!scoreInfo || !scoreInfo.score) return '';
+    var score = scoreInfo.score;
+    var homeScore = scoreInfo.reverse ? score.a : score.h;
+    var awayScore = scoreInfo.reverse ? score.h : score.a;
+    var homePens = scoreInfo.reverse ? score.ap : score.hp;
+    var awayPens = scoreInfo.reverse ? score.hp : score.ap;
+    var line = homeScore + ' - ' + awayScore;
+    if (typeof homePens === 'number' && typeof awayPens === 'number') line += ' (' + homePens + '-' + awayPens + ' pens)';
+    return line;
+  }
+
+  function modalScorers(scoreInfo, side) {
+    if (!scoreInfo || !scoreInfo.score) return [];
+    var score = scoreInfo.score;
+    var source = side === 'home'
+      ? (scoreInfo.reverse ? score.as : score.hs)
+      : (scoreInfo.reverse ? score.hs : score.as);
+    return Array.isArray(source) ? source : [];
+  }
+
+  function modalScorerGroups(scoreInfo, side) {
+    var groups = [];
+    modalScorers(scoreInfo, side).forEach(function(token) {
+      var raw = String(token || '').trim();
+      if (!raw) return;
+      var match = raw.match(/^(.*?)(\d+(?:\+\d+)?['’]?)(?:\s*(.*))$/);
+      var name = match ? match[1].trim() : raw;
+      var minute = match ? match[2].replace(/[’]/g, "'") : '';
+      var note = match ? match[3].trim() : '';
+      var key = name.toLowerCase() + '|' + note.toLowerCase();
+      var existing = groups.find(function(group) { return group.key === key; });
+      if (!existing) {
+        existing = {key:key, name:name, note:note, minutes:[]};
+        groups.push(existing);
+      }
+      if (minute) existing.minutes.push(minute);
+    });
+    return groups;
+  }
+
+  function renderScorerLane(scoreInfo, side, teamNameForLane, flag) {
+    var groups = modalScorerGroups(scoreInfo, side);
+    var items = groups.map(function(group) {
+      var minuteText = group.minutes.join(', ');
+      var note = group.note ? '<span class="mmr-scorer-note">' + esc(group.note) + '</span>' : '';
+      return '<div class="mmr-scorer-item"><span class="mmr-scorer-name">' + esc(group.name) + '</span><span class="mmr-scorer-minutes">' + esc(minuteText) + '</span>' + note + '</div>';
+    }).join('');
+    return '<div class="mmr-scorer-side mmr-scorer-' + side + (groups.length ? '' : ' mmr-scorer-empty') + '">' +
+      '<div class="mmr-scorer-team">' + flag + ' ' + esc(teamNameForLane) + '</div>' +
+      (items || '<div class="mmr-scorer-none">No goals</div>') +
+      '</div>';
+  }
+
+  function resultForTeam(scoreInfo, home, away) {
+    if (!scoreInfo || !scoreInfo.score || scoreInfo.score.status !== 'FT') return '';
+    var score = scoreInfo.score;
+    if (score.winner === teamName) return 'w';
+    if (score.winner && (score.winner === home || score.winner === away)) return 'l';
+    var hGoals = parseInt(scoreInfo.reverse ? score.a : score.h);
+    var aGoals = parseInt(scoreInfo.reverse ? score.h : score.a);
+    if (home === teamName) return hGoals > aGoals ? 'w' : hGoals < aGoals ? 'l' : 'd';
+    return aGoals > hGoals ? 'w' : aGoals < hGoals ? 'l' : 'd';
+  }
+
+  function resultLabel(result) {
+    return result === 'w' ? 'Win' : result === 'l' ? 'Loss' : result === 'd' ? 'Draw' : 'Set';
+  }
+
+  function renderFixtureRow(m, teams, opts) {
+    opts = opts || {};
+    var scoreInfo = scoreForModalTeams(teams.h, teams.a);
+    var dateInfo = formatDatePill(m.d);
+    var hFlag = wcData.teams[teams.h] ? wcData.teams[teams.h].flag : '';
+    var aFlag = wcData.teams[teams.a] ? wcData.teams[teams.a].flag : '';
+    var scoreHtml = scoreInfo
+      ? '<div class="mmr-center">' + modalScoreLine(scoreInfo) + '</div>'
+      : '<div class="mmr-center mmr-time">' + etToLocal(m.t, m.d) + '</div>';
+    var result = resultForTeam(scoreInfo, teams.h, teams.a);
+    var status = scoreInfo ? resultLabel(result) : 'Upcoming';
+    var scorers = scoreInfo
+      ? '<div class="mmr-scorers" aria-label="Goal scorers">' +
+        renderScorerLane(scoreInfo, 'home', teams.h, hFlag) +
+        renderScorerLane(scoreInfo, 'away', teams.a, aFlag) +
+        '</div>'
+      : '';
+    var round = opts.round ? '<span class="mmr-round">' + esc(opts.round) + '</span>' : '';
+    var venue = m.v ? '<div class="mmr-venue">' + esc(m.v) + '</div>' : '';
+    return '<div class="mmr-row mmr-result-' + result + (opts.journey ? ' mmr-journey-row' : '') + '" onclick="goToMatch(\'' + m.d + '\')">' +
+      '<div class="mmr-dot"></div>' +
+      '<div class="mmr-date">' + dateInfo.day + ' ' + dateInfo.date + round + '</div>' +
+      '<div class="mmr-home">' + esc(teams.h) + ' ' + hFlag + '</div>' +
+      scoreHtml +
+      '<div class="mmr-away">' + aFlag + ' ' + esc(teams.a) + '</div>' +
+      '<div class="mmr-status">' + status + '</div>' +
+      scorers + venue +
+    '</div>';
+  }
+
   // Injury/fitness intel
   var injuryNote = (typeof injuryIntel !== 'undefined' && injuryIntel[teamName]) ? injuryIntel[teamName] : '';
 
@@ -274,68 +387,36 @@ function openTeamModal(teamName) {
     }).join('') +
     '</tbody></table></div></div>';
 
-  // Team matches section — FotMob-style fixtures list
-  var teamMatches = matchesData.filter(function(m) { return m.h === teamName || m.a === teamName; });
-  if (teamMatches.length > 0) {
-    // Sort by date
-    teamMatches.sort(function(a, b) { return a.d.localeCompare(b.d) || a.t.localeCompare(b.t); });
-    var completedMatches = [];
-    var upcomingMatches = [];
-    teamMatches.forEach(function(m) {
-      var key = m.h + '_' + m.a;
-      var score = (typeof actualScores !== 'undefined' && actualScores[key]) ? actualScores[key] : null;
-      if (score && score.status === 'FT') completedMatches.push(m);
-      else upcomingMatches.push(m);
-    });
-
-    el.innerHTML += '<div class="modal-section"><h3 style="color:' + gc + ';border-color:' + gc + '">' + icon('calendar') + ' Fixtures</h3><div class="modal-matches">';
-
-    // Completed matches
-    if (completedMatches.length > 0) {
-      el.innerHTML += '<div class="mmr-section-label">Results</div>';
-      completedMatches.forEach(function(m) {
-        var key = m.h + '_' + m.a;
-        var score = actualScores[key];
-        var dateInfo = formatDatePill(m.d);
-        var hFlag = wcData.teams[m.h] ? wcData.teams[m.h].flag : '';
-        var aFlag = wcData.teams[m.a] ? wcData.teams[m.a].flag : '';
-        var hGoals = parseInt(score.h), aGoals = parseInt(score.a);
-        var result = '';
-        if (m.h === teamName) result = hGoals > aGoals ? 'w' : hGoals < aGoals ? 'l' : 'd';
-        else result = aGoals > hGoals ? 'w' : aGoals < hGoals ? 'l' : 'd';
-
-        el.innerHTML += '<div class="mmr-row mmr-result-' + result + '" onclick="goToMatch(\'' + m.d + '\')">' +
-          '<div class="mmr-dot"></div>' +
-          '<div class="mmr-date">' + dateInfo.day + ' ' + dateInfo.date + '</div>' +
-          '<div class="mmr-home">' + m.h + ' ' + hFlag + '</div>' +
-          '<div class="mmr-center">' + score.h + ' - ' + score.a + '</div>' +
-          '<div class="mmr-away">' + aFlag + ' ' + m.a + '</div>' +
-        '</div>';
-      });
-    }
-
-    // Upcoming matches
-    if (upcomingMatches.length > 0) {
-      el.innerHTML += '<div class="mmr-section-label">Upcoming</div>';
-      upcomingMatches.forEach(function(m) {
-        var pdt = etToLocal(m.t, m.d);
-        var dateInfo = formatDatePill(m.d);
-        var hFlag = wcData.teams[m.h] ? wcData.teams[m.h].flag : '';
-        var aFlag = wcData.teams[m.a] ? wcData.teams[m.a].flag : '';
-        var venue = m.v ? '<div class="mmr-venue">' + m.v + '</div>' : '';
-
-        el.innerHTML += '<div class="mmr-row mmr-upcoming" onclick="goToMatch(\'' + m.d + '\')">' +
-          '<div class="mmr-date">' + dateInfo.day + ' ' + dateInfo.date + '</div>' +
-          '<div class="mmr-home">' + m.h + ' ' + hFlag + '</div>' +
-          '<div class="mmr-center mmr-time">' + pdt + '</div>' +
-          '<div class="mmr-away">' + aFlag + ' ' + m.a + '</div>' +
-          venue +
-        '</div>';
-      });
-    }
-
-    el.innerHTML += '</div></div>';
+  // Team matches section — group schedule first, knockout journey second.
+  var groupMatches = matchesData.filter(function(m) { return !m.stage && (m.h === teamName || m.a === teamName); });
+  groupMatches.sort(function(a, b) { return a.d.localeCompare(b.d) || a.t.localeCompare(b.t); });
+  var fixtureHtml = '';
+  if (groupMatches.length > 0) {
+    fixtureHtml += '<div class="modal-section"><h3 style="color:' + gc + ';border-color:' + gc + '">' + icon('calendar') + ' Group Stage Fixtures</h3><div class="modal-matches">';
+    groupMatches.forEach(function(m) { fixtureHtml += renderFixtureRow(m, {h:m.h, a:m.a}); });
+    fixtureHtml += '</div></div>';
   }
+
+  var knockoutMatches = matchesData.map(function(m) {
+    return {match:m, teams:resolvedMatchTeams(m)};
+  }).filter(function(item) {
+    return item.match.stage && (item.teams.h === teamName || item.teams.a === teamName);
+  }).sort(function(a, b) { return a.match.d.localeCompare(b.match.d) || a.match.t.localeCompare(b.match.t); });
+  if (knockoutMatches.length > 0) {
+    var latest = knockoutMatches[knockoutMatches.length - 1];
+    var latestScore = scoreForModalTeams(latest.teams.h, latest.teams.a);
+    var journeyStatus = latestScore && latestScore.score && latestScore.score.winner === teamName
+      ? 'Still alive after ' + latest.match.stage
+      : latestScore && latestScore.score
+        ? 'Reached ' + latest.match.stage
+        : 'Next: ' + latest.match.stage;
+    fixtureHtml += '<div class="modal-section"><h3 style="color:' + gc + ';border-color:' + gc + '">' + icon('trophy') + ' Knockout Journey</h3>' +
+      '<div class="team-journey-summary"><strong>' + esc(journeyStatus) + '</strong><span>' + knockoutMatches.length + ' knockout fixture' + (knockoutMatches.length === 1 ? '' : 's') + '</span></div>' +
+      '<div class="modal-matches team-journey">';
+    knockoutMatches.forEach(function(item) { fixtureHtml += renderFixtureRow(item.match, item.teams, {round:item.match.stage, journey:true}); });
+    fixtureHtml += '</div></div>';
+  }
+  if (fixtureHtml) el.innerHTML += fixtureHtml;
 
   document.getElementById('modal').classList.add('visible');
   document.body.style.overflow = 'hidden';
@@ -1047,12 +1128,18 @@ function renderBracket() {
     var lockedAway = bracketViewMode === 'live' && wcData.teams[model.away] ? ' locked' : '';
     var venueCity = compactVenueCity(matchId);
     var title = compactDateTime(matchId) + ' ' + localTz + ' · ' + venueCity;
+    function bracketTeamIdentity(teamName) {
+      var openAttrs = wcData.teams[teamName]
+        ? ' data-team-open="' + esc(teamName) + '" role="button" tabindex="0" aria-label="Open ' + esc(teamName) + ' team details"'
+        : '';
+      return '<span class="bt-name"' + openAttrs + '><span class="bt-flag">' + getFlag(teamName) + '</span><span class="bt-label bt-label-full">' + esc(compactTeamLabel(teamName)) + '</span><span class="bt-label bt-label-code">' + esc(bracketTeamCode(teamName)) + '</span></span>';
+    }
     return '<div class="bracket-node bracket-match' + (model.needsPick ? ' needs-pick' : '') + '" data-match-id="' + matchId + '" title="' + esc(title) + '">' +
       '<div class="bracket-node-meta"><span>' + matchId + '</span>' + badge + '</div>' +
       '<div class="bracket-team' + (model.winner === model.home ? ' winner' : '') + lockedHome + '" data-ko="' + matchId + '" data-pick="home" data-team="' + esc(model.home) + '" aria-label="' + esc(model.home) + '">' +
-        '<span class="bt-name"><span class="bt-flag">' + getFlag(model.home) + '</span><span class="bt-label bt-label-full">' + esc(compactTeamLabel(model.home)) + '</span><span class="bt-label bt-label-code">' + esc(bracketTeamCode(model.home)) + '</span></span><span class="bt-score">' + homeScore + '</span></div>' +
+        bracketTeamIdentity(model.home) + '<span class="bt-score">' + homeScore + '</span></div>' +
       '<div class="bracket-team' + (model.winner === model.away ? ' winner' : '') + lockedAway + '" data-ko="' + matchId + '" data-pick="away" data-team="' + esc(model.away) + '" aria-label="' + esc(model.away) + '">' +
-        '<span class="bt-name"><span class="bt-flag">' + getFlag(model.away) + '</span><span class="bt-label bt-label-full">' + esc(compactTeamLabel(model.away)) + '</span><span class="bt-label bt-label-code">' + esc(bracketTeamCode(model.away)) + '</span></span><span class="bt-score">' + awayScore + '</span></div>' +
+        bracketTeamIdentity(model.away) + '<span class="bt-score">' + awayScore + '</span></div>' +
       '<div class="bracket-node-footer"><div class="bracket-node-time bracket-date-time">' + compactDateTime(matchId) + '</div>' +
         '<div class="bracket-node-city">' + esc(venueCity) + '</div></div>' +
       '</div>';
@@ -1235,6 +1322,12 @@ function renderBracket() {
   if (!el._hasListener) {
     el._hasListener = true;
     el.addEventListener('click', function(e) {
+      var teamOpen = e.target.closest('[data-team-open]');
+      if (teamOpen) {
+        var openName = teamOpen.getAttribute('data-team-open');
+        if (openName && wcData.teams[openName]) openTeamModal(openName);
+        return;
+      }
       var sectionBtn = e.target.closest('[data-bracket-section]');
       if (sectionBtn) {
         bracketMobileSection = sectionBtn.getAttribute('data-bracket-section');
@@ -1278,6 +1371,14 @@ function renderBracket() {
       if (e.target.id === 'resetBtn' || e.target.closest('#resetBtn')) {
         resetBracket();
       }
+    });
+    el.addEventListener('keydown', function(e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var teamOpen = e.target.closest('[data-team-open]');
+      if (!teamOpen) return;
+      e.preventDefault();
+      var openName = teamOpen.getAttribute('data-team-open');
+      if (openName && wcData.teams[openName]) openTeamModal(openName);
     });
   }
 }

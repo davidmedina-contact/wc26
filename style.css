@@ -370,6 +370,9 @@
   gap: 3px;
   font-size: 0.7rem;
 }
+.bracket-node [data-team-open] { cursor: pointer; border-radius: 3px; }
+.bracket-node [data-team-open]:hover { color: var(--accent); }
+.bracket-node [data-team-open]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .bracket-node .bt-flag { flex: 0 0 auto; }
 .bracket-node .bt-label {
   min-width: 0;
@@ -733,6 +736,21 @@
 .mmr-center { font-family: var(--mono); font-weight: 800; font-size: 0.88rem; color: var(--text); text-align: center; }
 .mmr-time { font-weight: 600; font-size: 0.78rem; color: var(--accent); }
 .mmr-venue { grid-column: 1 / -1; font-size: 0.62rem; color: var(--text-muted); padding-top: 2px; opacity: 0.7; }
+.mmr-scorers { grid-column: 2 / 5; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding-top: 7px; border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent); color: var(--text-muted); font-size: 0.68rem; line-height: 1.25; }
+.mmr-scorer-side { min-width: 0; }
+.mmr-scorer-home { text-align: right; }
+.mmr-scorer-away { text-align: left; }
+.mmr-scorer-team { overflow: hidden; color: var(--text-sec); font-size: 0.59rem; font-weight: 800; letter-spacing: 0.04em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.mmr-scorer-item { display: flex; align-items: baseline; justify-content: flex-end; gap: 5px; min-width: 0; margin-top: 4px; }
+.mmr-scorer-away .mmr-scorer-item { justify-content: flex-start; }
+.mmr-scorer-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-sec); }
+.mmr-scorer-minutes { flex: 0 0 auto; padding: 1px 4px; border-radius: 4px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); font-family: var(--mono); font-size: 0.61rem; font-weight: 800; white-space: nowrap; }
+.mmr-scorer-note { flex: 0 0 auto; color: var(--color-warning, #fbbf24); font-size: 0.56rem; font-weight: 800; text-transform: uppercase; }
+.mmr-scorer-none { margin-top: 4px; color: var(--text-muted); font-size: 0.62rem; }
+.team-journey-summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; padding: 9px 10px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: var(--surface2); color: var(--text); }
+.team-journey-summary span { color: var(--text-muted); font-size: 0.76rem; white-space: nowrap; }
+.team-journey .mmr-journey-row { padding-left: 18px; }
+.team-journey .mmr-journey-row::before { content: ''; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px; background: color-mix(in srgb, var(--accent) 26%, transparent); }
 
 /* W/D/L dot — attached to left edge of the row */
 .mmr-dot {
